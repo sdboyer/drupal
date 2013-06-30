@@ -64,8 +64,8 @@ class AssetAssemblyTest extends UnitTestCase {
     $this->assertTrue($bag->hasCss(), 'AssetBag correctly reports that it contains CSS assets.');
     $this->assertTrue($bag->hasJs(), 'AssetBag correctly reports that it contains javascript assets.');
 
-    $this->assertEquals(array($css1), $bag->getUnsortedCss());
-    $this->assertEquals(array($js1), $bag->getUnsortedJs());
+    $this->assertEquals(array($css1), $bag->getCss());
+    $this->assertEquals(array($js1), $bag->getJs());
 
     $css2 = new StylesheetFileAsset(DRUPAL_ROOT . 'core/misc/dropbutton/dropbutton.base.css');
     $bag->add($css2);
@@ -79,7 +79,7 @@ class AssetAssemblyTest extends UnitTestCase {
     $bag = new AssetBag();
 
     $alm = new AssetLibraryManager();
-    $alm->set('jquery', $this->createJQueryAssetLibrary());
+    $alm->add('system', 'jquery', $this->createJQueryAssetLibrary());
     $dep = new AssetLibraryReference('jquery', $alm);
 
     $css1 = new StylesheetFileAsset(DRUPAL_ROOT . '/core/misc/vertical-tabs.css');
