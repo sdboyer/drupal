@@ -30,4 +30,8 @@ class AssetTest extends UnitTestCase {
   public function setUp() {
     parent::setUp();
   }
+
+  public function testStub() {
+    // TODO anything. without this, phpunit blows up.
+  }
 }
