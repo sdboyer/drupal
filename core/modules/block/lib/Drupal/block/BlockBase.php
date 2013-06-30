@@ -8,6 +8,7 @@
 namespace Drupal\block;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\Core\Asset\AssetCollector;
 
 /**
  * Defines a base block implementation that most blocks plugins will extend.
@@ -224,4 +225,9 @@ abstract class BlockBase extends PluginBase implements BlockPluginInterface {
    * @see \Drupal\block\BlockBase::submit()
    */
   public function blockSubmit($form, &$form_state) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function declareAssets(AssetCollector $collector) {}
 }

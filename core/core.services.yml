@@ -583,3 +583,5 @@ services:
     class: Drupal\Core\Asset\JsCollectionGrouper
   asset.js.dumper:
     class: Drupal\Core\Asset\AssetDumper
+  asset.library_manager:
+    class: Drupal\Core\Asset\AssetLibraryManager

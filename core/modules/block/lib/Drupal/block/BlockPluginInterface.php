@@ -7,6 +7,8 @@
 
 namespace Drupal\block;
 
+use Drupal\Core\Asset\AssetCollector;
+
 /**
  * Defines the required interface for all block plugins.
  *
@@ -102,4 +104,12 @@ interface BlockPluginInterface {
    */
   public function build();
 
+  /**
+   * Declares the assets required by this block to a collector.
+   *
+   * @param \Drupal\Core\Asset\AssetCollector $collector
+   *
+   * @return void
+   */
+  public function declareAssets(AssetCollector $collector);
 }
