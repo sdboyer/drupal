@@ -583,5 +583,6 @@ services:
     class: Drupal\Core\Asset\JsCollectionGrouper
   asset.js.dumper:
     class: Drupal\Core\Asset\AssetDumper
-  asset.library_manager:
-    class: Drupal\Core\Asset\AssetLibraryManager
+  asset.library_repository:
+    class: Drupal\Core\Asset\AssetLibraryRepository
+    arguments: ['@module_handler']
