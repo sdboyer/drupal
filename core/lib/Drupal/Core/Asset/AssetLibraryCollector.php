@@ -11,6 +11,7 @@ use \Drupal\Core\Asset\AssetLibraryRepository;
 use \Drupal\Core\Asset\AssetCollector;
 
 class AssetLibraryCollector {
+
   /**
    * @var \Drupal\Core\Asset\AssetLibraryRepository
    */
@@ -90,4 +91,5 @@ class AssetLibraryCollector {
     }
     return $this->privateKey;
   }
+
 }

@@ -16,12 +16,13 @@ use Assetic\Asset\AssetInterface as AsseticAssetInterface;
  * more sophisticated logic and behaviors to be attached to individual assets.
  */
 interface AssetInterface extends AsseticAssetInterface, AssetDependencyInterface, \ArrayAccess {
+
   /**
    * Indicates whether or not this asset is eligible for preprocessing.
    *
    * Assets that are marked as not preprocessable will always be passed directly
-   * through to the browser without aggregation. Assets that are marked as
-   * eligible for preprocessing will be included in any broader aggregation
+   * to the browser without aggregation or minification. Assets that are marked
+   * as eligible for preprocessing will be included in any broader aggregation
    * logic that has been configured.
    *
    * @return bool
@@ -50,4 +51,5 @@ interface AssetInterface extends AsseticAssetInterface, AssetDependencyInterface
    *   TRUE if the value is served by a default, FALSE if it was explicitly set.
    */
   public function isDefault($key);
+
 }

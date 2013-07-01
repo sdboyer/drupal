@@ -15,12 +15,32 @@ use Drupal\Core\Asset\AssetBagInterface;
  */
 class AssetBag implements AssetBagInterface {
 
+  /**
+   * The assets in this AssetBag.
+   *
+   * @var array
+   */
   protected $assets = array();
 
+  /**
+   * Whether this AssetBag contains any JavaScript assets.
+   *
+   * @var bool
+   */
   protected $hasJs = FALSE;
 
+  /**
+   * Whether this AssetBag contains any CSS assets.
+   *
+   * @var bool
+   */
   protected $hasCss = FALSE;
 
+  /**
+   * Whether this AssetBag is frozen.
+   *
+   * @var bool
+   */
   protected $frozen = FALSE;
 
   /**
@@ -84,7 +104,6 @@ class AssetBag implements AssetBagInterface {
   public function all() {
     return $this->assets;
   }
-
 
   /**
    * {@inheritdoc}

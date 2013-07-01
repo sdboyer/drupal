@@ -88,6 +88,8 @@ class AssetCollector {
 
   /**
    * Adds an asset to the injected AM
+   *
+   * @todo Document.
    */
   public function add(AssetInterface $asset) {
     if (empty($this->bag)) {
@@ -99,6 +101,20 @@ class AssetCollector {
 
   /**
    * Creates an asset and returns it.
+   *
+   * @param string $asset_type
+   *   'css' or 'js'.
+   * @param string $source_type
+   *   'file', 'external' or 'string'.
+   * @param ??? $data
+   * @param array $options
+   *   ???
+   * @param array $filters
+   *   ???
+   *
+   * @return ???
+   *
+   * @todo Document.
    */
   public function create($asset_type, $source_type, $data, $options = array(), $filters = array()) {
     return call_user_func(array($this, $this->methodMap[$asset_type][$source_type]), $data, $options, $filters);

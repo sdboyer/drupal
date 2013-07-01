@@ -19,12 +19,19 @@ use Symfony\Component\DependencyInjection\ContainerAwareInterface;
  * onto the Response object.
  *
  * An AssetBagInterface object's contents are not expected to be in the final,
- * ordered form in which will ultimately be delivered as part of the page
+ * ordered form in which it will ultimately be delivered as part of the page
  * response. Rather, a stack of such bags will be combined towards the end of
  * the page request into the final asset list.
  */
 interface AssetBagInterface {
 
+  /**
+   * Adds another Asset to this AssetBag.
+   *
+   * @param AssetInterface $asset
+   *
+   * @return mixed
+   */
   public function add(AssetInterface $asset);
 
   /**
@@ -37,17 +44,16 @@ interface AssetBagInterface {
   public function addAssetBag(AssetBagInterface $bag);
 
   /**
-   * Adds configuration settings for eventual inclusion in Drupal.settings.
+   * Adds configuration settings for eventual inclusion in drupalSettings.
    *
-   * @todo fix this up to use proper classes asset objects somehow
+   * @todo Nice-to-have: create something like JavaScriptSettingAssetInterface.
    *
    * @param $data
    *   An associative array containing configuration settings, to be eventually
-   *   merged into drupalSettings. Settings should be be wrapped in another
-   *   variable, typically by module name, in order to avoid conflicts in the
-   *   Drupal.settings namespace. Items added with a string key will replace
-   *   existing settings with that key; items with numeric array keys will be
-   *   added to the existing settings array.
+   *   merged into drupalSettings. Settings should be be keyed, typically by
+   *   by module name, in order to avoid conflicts in the drupalSettings object.
+   *   Calling this twice with the same data does not change the settings sent
+   *   to the browser: this is idempotent, thanks to drupal_merge_js_settings().
    *
    * @return AssetBagInterface $this
    *   Returns the current AssetBagInterface object for method chaining.
@@ -62,10 +68,7 @@ interface AssetBagInterface {
   public function hasCss();
 
   /**
-   * Returns the CSS assets in this bag.
-   *
-   * Assets are returned in the order in which they were added, not necessarily
-   * correct page order.
+   * Returns the CSS assets in this bag, in the order they were added.
    *
    * @return array
    */
@@ -79,20 +82,14 @@ interface AssetBagInterface {
   public function hasJs();
 
   /**
-   * Returns the JavaScript assets in this bag, fully resolved into page order.
-   *
-   * Assets are returned in the order in which they were added, not necessarily
-   * correct page order.
+   * Returns the JavaScript assets in this bag, in the order they were added.
    *
    * @return array
    */
   public function getJs();
 
   /**
-   * Returns all assets contained in this object.
-   *
-   * The assets are returned in the order in which they were added, which is
-   * unlikely to be the final correct rendering order.
+   * Returns all assets contained in this object, in the order they were added.
    *
    * @return array
    */
