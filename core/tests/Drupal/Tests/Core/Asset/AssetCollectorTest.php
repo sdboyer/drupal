@@ -80,7 +80,7 @@ class AssetCollectorTest extends UnitTestCase {
    */
   public function testMetadataInjection() {
     // Test a single value first
-    $asset = $this->collector->createStylesheetFileAsset('foo', array('group' => CSS_AGGREGATE_THEME));
+    $asset = $this->collector->create('css', 'file', 'foo', array('group' => CSS_AGGREGATE_THEME));
     $this->assertEquals(CSS_AGGREGATE_THEME, $asset['group'], 'Collector injected user-passed parameters into the created asset.');
 
     // TODO is it worth testing multiple params? what about weird ones, like weight?
@@ -102,9 +102,7 @@ class AssetCollectorTest extends UnitTestCase {
     $this->collector->setBag($bag);
 
     $asset2 = $this->collector->create('css', 'file', 'bar');
-    $this->assertContains($asset2, $bag->getCss(), 'Asset created via generic method was implicitly added to bag.');
-    $asset3 = $this->collector->createStylesheetFileAsset('baz');
-    $this->assertContains($asset3, $bag->getCss(), 'Asset created via specific method was implicitly added to bag.');
+    $this->assertContains($asset2, $bag->getCss(), 'Created asset was implicitly added to bag.');
   }
 
   /**
@@ -119,7 +117,7 @@ class AssetCollectorTest extends UnitTestCase {
   }
 
   public function testLock() {
-    $this->assertTrue($this->collector->lock($this), 'Collector locked succesfully.');
+    $this->assertTrue($this->collector->lock($this), 'Collector locked successfully.');
     $this->assertTrue($this->collector->isLocked(), 'Collector accurately reports that it is locked via isLocked() method.');
   }
 
@@ -192,59 +190,42 @@ class AssetCollectorTest extends UnitTestCase {
   }
 
   public function testDefaultPropagation() {
-    // Test that defaults are correctly applied when passing through both
-    // the generic and specific factory methods.
+    // Test that defaults are correctly applied by the factory.
     $this->collector->setDefaults('css', array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
     $css1 = $this->collector->create('css', 'file', 'foo');
     $this->assertTrue($css1['every_page'], 'Correct default propagated for "every_page" property.');
     $this->assertEquals(CSS_AGGREGATE_THEME, $css1['group'], 'Correct default propagated for "group" property.');
-
-    $css2 = $this->collector->createStylesheetFileAsset('foo');
-    $this->assertTrue($css2['every_page'], 'Correct default propagated for "every_page" property.');
-    $this->assertEquals(CSS_AGGREGATE_THEME, $css2['group'], 'Correct default propagated for "group" property.');
 
     // TODO bother testing js? it seems logically redundant
   }
 
   public function testCreateStylesheetFileAsset() {
     $css_file1 = $this->collector->create('css', 'file', 'foo');
-    $css_file2 = $this->collector->createStylesheetFileAsset('foo');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetFileAsset', $css_file1, 'Collector correctly created a StylesheetFileAsset instance through the generic method.');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetFileAsset', $css_file2, 'Collector correctly created a StylesheetFileAsset instance through the specific method.');
+    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetFileAsset', $css_file1, 'Collector correctly created a StylesheetFileAsset instance.');
   }
 
   public function testCreateStylesheetExternalAsset() {
     $css_external1 = $this->collector->create('css', 'external', 'http://foo.bar/path/to/asset.css');
-    $css_external2 = $this->collector->createStylesheetExternalAsset('http://foo.bar/path/to/asset.css');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetExternalAsset', $css_external1, 'Collector correctly created a StylesheetExternalAsset instance through the generic method.');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetExternalAsset', $css_external2, 'Collector correctly created a StylesheetExternalAsset instance through the specific method.');
+    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetExternalAsset', $css_external1, 'Collector correctly created a StylesheetExternalAsset instance.');
   }
 
   public function testCreateStylesheetStringAsset() {
     $css_string1 = $this->collector->create('css', 'string', 'foo');
-    $css_string2 = $this->collector->createStylesheetStringAsset('foo');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetStringAsset', $css_string1, 'Collector correctly created a StylesheetStringAsset instance through the generic method.');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetStringAsset', $css_string2, 'Collector correctly created a StylesheetStringAsset instance through the specific method.');
+    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetStringAsset', $css_string1, 'Collector correctly created a StylesheetStringAsset instance .');
   }
 
   public function testCreateJavascriptFileAsset() {
     $js_file1 = $this->collector->create('js', 'file', 'foo');
-    $js_file2 = $this->collector->createJavascriptFileAsset('foo');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptFileAsset', $js_file1, 'Collector correctly created a JavascriptFileAsset instance through the generic method.');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptFileAsset', $js_file2, 'Collector correctly created a JavascriptFileAsset instance through the specific method.');
+    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptFileAsset', $js_file1, 'Collector correctly created a JavascriptFileAsset instance .');
   }
 
   public function testCreateJavascriptExternalAsset() {
     $js_external1 = $this->collector->create('js', 'external', 'http://foo.bar/path/to/asset.js');
-    $js_external2 = $this->collector->createJavascriptExternalAsset('http://foo.bar/path/to/asset.js');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptExternalAsset', $js_external1, 'Collector correctly created a JavascriptExternalAsset instance through the generic method.');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptExternalAsset', $js_external2, 'Collector correctly created a JavascriptExternalAsset instance through the specific method.');
+    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptExternalAsset', $js_external1, 'Collector correctly created a JavascriptExternalAsset instance .');
   }
 
   public function testCreateJavascriptStringAsset() {
     $js_string1 = $this->collector->create('js', 'string', 'foo');
-    $js_string2 = $this->collector->createJavascriptStringAsset('foo');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptStringAsset', $js_string1, 'Collector correctly created a JavascriptStringAsset instance through the generic method.');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptStringAsset', $js_string2, 'Collector correctly created a JavascriptStringAsset instance through the specific method.');
+    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptStringAsset', $js_string1, 'Collector correctly created a JavascriptStringAsset instance .');
   }
 }

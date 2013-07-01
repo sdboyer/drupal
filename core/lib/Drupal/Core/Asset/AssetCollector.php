@@ -69,16 +69,16 @@ class AssetCollector {
 
   protected $assetDefaults = array();
 
-  protected $methodMap = array(
+  protected $classMap = array(
     'css' => array(
-      'file' => 'createStylesheetFileAsset',
-      'external' => 'createStylesheetExternalAsset',
-      'string' => 'createStylesheetStringAsset',
+      'file' => 'Drupal\\Core\\Asset\\StylesheetFileAsset',
+      'external' => 'Drupal\\Core\\Asset\\StylesheetExternalAsset',
+      'string' => 'Drupal\\Core\\Asset\\StylesheetStringAsset',
     ),
     'js' => array(
-      'file' => 'createJavascriptFileAsset',
-      'external' => 'createJavascriptExternalAsset',
-      'string' => 'createJavascriptStringAsset',
+      'file' => 'Drupal\\Core\\Asset\\JavascriptFileAsset',
+      'external' => 'Drupal\\Core\\Asset\\JavascriptExternalAsset',
+      'string' => 'Drupal\\Core\\Asset\\JavascriptStringAsset',
      ),
   );
 
@@ -112,12 +112,25 @@ class AssetCollector {
    * @param array $filters
    *   ???
    *
-   * @return ???
-   *
-   * @todo Document.
+   * @return \Drupal\Core\Asset\AssetInterface
    */
   public function create($asset_type, $source_type, $data, $options = array(), $filters = array()) {
-    return call_user_func(array($this, $this->methodMap[$asset_type][$source_type]), $data, $options, $filters);
+    if (!isset($this->classMap[$asset_type])) {
+      throw new \InvalidArgumentException('Only assets of type "js" or "css" are allowed.');
+    }
+    if (!isset($this->classMap[$asset_type][$source_type])) {
+      throw new \InvalidArgumentException('Only sources of type "file", "string", or "external" are allowed.');
+    }
+
+    $class = $this->classMap[$asset_type][$source_type];
+    $asset = new $class($data, $options, $filters);
+    $asset->setDefaults($this->getDefaults($asset_type));
+
+    if (!empty($this->bag)) {
+      $this->add($asset);
+    }
+
+    return $asset;
   }
 
   public function setBag(AssetBagInterface $bag) {
@@ -132,60 +145,6 @@ class AssetCollector {
       throw new \Exception('The collector instance is locked. Bags cannot be cleared on a locked collector.');
     }
     $this->bag = NULL;
-  }
-
-  public function createStylesheetFileAsset($path, $options = array(), $filters = array()) {
-    $asset = new StylesheetFileAsset($path, $options, $filters);
-    $asset->setDefaults($this->getDefaults('css'));
-    if (!empty($this->bag)) {
-      $this->add($asset);
-    }
-    return $asset;
-  }
-
-  public function createStylesheetStringAsset($data, $options = array(), $filters = array()) {
-    $asset = new StylesheetStringAsset($data, $options, $filters);
-    $asset->setDefaults($this->getDefaults('css'));
-    if (!empty($this->bag)) {
-      $this->add($asset);
-    }
-    return $asset;
-  }
-
-  public function createStylesheetExternalAsset($url, $options = array(), $filters = array()) {
-    $asset = new StylesheetExternalAsset($url, $options, $filters);
-    $asset->setDefaults($this->getDefaults('css'));
-    if (!empty($this->bag)) {
-      $this->add($asset);
-    }
-    return $asset;
-  }
-
-  public function createJavascriptFileAsset($path, $options = array(), $filters = array()) {
-    $asset = new JavascriptFileAsset($path, $options, $filters);
-    $asset->setDefaults($this->getDefaults('js'));
-    if (!empty($this->bag)) {
-      $this->add($asset);
-    }
-    return $asset;
-  }
-
-  public function createJavascriptStringAsset($data, $options = array(), $filters = array()) {
-    $asset = new JavascriptStringAsset($data, $options, $filters);
-    $asset->setDefaults($this->getDefaults('js'));
-    if (!empty($this->bag)) {
-      $this->add($asset);
-    }
-    return $asset;
-  }
-
-  public function createJavascriptExternalAsset($url, $options = array(), $filters = array()) {
-    $asset = new JavascriptExternalAsset($url, $options, $filters);
-    $asset->setDefaults($this->getDefaults('js'));
-    if (!empty($this->bag)) {
-      $this->add($asset);
-    }
-    return $asset;
   }
 
   public function createJavascriptSetting() {
