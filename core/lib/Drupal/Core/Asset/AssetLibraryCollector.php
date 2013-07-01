@@ -7,12 +7,12 @@
 namespace Drupal\Core\Asset;
 
 use Drupal\Component\Utility\Crypt;
-use \Drupal\Core\Asset\AssetLibraryManager;
+use \Drupal\Core\Asset\AssetLibraryRepository;
 use \Drupal\Core\Asset\AssetCollector;
 
 class AssetLibraryCollector {
   /**
-   * @var \Drupal\Core\Asset\AssetLibraryManager
+   * @var \Drupal\Core\Asset\AssetLibraryRepository
    */
   protected $manager;
 
@@ -24,7 +24,7 @@ class AssetLibraryCollector {
 
   protected $privateKey;
 
-  public function __construct(AssetLibraryManager $manager) {
+  public function __construct(AssetLibraryRepository $manager) {
     $this->manager = $manager;
   }
 

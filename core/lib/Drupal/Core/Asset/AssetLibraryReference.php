@@ -8,17 +8,17 @@
 namespace Drupal\Core\Asset;
 
 use Assetic\Asset\AssetReference;
-use Drupal\Core\Asset\AssetLibraryManager;
+use Drupal\Core\Asset\AssetLibraryRepository;
 
 class AssetLibraryReference {
 
   /**
-   * @var \Drupal\Core\Asset\AssetLibraryManager;
+   * @var \Drupal\Core\Asset\AssetLibraryRepository;
    */
   protected $manager;
 
-  public function __construct($name, AssetLibraryManager $manager = NULL) {
-    if (!$manager instanceof AssetLibraryManager) {
+  public function __construct($name, AssetLibraryRepository $manager = NULL) {
+    if (!$manager instanceof AssetLibraryRepository) {
       // If no manager was injected, fetch it via global container access
       $this->manager = drupal_container()->get('asset_library_manager');
     }

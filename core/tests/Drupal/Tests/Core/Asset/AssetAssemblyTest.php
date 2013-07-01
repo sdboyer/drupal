@@ -9,7 +9,7 @@ namespace Drupal\Tests\Core\Asset;
 
 use Drupal\Core\Asset\AssetBag;
 use Drupal\Core\Asset\AssetLibrary;
-use Drupal\Core\Asset\AssetLibraryManager;
+use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\AssetLibraryReference;
 use Drupal\Core\Asset\JavascriptFileAsset;
 use Drupal\Core\Asset\JavascriptStringAsset;
@@ -78,7 +78,7 @@ class AssetAssemblyTest extends UnitTestCase {
   public function testSortingAndDependencyResolution() {
     $bag = new AssetBag();
 
-    $alm = new AssetLibraryManager();
+    $alm = new AssetLibraryRepository();
     $alm->add('system', 'jquery', $this->createJQueryAssetLibrary());
     $dep = new AssetLibraryReference('jquery', $alm);
 
