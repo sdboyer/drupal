@@ -1632,6 +1632,9 @@ function drupal_add_css($data = NULL, $options = NULL) {
   // Create an array of CSS files for each media type first, since each type needs to be served
   // to the browser differently.
   if (isset($data)) {
+    $options['type'] = isset($options['type']) ? $options['type'] : 'file';
+    drupal_collect_assets($data, $options, 'css');
+
     $options += array(
       'type' => 'file',
       'group' => CSS_AGGREGATE_DEFAULT,
@@ -1681,6 +1684,29 @@ function drupal_add_css($data = NULL, $options = NULL) {
   }
 
   return $css;
+}
+
+function drupal_collect_assets($data, $options, $type = '') {
+  $bag = &drupal_static('global_asset_bag', FALSE);
+  $collector = &drupal_static('global_asset_collector', FALSE);
+
+  $bag = ($bag instanceof \Drupal\Core\Asset\AssetBag) ? $bag : new \Drupal\Core\Asset\AssetBag();
+  if (!$collector instanceof \Drupal\Core\Asset\AssetCollector) {
+    $collector = new \Drupal\Core\Asset\AssetCollector();
+    $collector->setBag($bag);
+  }
+
+  if ($data instanceof \Drupal\Core\Asset\AssetInterface) {
+    $collector->add($data);
+    return;
+  }
+
+  if ($type == 'js-setting') {
+    // TODO handle js settings
+    return;
+  }
+
+  $collector->create($type, $options['type'], $data, $options);
 }
 
 /**
@@ -2205,6 +2231,11 @@ function drupal_html_id($id) {
  */
 function drupal_add_js($data = NULL, $options = NULL) {
   $javascript = &drupal_static(__FUNCTION__, array());
+
+  if (isset($data)) {
+    $options['type'] = isset($options['type']) ? $options['type'] : 'file';
+    drupal_collect_assets($data, $options, $options['type'] == 'setting' ? 'js-setting' : 'js');
+  }
 
   // Construct the options, taking the defaults into consideration.
   if (isset($options)) {
