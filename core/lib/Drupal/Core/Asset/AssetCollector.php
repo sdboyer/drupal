@@ -116,10 +116,10 @@ class AssetCollector {
    */
   public function create($asset_type, $source_type, $data, $options = array(), $filters = array()) {
     if (!isset($this->classMap[$asset_type])) {
-      throw new \InvalidArgumentException('Only assets of type "js" or "css" are allowed.');
+      throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are allowed, "%s" requested.', $asset_type));
     }
     if (!isset($this->classMap[$asset_type][$source_type])) {
-      throw new \InvalidArgumentException('Only sources of type "file", "string", or "external" are allowed.');
+      throw new \InvalidArgumentException(sprintf('Only sources of type "file", "string", or "external" are allowed, "%s" requested.', $source_type));
     }
 
     $class = $this->classMap[$asset_type][$source_type];
@@ -135,7 +135,7 @@ class AssetCollector {
 
   public function setBag(AssetBagInterface $bag) {
     if ($this->isLocked()) {
-      throw new \Exception('The collector instance is locked. A new bag cannot assigned on a locked collector.');
+      throw new \Exception('The collector instance is locked. A new bag cannot be attached to a locked collector.');
     }
     $this->bag = $bag;
   }
