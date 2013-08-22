@@ -20,7 +20,8 @@
     "symfony-cmf/routing": "1.1.*@alpha",
     "easyrdf/easyrdf": "0.8.*@beta",
     "phpunit/phpunit": "3.7.*",
-    "zendframework/zend-feed": "2.2.*"
+    "zendframework/zend-feed": "2.2.*",
+    "sdboyer/gliph": "0.1.*"
   },
   "autoload": {
     "psr-0": {
