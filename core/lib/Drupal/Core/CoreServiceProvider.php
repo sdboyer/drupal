@@ -13,7 +13,6 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\Compiler\ModifyServiceDefinitionsPass;
 use Drupal\Core\DependencyInjection\Compiler\RegisterKernelListenersPass;
 use Drupal\Core\DependencyInjection\Compiler\RegisterAccessChecksPass;
-use Drupal\Core\DependencyInjection\Compiler\RegisterMatchersPass;
 use Drupal\Core\DependencyInjection\Compiler\RegisterPathProcessorsPass;
 use Drupal\Core\DependencyInjection\Compiler\RegisterRouteFiltersPass;
 use Drupal\Core\DependencyInjection\Compiler\RegisterRouteEnhancersPass;
@@ -52,12 +51,11 @@ class CoreServiceProvider implements ServiceProviderInterface  {
     $this->registerTwig($container);
     $this->registerModuleHandler($container);
 
-    $container->addCompilerPass(new RegisterMatchersPass());
     $container->addCompilerPass(new RegisterRouteFiltersPass());
     // Add a compiler pass for registering event subscribers.
     $container->addCompilerPass(new RegisterKernelListenersPass(), PassConfig::TYPE_AFTER_REMOVING);
     $container->addCompilerPass(new RegisterAccessChecksPass());
-    // Add a compiler pass for upcasting of entity route parameters.
+    // Add a compiler pass for upcasting route parameters.
     $container->addCompilerPass(new RegisterParamConvertersPass());
     $container->addCompilerPass(new RegisterRouteEnhancersPass());
     // Add a compiler pass for registering services needing destruction.

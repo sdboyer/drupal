@@ -7,7 +7,9 @@
 
 namespace Drupal\locale\Tests;
 
+use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\simpletest\WebTestBase;
+use Drupal\Component\Utility\String;
 
 /**
  * Tests for update translations.
@@ -68,7 +70,7 @@ class LocaleUpdateBase extends WebTestBase {
   protected function setTranslationsDirectory($path) {
     $this->tranlations_directory = $path;
     file_prepare_directory($path, FILE_CREATE_DIRECTORY);
-    config('locale.settings')->set('translation.path', $path)->save();
+    \Drupal::config('locale.settings')->set('translation.path', $path)->save();
   }
 
   /**
@@ -81,7 +83,7 @@ class LocaleUpdateBase extends WebTestBase {
     $edit = array('predefined_langcode' => $langcode);
     $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
     drupal_static_reset('language_list');
-    $this->assertTrue(language_load($langcode), t('Language %langcode added.', array('%langcode' => $langcode)));
+    $this->assertTrue(language_load($langcode), String::format('Language %langcode added.', array('%langcode' => $langcode)));
   }
 
   /**
@@ -164,14 +166,14 @@ EOF;
    * imported.
    */
   protected function setTranslationFiles() {
-    $config = config('locale.settings');
+    $config = \Drupal::config('locale.settings');
 
     // A flag is set to let the locale_test module replace the project data with
     // a set of test projects which match the below project files.
     \Drupal::state()->set('locale.test_projects_alter', TRUE);
 
     // Setup the environment.
-    $public_path = variable_get('file_public_path', conf_path() . '/files');
+    $public_path = PublicStream::basePath();
     $this->setTranslationsDirectory($public_path . '/local');
     $config->set('translation.default_filename', '%project-%version.%language._po')->save();
 

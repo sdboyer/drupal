@@ -8,7 +8,7 @@
 namespace Drupal\comment\Controller;
 
 use Drupal\comment\CommentInterface;
-use Drupal\comment\Plugin\Core\Entity\Comment;
+use Drupal\comment\Entity\Comment;
 use Drupal\Core\Controller\ControllerInterface;
 use Drupal\Core\Routing\PathBasedGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,7 +21,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 /**
  * Controller for the comment entity.
  *
- * @see \Drupal\comment\Plugin\Core\Entity\Comment.
+ * @see \Drupal\comment\Entity\Comment.
  */
 class CommentController implements ControllerInterface {
 
@@ -121,9 +121,9 @@ class CommentController implements ControllerInterface {
         throw new AccessDeniedHttpException();
       }
       // Find the current display page for this comment.
-      $page = comment_get_display_page($comment->id(), $node->type);
+      $page = comment_get_display_page($comment->id(), $node->getType());
       // @todo: Cleaner sub request handling.
-      $redirect_request = Request::create('/node/' . $node->nid, 'GET', $request->query->all(), $request->cookies->all(), array(), $request->server->all());
+      $redirect_request = Request::create('/node/' . $node->id(), 'GET', $request->query->all(), $request->cookies->all(), array(), $request->server->all());
       $redirect_request->query->set('page', $page);
       // @todo: Convert the pager to use the request object.
       $request->query->set('page', $page);

@@ -15,15 +15,11 @@ use Drupal\simpletest\WebTestBase;
  *
  * image.effects.inc:
  *   image_style_generate()
- *   image_style_create_derivative()
+ *   \Drupal\image\ImageStyleInterface::createDerivative()
  *
  * image.module:
  *   image_style_options()
- *   image_style_flush()
- *   image_effect_definition_load()
- *   image_effect_load()
- *   image_effect_save()
- *   image_effect_delete()
+ *   \Drupal\image\ImageStyleInterface::flush()
  *   image_filter_keyword()
  */
 

@@ -7,7 +7,7 @@
 
 namespace Drupal\edit\Access;
 
-use Drupal\Core\Access\AccessCheckInterface;
+use Drupal\Core\Access\StaticAccessCheckInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -16,14 +16,14 @@ use Drupal\Core\Entity\EntityInterface;
 /**
  * Access check for editing entities.
  */
-class EditEntityAccessCheck implements AccessCheckInterface, EditEntityAccessCheckInterface {
+class EditEntityAccessCheck implements StaticAccessCheckInterface {
 
   /**
    * {@inheritdoc}
    */
-  public function applies(Route $route) {
+  public function appliesTo() {
     // @see edit.routing.yml
-    return array_key_exists('_access_edit_entity', $route->getRequirements());
+    return array('_access_edit_entity');
   }
 
   /**
@@ -35,13 +35,13 @@ class EditEntityAccessCheck implements AccessCheckInterface, EditEntityAccessChe
     //   http://drupal.org/node/1798214.
     $this->validateAndUpcastRequestAttributes($request);
 
-    return $this->accessEditEntity($request->attributes->get('entity'));
+    return $this->accessEditEntity($request->attributes->get('entity'))  ? static::ALLOW : static::DENY;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function accessEditEntity(EntityInterface $entity) {
+  protected function accessEditEntity(EntityInterface $entity) {
     return $entity->access('update');
   }
 

@@ -26,14 +26,14 @@ class DatetimeFieldTest extends WebTestBase {
   /**
    * A field to use in this test class.
    *
-   * @var \Drupal\field\Plugin\Core\Entity\Field
+   * @var \Drupal\field\Entity\Field
    */
   protected $field;
 
   /**
    * The instance used in this test class.
    *
-   * @var \Drupal\field\Plugin\Core\Entity\FieldInstance
+   * @var \Drupal\field\Entity\FieldInstance
    */
   protected $instance;
 
@@ -104,8 +104,8 @@ class DatetimeFieldTest extends WebTestBase {
     $value = '2012-12-31 00:00:00';
     $date = new DrupalDateTime($value);
     $format_type = $date->canUseIntl() ? DrupalDateTime::INTL : DrupalDateTime::PHP;
-    $date_format = config('system.date')->get('formats.html_date.pattern.' . $format_type);
-    $time_format = config('system.date')->get('formats.html_time.pattern.' . $format_type);
+    $date_format = entity_load('date_format', 'html_date')->getPattern($format_type);
+    $time_format = entity_load('date_format', 'html_time')->getPattern($format_type);
 
     $edit = array(
       'user_id' => 1,
@@ -175,8 +175,8 @@ class DatetimeFieldTest extends WebTestBase {
     $value = '2012-12-31 00:00:00';
     $date = new DrupalDateTime($value);
     $format_type = $date->canUseIntl() ? DrupalDateTime::INTL : DrupalDateTime::PHP;
-    $date_format = config('system.date')->get('formats.html_date.pattern.' . $format_type);
-    $time_format = config('system.date')->get('formats.html_time.pattern.' . $format_type);
+    $date_format = entity_load('date_format', 'html_date')->getPattern($format_type);
+    $time_format = entity_load('date_format', 'html_time')->getPattern($format_type);
 
     $edit = array(
       'user_id' => 1,

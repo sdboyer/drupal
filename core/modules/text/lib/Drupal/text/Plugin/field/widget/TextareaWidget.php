@@ -7,16 +7,16 @@
 
 namespace Drupal\text\Plugin\field\widget;
 
-use Drupal\Component\Annotation\Plugin;
+use Drupal\field\Annotation\FieldWidget;
 use Drupal\Core\Annotation\Translation;
+use Drupal\Core\Entity\Field\FieldInterface;
 use Drupal\field\Plugin\Type\Widget\WidgetBase;
 
 /**
  * Plugin implementation of the 'text_textarea' widget.
  *
- * @Plugin(
+ * @FieldWidget(
  *   id = "text_textarea",
- *   module = "text",
  *   label = @Translation("Text area (multiple rows)"),
  *   field_types = {
  *     "text_long"
@@ -67,10 +67,10 @@ class TextareaWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
+  public function formElement(FieldInterface $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
     $main_widget = $element + array(
       '#type' => 'textarea',
-      '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : NULL,
+      '#default_value' => $items[$delta]->value,
       '#rows' => $this->getSetting('rows'),
       '#placeholder' => $this->getSetting('placeholder'),
       '#attributes' => array('class' => array('text-full')),
@@ -79,7 +79,7 @@ class TextareaWidget extends WidgetBase {
     if ($this->getFieldSetting('text_processing')) {
       $element = $main_widget;
       $element['#type'] = 'text_format';
-      $element['#format'] = isset($items[$delta]['format']) ? $items[$delta]['format'] : NULL;
+      $element['#format'] = $items[$delta]->format;
       $element['#base_type'] = $main_widget['#type'];
     }
     else {

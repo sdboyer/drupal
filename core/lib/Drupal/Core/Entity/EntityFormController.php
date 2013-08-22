@@ -7,6 +7,7 @@
 
 namespace Drupal\Core\Entity;
 
+use Drupal\Core\Form\FormBase;
 use Drupal\entity\EntityFormDisplayInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\Language;
@@ -15,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Base class for entity form controllers.
  */
-class EntityFormController implements EntityFormControllerInterface {
+class EntityFormController extends FormBase implements EntityFormControllerInterface {
 
   /**
    * The name of the current operation.
@@ -42,35 +43,14 @@ class EntityFormController implements EntityFormControllerInterface {
   protected $entity;
 
   /**
-   * Constructs an EntityFormController object.
-   *
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface
-   *   The module handler service.
-   */
-  public function __construct(ModuleHandlerInterface $module_handler) {
-    $this->moduleHandler = $module_handler;
-  }
-
-  /**
    * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, $entity_type, array $entity_info) {
-    return new static(
-      $container->get('module_handler')
-    );
-  }
-
-  /**
-   * Sets the operation for this form.
-   *
-   * @param string $operation
-   *   The name of the current operation.
    */
   public function setOperation($operation) {
     // If NULL is passed, do not overwrite the operation.
     if ($operation) {
       $this->operation = $operation;
     }
+    return $this;
   }
 
   /**
@@ -124,12 +104,6 @@ class EntityFormController implements EntityFormControllerInterface {
     }
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, array &$form_state) {
   }
 
   /**
@@ -269,7 +243,7 @@ class EntityFormController implements EntityFormControllerInterface {
     return array(
       // @todo Rename the action key from submit to save.
       'submit' => array(
-        '#value' => t('Save'),
+        '#value' => $this->t('Save'),
         '#validate' => array(
           array($this, 'validate'),
         ),
@@ -279,7 +253,7 @@ class EntityFormController implements EntityFormControllerInterface {
         ),
       ),
       'delete' => array(
-        '#value' => t('Delete'),
+        '#value' => $this->t('Delete'),
         // No need to validate the form when deleting the entity.
         '#submit' => array(
           array($this, 'delete'),
@@ -430,9 +404,9 @@ class EntityFormController implements EntityFormControllerInterface {
    * Updates the form language to reflect any change to the entity language.
    *
    * @param array $form_state
-   *   A keyed array containing the current state of the form.
+   *   A reference to a keyed array containing the current state of the form.
    */
-  protected function updateFormLangcode(array $form_state) {
+  protected function updateFormLangcode(array &$form_state) {
     // Update the form language as it might have changed.
     if (isset($form_state['values']['langcode']) && $this->isDefaultFormLangcode($form_state)) {
       $form_state['langcode'] = $form_state['values']['langcode'];
@@ -461,13 +435,16 @@ class EntityFormController implements EntityFormControllerInterface {
       foreach (field_info_instances($entity_type, $entity->bundle()) as $instance) {
         $field_name = $instance['field_name'];
         $field = field_info_field($field_name);
-        $previous_langcode = $form[$field_name]['#language'];
 
-        // Handle a possible language change: new language values are inserted,
-        // previous ones are deleted.
-        if ($field['translatable'] && $previous_langcode != $current_langcode) {
-          $form_state['values'][$field_name][$current_langcode] = $form_state['values'][$field_name][$previous_langcode];
-          $form_state['values'][$field_name][$previous_langcode] = array();
+        if (isset($form[$field_name]['#language'])) {
+          $previous_langcode = $form[$field_name]['#language'];
+
+          // Handle a possible language change: new language values are inserted,
+          // previous ones are deleted.
+          if ($field['translatable'] && $previous_langcode != $current_langcode) {
+            $form_state['values'][$field_name][$current_langcode] = $form_state['values'][$field_name][$previous_langcode];
+            $form_state['values'][$field_name][$previous_langcode] = array();
+          }
         }
       }
     }
@@ -484,7 +461,7 @@ class EntityFormController implements EntityFormControllerInterface {
     $form_state['controller'] = $this;
     // @todo Move entity_form_submit_build_entity() here.
     // @todo Exploit the Field API to process the submitted entity field.
-    entity_form_submit_build_entity($entity->entityType(), $entity, $form, $form_state);
+    entity_form_submit_build_entity($entity->entityType(), $entity, $form, $form_state, array('langcode' => $this->getFormLangcode($form_state)));
     return $entity;
   }
 
@@ -563,4 +540,13 @@ class EntityFormController implements EntityFormControllerInterface {
   public function getOperation() {
     return $this->operation;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setModuleHandler(ModuleHandlerInterface $module_handler) {
+    $this->moduleHandler = $module_handler;
+    return $this;
+  }
+
 }

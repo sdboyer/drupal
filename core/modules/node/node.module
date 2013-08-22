@@ -20,8 +20,8 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\node\NodeTypeInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Template\Attribute;
-use Drupal\entity\Plugin\Core\Entity\EntityDisplay;
-use Drupal\file\Plugin\Core\Entity\File;
+use Drupal\entity\Entity\EntityDisplay;
+use Drupal\file\Entity\File;
 use Drupal\user\UserInterface;
 
 /**
@@ -281,7 +281,7 @@ function node_mark($nid, $timestamp) {
   global $user;
   $cache = &drupal_static(__FUNCTION__, array());
 
-  if (!$user->uid || !module_exists('history')) {
+  if ($user->isAnonymous() || !module_exists('history')) {
     return MARK_READ;
   }
   if (!isset($cache[$nid])) {
@@ -329,7 +329,7 @@ function node_type_get_names() {
   $config_names = config_get_storage_names_with_prefix('node.type.');
   $names = array();
   foreach ($config_names as $config_name) {
-    $config = config($config_name);
+    $config = Drupal::config($config_name);
     $names[$config->get('type')] = $config->get('name');
   }
   cache()->set($cid, $names, CacheBackendInterface::CACHE_PERMANENT, array(
@@ -501,53 +501,6 @@ function node_type_update_nodes($old_id, $new_id) {
 }
 
 /**
- * Implements hook_rdf_mapping().
- */
-function node_rdf_mapping() {
-  return array(
-    array(
-      'type' => 'node',
-      'bundle' => RDF_DEFAULT_BUNDLE,
-      'mapping' => array(
-        'rdftype' => array('sioc:Item', 'foaf:Document'),
-        'title' => array(
-          'predicates' => array('dc:title'),
-        ),
-        'created' => array(
-          'predicates' => array('dc:date', 'dc:created'),
-          'datatype' => 'xsd:dateTime',
-          'callback' => 'date_iso8601',
-        ),
-        'changed' => array(
-          'predicates' => array('dc:modified'),
-          'datatype' => 'xsd:dateTime',
-          'callback' => 'date_iso8601',
-        ),
-        'body' => array(
-          'predicates' => array('content:encoded'),
-        ),
-        'uid' => array(
-          'predicates' => array('sioc:has_creator'),
-          'type' => 'rel',
-        ),
-        'name' => array(
-          'predicates' => array('foaf:name'),
-        ),
-        'comment_count' => array(
-          'predicates' => array('sioc:num_replies'),
-          'datatype' => 'xsd:integer',
-        ),
-        'last_activity' => array(
-          'predicates' => array('sioc:last_activity_date'),
-          'datatype' => 'xsd:dateTime',
-          'callback' => 'date_iso8601',
-        ),
-      ),
-    ),
-  );
-}
-
-/**
  * Loads node entities from the database.
  *
  * This function should be used whenever you need to load more than one node
@@ -584,8 +537,8 @@ function node_load_multiple(array $nids = NULL, $reset = FALSE) {
  *   (optional) Whether to reset the node_load_multiple() cache. Defaults to
  *   FALSE.
  *
- * @return \Drupal\node\Node|null
- *   A fully-populated node entity or NULL if the node is not found.
+ * @return \Drupal\node\NodeInterface|null
+ *   A fully-populated node entity, or NULL if the node is not found.
  */
 function node_load($nid = NULL, $reset = FALSE) {
   $entity = entity_load('node', $nid, $reset);
@@ -595,11 +548,11 @@ function node_load($nid = NULL, $reset = FALSE) {
 /**
  * Loads a node revision from the database.
  *
- * @param int $nid
+ * @param int $vid
  *   The node revision id.
  *
- * @return \Drupal\node\Node|null
- *   A fully-populated node entity or NULL if the node is not found.
+ * @return \Drupal\node\NodeInterface|null
+ *   A fully-populated node entity, or NULL if the node is not found.
  */
 function node_revision_load($vid = NULL) {
   return entity_revision_load('node', $vid);
@@ -740,7 +693,7 @@ function template_preprocess_node(&$variables) {
   //   http://drupal.org/node/1941286.
   $username = array(
     '#theme' => 'username',
-    '#account' => $node,
+    '#account' => $node->getAuthor(),
     '#link_options' => array('attributes' => array('rel' => 'author')),
   );
   $variables['name'] = drupal_render($username);
@@ -854,7 +807,7 @@ function node_permission() {
   );
 
   // Generate standard node permissions for all applicable node types.
-  foreach (node_permissions_get_configured_types() as $name => $type) {
+  foreach (node_permissions_get_configured_types() as $type) {
     $perms += node_list_permissions($type);
   }
 
@@ -868,7 +821,7 @@ function node_permission() {
  *   A query object that has been extended with the Search DB Extender.
  */
 function _node_rankings(SelectExtender $query) {
-  if ($ranking = module_invoke_all('ranking')) {
+  if ($ranking = Drupal::moduleHandler()->invokeAll('ranking')) {
     $tables = &$query->getTables();
     foreach ($ranking as $rank => $values) {
       if ($node_rank = variable_get('node_rank_' . $rank, 0)) {
@@ -935,7 +888,7 @@ function node_search_admin() {
 
   // Note: reversed to reflect that higher number = higher ranking.
   $options = drupal_map_assoc(range(0, 10));
-  foreach (module_invoke_all('ranking') as $var => $values) {
+  foreach (Drupal::moduleHandler()->invokeAll('ranking') as $var => $values) {
     $form['content_ranking']['factors']['node_rank_' . $var] = array(
       '#title' => $values['title'],
       '#type' => 'select',
@@ -992,13 +945,13 @@ function node_search_execute($keys = NULL, $conditions = NULL) {
     // Fetch comments for snippet.
     $node->rendered .= ' ' . module_invoke('comment', 'node_update_index', $node, $item->langcode);
 
-    $extra = module_invoke_all('node_search_result', $node, $item->langcode);
+    $extra = Drupal::moduleHandler()->invokeAll('node_search_result', array($node, $item->langcode));
 
     $language = language_load($item->langcode);
     $uri = $node->uri();
     $username = array(
       '#theme' => 'username',
-      '#account' => $node,
+      '#account' => $node->getAuthor(),
     );
     $results[] = array(
       'link' => url($uri['path'], array_merge($uri['options'], array('absolute' => TRUE, 'language' => $language))),
@@ -1062,7 +1015,7 @@ function node_user_cancel($edit, $account, $method) {
       $nodes = db_select('node_field_data', 'n')
         ->distinct()
         ->fields('n', array('nid'))
-        ->condition('uid', $account->uid)
+        ->condition('uid', $account->id())
         ->execute()
         ->fetchCol();
       node_mass_update($nodes, array('status' => 0), NULL, TRUE);
@@ -1074,14 +1027,14 @@ function node_user_cancel($edit, $account, $method) {
       $nodes = db_select('node_field_data', 'n')
         ->distinct()
         ->fields('n', array('nid'))
-        ->condition('uid', $account->uid)
+        ->condition('uid', $account->id())
         ->execute()
         ->fetchCol();
       node_mass_update($nodes, array('uid' => 0), NULL, TRUE);
       // Anonymize old revisions.
       db_update('node_field_revision')
         ->fields(array('uid' => 0))
-        ->condition('uid', $account->uid)
+        ->condition('uid', $account->id())
         ->execute();
       break;
   }
@@ -1096,12 +1049,12 @@ function node_user_predelete($account) {
   $nodes = db_select('node_field_data', 'n')
     ->distinct()
     ->fields('n', array('nid'))
-    ->condition('uid', $account->uid)
+    ->condition('uid', $account->id())
     ->execute()
     ->fetchCol();
   entity_delete_multiple('node', $nodes);
   // Delete old revisions.
-  $revisions = db_query('SELECT DISTINCT vid FROM {node_field_revision} WHERE uid = :uid', array(':uid' => $account->uid))->fetchCol();
+  $revisions = db_query('SELECT DISTINCT vid FROM {node_field_revision} WHERE uid = :uid', array(':uid' => $account->id()))->fetchCol();
   foreach ($revisions as $revision) {
     node_revision_delete($revision);
   }
@@ -1163,64 +1116,7 @@ function theme_node_search_admin($variables) {
  * @see node_menu()
  */
 function _node_revision_access(EntityInterface $node, $op = 'view', $account = NULL, $langcode = NULL) {
-  $access = &drupal_static(__FUNCTION__, array());
-
-  $map = array(
-    'view' => 'view all revisions',
-    'update' => 'revert all revisions',
-    'delete' => 'delete all revisions',
-  );
-  $bundle = $node->bundle();
-  $type_map = array(
-    'view' => "view $bundle revisions",
-    'update' => "revert $bundle revisions",
-    'delete' => "delete $bundle revisions",
-  );
-
-  if (!$node || !isset($map[$op]) || !isset($type_map[$op])) {
-    // If there was no node to check against, or the $op was not one of the
-    // supported ones, we return access denied.
-    return FALSE;
-  }
-
-  if (!isset($account)) {
-    $account = $GLOBALS['user'];
-  }
-
-  // If no language code was provided, default to the node revision's langcode.
-  if (empty($langcode)) {
-    $langcode = $node->language()->id;
-  }
-
-  // Statically cache access by revision ID, language code, user account ID,
-  // and operation.
-  $cid = $node->getRevisionId() . ':' . $langcode . ':' . $account->id() . ':' . $op;
-
-  if (!isset($access[$cid])) {
-    // Perform basic permission checks first.
-    if (!user_access($map[$op], $account) && !user_access($type_map[$op], $account) && !user_access('administer nodes', $account)) {
-      return $access[$cid] = FALSE;
-    }
-
-    // There should be at least two revisions. If the vid of the given node
-    // and the vid of the default revision differ, then we already have two
-    // different revisions so there is no need for a separate database check.
-    // Also, if you try to revert to or delete the default revision, that's
-    // not good.
-    if ($node->isDefaultRevision() && (db_query('SELECT COUNT(*) FROM {node_field_revision} WHERE nid = :nid AND default_langcode = 1', array(':nid' => $node->id()))->fetchField() == 1 || $op == 'update' || $op == 'delete')) {
-      $access[$cid] = FALSE;
-    }
-    elseif (user_access('administer nodes', $account)) {
-      $access[$cid] = TRUE;
-    }
-    else {
-      // First check the access to the default revision and finally, if the
-      // node passed in is not the default revision then access to that, too.
-      $access[$cid] = node_access($op, node_load($node->id()), $account, $langcode) && ($node->isDefaultRevision() || node_access($op, $node, $account, $langcode));
-    }
-  }
-
-  return $access[$cid];
+  return Drupal::service('access_check.node.revision')->checkAccess($node, $op, $account, $langcode);
 }
 
 /**
@@ -1262,17 +1158,6 @@ function node_menu() {
   $items['admin/content/node'] = array(
     'title' => 'Content',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-
-  $items['admin/reports/status/rebuild'] = array(
-    'title' => 'Rebuild permissions',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('node_configure_rebuild_confirm'),
-    // Any user than can potentially trigger a node_access_needs_rebuild(TRUE)
-    // has to be allowed access to the 'node access rebuild' confirm form.
-    'access arguments' => array('access administration pages'),
-    'type' => MENU_CALLBACK,
-    'file' => 'node.admin.inc',
   );
 
   $items['admin/structure/types'] = array(
@@ -1342,14 +1227,10 @@ function node_menu() {
   );
   $items['node/%node/delete'] = array(
     'title' => 'Delete',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('node_delete_confirm', 1),
-    'access callback' => 'node_access',
-    'access arguments' => array('delete', 1),
+    'route_name' => 'node_delete_confirm',
     'weight' => 10,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
-    'file' => 'node.pages.inc',
   );
   $items['node/%node/revisions'] = array(
     'title' => 'Revisions',
@@ -1370,19 +1251,11 @@ function node_menu() {
   );
   $items['node/%node/revisions/%node_revision/revert'] = array(
     'title' => 'Revert to earlier revision',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('node_revision_revert_confirm', 3),
-    'access callback' => '_node_revision_access',
-    'access arguments' => array(3, 'update'),
-    'file' => 'node.pages.inc',
+    'route_name' => 'node_revision_revert_confirm',
   );
   $items['node/%node/revisions/%node_revision/delete'] = array(
     'title' => 'Delete earlier revision',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('node_revision_delete_confirm', 3),
-    'access callback' => '_node_revision_access',
-    'access arguments' => array(3, 'delete'),
-    'file' => 'node.pages.inc',
+    'route_name' => 'node_revision_delete_confirm',
   );
   return $items;
 }
@@ -1472,7 +1345,7 @@ function node_get_recent($number = 10) {
     // If the user is able to view their own unpublished nodes, allow them
     // to see these in addition to published nodes. Check that they actually
     // have some unpublished nodes to view before adding the condition.
-    if (user_access('view own unpublished content') && $own_unpublished = db_query('SELECT DISTINCT nid FROM {node_field_data} WHERE uid = :uid AND status = :status', array(':uid' => $GLOBALS['user']->uid, ':status' => NODE_NOT_PUBLISHED))->fetchCol()) {
+    if (user_access('view own unpublished content') && $own_unpublished = db_query('SELECT DISTINCT nid FROM {node_field_data} WHERE uid = :uid AND status = :status', array(':uid' => $GLOBALS['user']->id(), ':status' => NODE_NOT_PUBLISHED))->fetchCol()) {
       $query->condition(db_or()
         ->condition('n.status', NODE_PUBLISHED)
         ->condition('n.nid', $own_unpublished, 'IN')
@@ -1616,7 +1489,7 @@ function node_modules_uninstalled($modules) {
   // Remove module-specific settings from all node types.
   $config_names = config_get_storage_names_with_prefix('node.type.');
   foreach ($config_names as $config_name) {
-    $config = config($config_name);
+    $config = Drupal::config($config_name);
     $changed = FALSE;
     foreach ($modules as $module) {
       if ($config->get('settings.' . $module)) {
@@ -1699,7 +1572,7 @@ function node_block_access($block) {
 function node_feed($nids = FALSE, $channel = array()) {
   global $base_url;
   $language_content = language(Language::TYPE_CONTENT);
-  $rss_config = config('system.rss');
+  $rss_config = Drupal::config('system.rss');
 
   if ($nids === FALSE) {
     $nids = db_select('node_field_data', 'n')
@@ -1751,7 +1624,7 @@ function node_feed($nids = FALSE, $channel = array()) {
 
   $channel_defaults = array(
     'version'     => '2.0',
-    'title'       => config('system.site')->get('name'),
+    'title'       => Drupal::config('system.site')->get('name'),
     'link'        => $base_url,
     'description' => $rss_config->get('channel.description'),
     'language'    => $language_content->id
@@ -1838,7 +1711,7 @@ function node_page_view(EntityInterface $node) {
  * Implements hook_update_index().
  */
 function node_update_index() {
-  $limit = (int) config('search.settings')->get('index.cron_limit');
+  $limit = (int) Drupal::config('search.settings')->get('index.cron_limit');
 
   $result = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {search_dataset} d ON d.type = 'node' AND d.sid = n.nid WHERE d.sid IS NULL OR d.reindex <> 0 ORDER BY d.reindex ASC, n.nid ASC", 0, $limit, array(), array('target' => 'slave'));
   $nids = $result->fetchCol();
@@ -1883,13 +1756,13 @@ function _node_index_node(EntityInterface $node) {
     $text = '<h1>' . check_plain($node->label($language->id)) . '</h1>' . $node->rendered;
 
     // Fetch extra data normally not visible.
-    $extra = module_invoke_all('node_update_index', $node, $language->id);
+    $extra = Drupal::moduleHandler()->invokeAll('node_update_index', array($node, $language->id));
     foreach ($extra as $t) {
       $text .= $t;
     }
 
     // Update index.
-    search_index($node->nid, 'node', $text, $language->id);
+    search_index($node->id(), 'node', $text, $language->id);
   }
 }
 
@@ -2041,9 +1914,9 @@ function node_form_system_site_information_settings_form_alter(&$form, &$form_st
   $form['front_page']['default_nodes_main'] = array(
     '#type' => 'select',
     '#title' => t('Number of posts on front page'),
-    '#default_value' => config('node.settings')->get('items_per_page'),
+    '#default_value' => Drupal::config('node.settings')->get('items_per_page'),
     '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30)),
-    '#access' => (config('system.site')->get('page.front') == 'node'),
+    '#access' => (Drupal::config('system.site')->get('page.front') == 'node'),
     '#description' => t('The maximum number of posts displayed on overview pages such as the front page.'),
   );
   $form['#submit'][] = 'node_form_system_site_information_settings_form_submit';
@@ -2055,7 +1928,7 @@ function node_form_system_site_information_settings_form_alter(&$form, &$form_st
  * @see node_form_system_site_information_settings_form_alter()
  */
 function node_form_system_site_information_settings_form_submit($form, &$form_state) {
-  config('node.settings')
+  Drupal::config('node.settings')
     ->set('items_per_page', $form_state['values']['default_nodes_main'])
     ->save();
 }
@@ -2155,11 +2028,19 @@ function node_form_system_themes_admin_form_submit($form, &$form_state) {
  * @see node_menu()
  */
 function node_access($op, $node, $account = NULL, $langcode = NULL) {
-  if (!$node instanceof EntityInterface) {
-    $node = entity_create('node', array('type' => $node));
-  }
-  elseif ($node instanceof NodeTypeInterface) {
-    $node = entity_create('node', array('type' => $node->id()));
+  $access_controller = Drupal::entityManager()->getAccessController('node');
+
+  if ($op == 'create') {
+    if (!$node instanceof EntityInterface) {
+      $bundle = $node;
+    }
+    elseif ($node instanceof NodeTypeInterface) {
+      $bundle = $node->id();
+    }
+    else {
+      $bundle = $node->bundle();
+    }
+    return $access_controller->createAccess($bundle, $account, array('langcode' => $langcode));
   }
 
   // If no language code was provided, default to the node's langcode.
@@ -2178,14 +2059,7 @@ function node_access($op, $node, $account = NULL, $langcode = NULL) {
       }
     }
   }
-
-  // Make sure that if an account is passed, that it is a fully loaded user
-  // object.
-  if ($account && !($account instanceof UserInterface)) {
-    $account = user_load($account->uid);
-  }
-
-  return Drupal::entityManager()->getAccessController('node')->access($node, $op, $langcode, $account);
+  return $access_controller->access($node, $op, $langcode, $account);
 }
 
 /**
@@ -2201,13 +2075,13 @@ function node_node_access($node, $op, $account) {
     }
 
     if ($op == 'update') {
-      if (user_access('edit any ' . $type . ' content', $account) || (user_access('edit own ' . $type . ' content', $account) && ($account->uid == $node->getAuthorId()))) {
+      if (user_access('edit any ' . $type . ' content', $account) || (user_access('edit own ' . $type . ' content', $account) && ($account->id() == $node->getAuthorId()))) {
         return NODE_ACCESS_ALLOW;
       }
     }
 
     if ($op == 'delete') {
-      if (user_access('delete any ' . $type . ' content', $account) || (user_access('delete own ' . $type . ' content', $account) && ($account->uid == $node->getAuthorId()))) {
+      if (user_access('delete any ' . $type . ' content', $account) || (user_access('delete own ' . $type . ' content', $account) && ($account->id() == $node->getAuthorId()))) {
         return NODE_ACCESS_ALLOW;
       }
     }
@@ -2311,7 +2185,7 @@ function node_access_grants($op, $account = NULL) {
   }
 
   // Fetch node access grants from other modules.
-  $grants = module_invoke_all('node_grants', $account, $op);
+  $grants = Drupal::moduleHandler()->invokeAll('node_grants', array($account, $op));
   // Allow modules to alter the assigned grants.
   drupal_alter('node_grants', $grants, $account, $op);
 
@@ -2346,21 +2220,21 @@ function node_access_view_all_nodes($account = NULL) {
     $account = $user;
   }
 
-  // Statically cache results in an array keyed by $account->uid.
+  // Statically cache results in an array keyed by $account->id().
   $access = &drupal_static(__FUNCTION__);
-  if (isset($access[$account->uid])) {
-    return $access[$account->uid];
+  if (isset($access[$account->id()])) {
+    return $access[$account->id()];
   }
 
   // If no modules implement the node access system, access is always TRUE.
-  if (!module_implements('node_grants')) {
-    $access[$account->uid] = TRUE;
+  if (!Drupal::moduleHandler()->getImplementations('node_grants')) {
+    $access[$account->id()] = TRUE;
   }
   else {
-    $access[$account->uid] = Drupal::entityManager()->getAccessController('node')->checkAllGrants($account);
+    $access[$account->id()] = Drupal::entityManager()->getAccessController('node')->checkAllGrants($account);
   }
 
-  return $access[$account->uid];
+  return $access[$account->id()];
 }
 
 
@@ -2390,9 +2264,6 @@ function node_query_node_access_alter(AlterableInterface $query) {
   if (!$op = $query->getMetaData('op')) {
     $op = 'view';
   }
-  if (!$langcode = $query->getMetaData('langcode')) {
-    $langcode = FALSE;
-  }
 
   // If $account can bypass node access, or there are no node access modules,
   // or the operation is 'view' and the $account has a global view grant
@@ -2400,7 +2271,7 @@ function node_query_node_access_alter(AlterableInterface $query) {
   if (user_access('bypass node access', $account)) {
     return;
   }
-  if (!count(module_implements('node_grants'))) {
+  if (!count(Drupal::moduleHandler()->getImplementations('node_grants'))) {
     return;
   }
   if ($op == 'view' && node_access_view_all_nodes($account)) {
@@ -2489,7 +2360,7 @@ function node_access_rebuild($batch_mode = FALSE) {
   $access_controller = Drupal::entityManager()->getAccessController('node');
   $access_controller->deleteGrants();
   // Only recalculate if the site is using a node_access module.
-  if (count(module_implements('node_grants'))) {
+  if (count(Drupal::moduleHandler()->getImplementations('node_grants'))) {
     if ($batch_mode) {
       $batch = array(
         'title' => t('Rebuilding content access permissions'),
@@ -2607,7 +2478,7 @@ function node_requirements($phase) {
     // in the {node_access} table, or if there are modules that
     // implement hook_node_grants().
     $grant_count = Drupal::entityManager()->getAccessController('node')->countGrants();
-    if ($grant_count != 1 || count(module_implements('node_grants')) > 0) {
+    if ($grant_count != 1 || count(Drupal::moduleHandler()->getImplementations('node_grants')) > 0) {
       $value = format_plural($grant_count, 'One permission in use', '@count permissions in use', array('@count' => $grant_count));
     }
     else {
@@ -2630,7 +2501,7 @@ function node_requirements($phase) {
 function node_modules_enabled($modules) {
   // Check if any of the newly enabled modules require the node_access table to
   // be rebuilt.
-  if (!node_access_needs_rebuild() && array_intersect($modules, module_implements('node_grants'))) {
+  if (!node_access_needs_rebuild() && array_intersect($modules, Drupal::moduleHandler()->getImplementations('node_grants'))) {
     node_access_needs_rebuild(TRUE);
   }
 }
@@ -2647,14 +2518,14 @@ function node_modules_disabled($modules) {
     // check whether a hook implementation function exists and do not invoke it.
     // Node access also needs to be rebuilt if language module is disabled to
     // remove any language-specific grants.
-    if (!node_access_needs_rebuild() && (module_hook($module, 'node_grants') || $module == 'language')) {
+    if (!node_access_needs_rebuild() && (Drupal::moduleHandler()->implementsHook($module, 'node_grants') || $module == 'language')) {
       node_access_needs_rebuild(TRUE);
     }
   }
 
   // If there remains no more node_access module, rebuilding will be
   // straightforward, we can do it right now.
-  if (node_access_needs_rebuild() && count(module_implements('node_grants')) == 0) {
+  if (node_access_needs_rebuild() && count(Drupal::moduleHandler()->getImplementations('node_grants')) == 0) {
     node_access_rebuild();
   }
 }
@@ -2735,6 +2606,6 @@ function node_library_info() {
  */
 function node_system_info_alter(&$info, $file, $type) {
   if ($type == 'module' && $file->name == 'translation') {
-    $info['hidden'] = !module_exists('translation') && config('system.module.disabled')->get('translation') === NULL;
+    $info['hidden'] = !module_exists('translation') && Drupal::config('system.module.disabled')->get('translation') === NULL;
   }
 }

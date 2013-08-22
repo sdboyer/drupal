@@ -106,7 +106,7 @@ class TaxonomyTermFieldAttributesTest extends TaxonomyTestBase {
     $parser->parse($graph, $html, 'rdfa', $base_uri);
 
     // Node relations to taxonomy terms.
-    $node_uri = url('node/' . $node->nid, array('absolute' => TRUE));
+    $node_uri = url('node/' . $node->id(), array('absolute' => TRUE));
     $expected_value = array(
       'type' => 'uri',
       'value' => $taxonomy_term_1_uri,
@@ -147,7 +147,7 @@ class TaxonomyTermFieldAttributesTest extends TaxonomyTestBase {
    *
    * @param string $field_name
    *   The name of the field to create.
-   * @param \Drupal\taxonomy\Plugin\Core\Entity\Vocabulary $vocabulary
+   * @param \Drupal\taxonomy\Entity\Vocabulary $vocabulary
    *   The vocabulary that the field should use.
    *
    * @todo Move this to TaxonomyTestBase, like the other field modules.

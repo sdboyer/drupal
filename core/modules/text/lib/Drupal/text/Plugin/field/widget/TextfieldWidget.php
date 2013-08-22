@@ -7,16 +7,16 @@
 
 namespace Drupal\text\Plugin\field\widget;
 
-use Drupal\Component\Annotation\Plugin;
+use Drupal\field\Annotation\FieldWidget;
 use Drupal\Core\Annotation\Translation;
+use Drupal\Core\Entity\Field\FieldInterface;
 use Drupal\field\Plugin\Type\Widget\WidgetBase;
 
 /**
  * Plugin implementation of the 'text_textfield' widget.
  *
- * @Plugin(
+ * @FieldWidget(
  *   id = "text_textfield",
- *   module = "text",
  *   label = @Translation("Text field"),
  *   field_types = {
  *     "text"
@@ -67,10 +67,10 @@ class TextfieldWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
+  public function formElement(FieldInterface $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
     $main_widget = $element + array(
       '#type' => 'textfield',
-      '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : NULL,
+      '#default_value' => isset($items[$delta]->value) ? $items[$delta]->value : NULL,
       '#size' => $this->getSetting('size'),
       '#placeholder' => $this->getSetting('placeholder'),
       '#maxlength' => $this->getFieldSetting('max_length'),
@@ -80,7 +80,7 @@ class TextfieldWidget extends WidgetBase {
     if ($this->getFieldSetting('text_processing')) {
       $element = $main_widget;
       $element['#type'] = 'text_format';
-      $element['#format'] = isset($items[$delta]['format']) ? $items[$delta]['format'] : NULL;
+      $element['#format'] = isset($items[$delta]->format) ? $items[$delta]->format : NULL;
       $element['#base_type'] = $main_widget['#type'];
     }
     else {

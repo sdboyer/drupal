@@ -93,7 +93,7 @@ class SearchMultilingualEntityTest extends SearchTestBase {
    */
   function testIndexingThrottle() {
     // Index only 4 items per cron run.
-    config('search.settings')->set('index.cron_limit', 4)->save();
+    \Drupal::config('search.settings')->set('index.cron_limit', 4)->save();
     // Update the index. This does the initial processing.
     node_update_index();
     // Run the shutdown function. Testing is a unique case where indexing
@@ -123,9 +123,7 @@ class SearchMultilingualEntityTest extends SearchTestBase {
       $body_language_variant = end($node->body);
       $search_result = node_search_execute($body_language_variant[0]['value']);
       // See whether we get the same node as a result.
-      $sts = $this->assertTrue(!empty($search_result[0]['node']->nid)
-        && $search_result[0]['node']->nid == $node->nid,
-        'The search has resulted the correct node.');
+      $this->assertEqual($search_result[0]['node']->id(), $node->id(), 'The search has resulted the correct node.');
     }
   }
 }

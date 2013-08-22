@@ -58,7 +58,7 @@ class NodeStorageController extends DatabaseStorageControllerNG {
     $this->hookLoadArguments = array($argument);
 
     // Call hook_entity_load().
-    foreach (module_implements('entity_load') as $module) {
+    foreach (\Drupal::moduleHandler()->getImplementations('entity_load') as $module) {
       $function = $module . '_entity_load';
       $function($queried_entities, $this->entityType);
     }
@@ -66,7 +66,7 @@ class NodeStorageController extends DatabaseStorageControllerNG {
     // always the queried entities, followed by additional arguments set in
     // $this->hookLoadArguments.
     $args = array_merge(array($queried_entities), $this->hookLoadArguments);
-    foreach (module_implements($this->entityType . '_load') as $module) {
+    foreach (\Drupal::moduleHandler()->getImplementations($this->entityType . '_load') as $module) {
       call_user_func_array($module . '_' . $this->entityType . '_load', $args);
     }
   }
@@ -155,12 +155,22 @@ class NodeStorageController extends DatabaseStorageControllerNG {
       'label' => t('Title'),
       'description' => t('The title of this node, always treated as non-markup plain text.'),
       'type' => 'string_field',
+      'required' => TRUE,
+      'settings' => array(
+        'default_value' => '',
+      ),
+      'property_constraints' => array(
+        'value' => array('Length' => array('max' => 255)),
+      ),
     );
     $properties['uid'] = array(
       'label' => t('User ID'),
       'description' => t('The user ID of the node author.'),
       'type' => 'entity_reference_field',
-      'settings' => array('target_type' => 'user'),
+      'settings' => array(
+        'target_type' => 'user',
+        'default_value' => 0,
+      ),
     );
     $properties['status'] = array(
       'label' => t('Publishing status'),
@@ -176,6 +186,9 @@ class NodeStorageController extends DatabaseStorageControllerNG {
       'label' => t('Changed'),
       'description' => t('The time that the node was last edited.'),
       'type' => 'integer_field',
+      'property_constraints' => array(
+        'value' => array('NodeChanged' => array()),
+      ),
     );
     $properties['comment'] = array(
       'label' => t('Comment'),

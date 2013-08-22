@@ -8,7 +8,7 @@
 namespace Drupal\comment\Tests;
 
 use Drupal\Core\Language\Language;
-use Drupal\comment\Plugin\Core\Entity\Comment;
+use Drupal\comment\Entity\Comment;
 use Drupal\simpletest\WebTestBase;
 
 /**
@@ -75,7 +75,7 @@ abstract class CommentTestBase extends WebTestBase {
     ));
 
     // Create a test node authored by the web user.
-    $this->node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1, 'uid' => $this->web_user->uid));
+    $this->node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1, 'uid' => $this->web_user->id()));
   }
 
   /**
@@ -101,7 +101,7 @@ abstract class CommentTestBase extends WebTestBase {
 
     // Must get the page before we test for fields.
     if ($node !== NULL) {
-      $this->drupalGet('comment/reply/' . $node->nid);
+      $this->drupalGet('comment/reply/' . $node->id());
     }
 
     if ($subject_mode == TRUE) {

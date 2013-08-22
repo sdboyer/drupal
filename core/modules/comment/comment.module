@@ -10,8 +10,8 @@
  */
 
 use Drupal\node\NodeTypeInterface;
-use Drupal\entity\Plugin\Core\Entity\EntityDisplay;
-use Drupal\file\Plugin\Core\Entity\File;
+use Drupal\entity\Entity\EntityDisplay;
+use Drupal\file\Entity\File;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -78,7 +78,7 @@ const COMMENT_NODE_CLOSED = 1;
  */
 const COMMENT_NODE_OPEN = 2;
 
-use Drupal\comment\Plugin\Core\Entity\Comment;
+use Drupal\comment\Entity\Comment;
 
 /**
  * Implements hook_help().
@@ -432,8 +432,8 @@ function comment_get_recent($number = 10) {
  *   "page=X" if the page number is greater than zero; empty string otherwise.
  */
 function comment_new_page_count($num_comments, $new_replies, EntityInterface $node) {
-  $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
-  $comments_per_page = variable_get('comment_default_per_page_' . $node->type, 50);
+  $mode = variable_get('comment_default_mode_' . $node->getType(), COMMENT_MODE_THREADED);
+  $comments_per_page = variable_get('comment_default_per_page_' . $node->getType(), 50);
   $pagenum = NULL;
   $flat = $mode == COMMENT_MODE_FLAT ? TRUE : FALSE;
   if ($num_comments <= $comments_per_page) {
@@ -452,7 +452,7 @@ function comment_new_page_count($num_comments, $new_replies, EntityInterface $no
     // 1. Find all the threads with a new comment.
     $unread_threads_query = db_select('comment')
       ->fields('comment', array('thread'))
-      ->condition('nid', $node->nid)
+      ->condition('nid', $node->id())
       ->condition('status', COMMENT_PUBLISHED)
       ->orderBy('created', 'DESC')
       ->orderBy('cid', 'DESC')
@@ -472,7 +472,7 @@ function comment_new_page_count($num_comments, $new_replies, EntityInterface $no
     // Find the number of the first comment of the first unread thread.
     $count = db_query('SELECT COUNT(*) FROM {comment} WHERE nid = :nid AND status = :status AND SUBSTRING(thread, 1, (LENGTH(thread) - 1)) < :thread', array(
       ':status' => COMMENT_PUBLISHED,
-      ':nid' => $node->nid,
+      ':nid' => $node->id(),
       ':thread' => $first_thread,
     ))->fetchField();
 
@@ -521,7 +521,7 @@ function comment_node_view(EntityInterface $node, EntityDisplay $display, $view_
       // Add a comments RSS element which is a URL to the comments of this node.
       $node->rss_elements[] = array(
         'key' => 'comments',
-        'value' => url('node/' . $node->nid, array('fragment' => 'comments', 'absolute' => TRUE))
+        'value' => url('node/' . $node->id(), array('fragment' => 'comments', 'absolute' => TRUE))
       );
     }
     elseif ($view_mode == 'teaser') {
@@ -532,16 +532,16 @@ function comment_node_view(EntityInterface $node, EntityDisplay $display, $view_
         if (!empty($node->comment_count)) {
           $links['comment-comments'] = array(
             'title' => format_plural($node->comment_count, '1 comment', '@count comments'),
-            'href' => "node/$node->nid",
+            'href' => 'node/' . $node->id(),
             'attributes' => array('title' => t('Jump to the first comment of this posting.')),
             'fragment' => 'comments',
             'html' => TRUE,
           );
           // Show a link to the first new comment.
-          if ($new = comment_num_new($node->nid)) {
+          if ($new = comment_num_new($node->id())) {
             $links['comment-new-comments'] = array(
               'title' => format_plural($new, '1 new comment', '@count new comments'),
-              'href' => "node/$node->nid",
+              'href' => 'node/' . $node->id(),
               'query' => comment_new_page_count($node->comment_count, $new, $node),
               'attributes' => array('title' => t('Jump to the first new comment of this posting.')),
               'fragment' => 'new',
@@ -551,16 +551,16 @@ function comment_node_view(EntityInterface $node, EntityDisplay $display, $view_
         }
       }
       if ($node->comment == COMMENT_NODE_OPEN) {
-        $comment_form_location = variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW);
+        $comment_form_location = variable_get('comment_form_location_' . $node->getType(), COMMENT_FORM_BELOW);
         if (user_access('post comments')) {
           $links['comment-add'] = array(
             'title' => t('Add new comment'),
-            'href' => "node/$node->nid",
+            'href' => 'node/' . $node->id(),
             'attributes' => array('title' => t('Add a new comment to this page.')),
             'fragment' => 'comment-form',
           );
           if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
-            $links['comment-add']['href'] = "comment/reply/$node->nid";
+            $links['comment-add']['href'] = 'comment/reply/' . $node->id();
           }
         }
         else {
@@ -581,7 +581,7 @@ function comment_node_view(EntityInterface $node, EntityDisplay $display, $view_
       // But we don't want this link if we're building the node for search
       // indexing or constructing a search result excerpt.
       if ($node->comment == COMMENT_NODE_OPEN) {
-        $comment_form_location = variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW);
+        $comment_form_location = variable_get('comment_form_location_' . $node->getType(), COMMENT_FORM_BELOW);
         if (user_access('post comments')) {
           // Show the "post comment" link if the form is on another page, or
           // if there are existing comments that the link will skip past.
@@ -589,11 +589,11 @@ function comment_node_view(EntityInterface $node, EntityDisplay $display, $view_
             $links['comment-add'] = array(
               'title' => t('Add new comment'),
               'attributes' => array('title' => t('Share your thoughts and opinions related to this posting.')),
-              'href' => "node/$node->nid",
+              'href' => 'node/' . $node->id(),
               'fragment' => 'comment-form',
             );
             if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
-              $links['comment-add']['href'] = "comment/reply/$node->nid";
+              $links['comment-add']['href'] = 'comment/reply/' . $node->id();
             }
           }
         }
@@ -643,8 +643,8 @@ function comment_node_page_additions(EntityInterface $node) {
   // Unpublished comments are not included in $node->comment_count, so show
   // comments unconditionally if the user is an administrator.
   if (($node->comment_count && user_access('access comments')) || user_access('administer comments')) {
-    $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
-    $comments_per_page = variable_get('comment_default_per_page_' . $node->type, 50);
+    $mode = variable_get('comment_default_mode_' . $node->getType(), COMMENT_MODE_THREADED);
+    $comments_per_page = variable_get('comment_default_per_page_' . $node->getType(), 50);
     if ($cids = comment_get_thread($node, $mode, $comments_per_page)) {
       $comments = comment_load_multiple($cids);
       comment_prepare_thread($comments);
@@ -655,13 +655,13 @@ function comment_node_page_additions(EntityInterface $node) {
   }
 
   // Append comment form if needed.
-  if (user_access('post comments') && $node->comment == COMMENT_NODE_OPEN && (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW)) {
+  if (user_access('post comments') && $node->comment == COMMENT_NODE_OPEN && (variable_get('comment_form_location_' . $node->getType(), COMMENT_FORM_BELOW) == COMMENT_FORM_BELOW)) {
     $additions['comment_form'] = comment_add($node);
   }
 
   if ($additions) {
     $additions += array(
-      '#theme' => 'comment_wrapper__node_' . $node->type,
+      '#theme' => 'comment_wrapper__node_' . $node->getType(),
       '#node' => $node,
       'comments' => array(),
       'comment_form' => array(),
@@ -684,7 +684,7 @@ function comment_node_page_additions(EntityInterface $node) {
  *   The renderable array for the comment addition form.
  */
 function comment_add(EntityInterface $node, $pid = NULL) {
-  $values = array('nid' => $node->nid, 'pid' => $pid, 'node_type' => 'comment_node_' . $node->type);
+  $values = array('nid' => $node->id(), 'pid' => $pid, 'node_type' => 'comment_node_' . $node->getType());
   $comment = entity_create('comment', $values);
   return Drupal::entityManager()->getForm($comment);
 }
@@ -761,7 +761,7 @@ function comment_get_thread(EntityInterface $node, $mode, $comments_per_page) {
     ->extend('Drupal\Core\Database\Query\PagerSelectExtender');
   $query->addField('c', 'cid');
   $query
-    ->condition('c.nid', $node->nid)
+    ->condition('c.nid', $node->id())
     ->addTag('node_access')
     ->addTag('comment_filter')
     ->addMetaData('base_table', 'comment')
@@ -771,7 +771,7 @@ function comment_get_thread(EntityInterface $node, $mode, $comments_per_page) {
   $count_query = db_select('comment', 'c');
   $count_query->addExpression('COUNT(*)');
   $count_query
-    ->condition('c.nid', $node->nid)
+    ->condition('c.nid', $node->id())
     ->addTag('node_access')
     ->addTag('comment_filter')
     ->addMetaData('base_table', 'comment')
@@ -1071,7 +1071,7 @@ function comment_form_node_form_alter(&$form, $form_state) {
     ),
     '#weight' => 30,
   );
-  $comment_count = isset($node->nid) ? db_query('SELECT comment_count FROM {node_comment_statistics} WHERE nid = :nid', array(':nid' => $node->nid))->fetchField() : 0;
+  $comment_count = $node->id() ? db_query('SELECT comment_count FROM {node_comment_statistics} WHERE nid = :nid', array(':nid' => $node->id()))->fetchField() : 0;
   $comment_settings = ($node->comment == COMMENT_NODE_HIDDEN && empty($comment_count)) ? COMMENT_NODE_CLOSED : $node->comment;
   $form['comment_settings']['comment'] = array(
     '#type' => 'radios',
@@ -1114,13 +1114,13 @@ function comment_node_load($nodes, $types) {
   foreach ($nodes as $node) {
     // Store whether comments are enabled for this node.
     if ($node->comment != COMMENT_NODE_HIDDEN) {
-      $comments_enabled[] = $node->nid;
+      $comments_enabled[] = $node->id();
     }
     else {
       $node->cid = 0;
-      $node->last_comment_timestamp = $node->created;
+      $node->last_comment_timestamp = $node->getCreatedTime();
       $node->last_comment_name = '';
-      $node->last_comment_uid = $node->uid;
+      $node->last_comment_uid = $node->getAuthorId();
       $node->comment_count = 0;
     }
   }
@@ -1143,7 +1143,7 @@ function comment_node_load($nodes, $types) {
  */
 function comment_node_prepare_form(NodeInterface $node, $form_display, $operation, array &$form_state) {
   if (!isset($node->comment)) {
-    $node->comment = variable_get("comment_$node->type", COMMENT_NODE_OPEN);
+    $node->comment = variable_get('comment_' . $node->getType(), COMMENT_NODE_OPEN);
   }
 }
 
@@ -1156,11 +1156,11 @@ function comment_node_insert(EntityInterface $node) {
   if (variable_get('comment_maintain_node_statistics', TRUE)) {
     db_insert('node_comment_statistics')
       ->fields(array(
-        'nid' => $node->nid,
+        'nid' => $node->id(),
         'cid' => 0,
-        'last_comment_timestamp' => $node->changed,
+        'last_comment_timestamp' => $node->getChangedTime(),
         'last_comment_name' => NULL,
-        'last_comment_uid' => $node->uid,
+        'last_comment_uid' => $node->getAuthorId(),
         'comment_count' => 0,
       ))
       ->execute();
@@ -1171,10 +1171,10 @@ function comment_node_insert(EntityInterface $node) {
  * Implements hook_node_predelete().
  */
 function comment_node_predelete(EntityInterface $node) {
-  $cids = db_query('SELECT cid FROM {comment} WHERE nid = :nid', array(':nid' => $node->nid))->fetchCol();
+  $cids = db_query('SELECT cid FROM {comment} WHERE nid = :nid', array(':nid' => $node->id()))->fetchCol();
   entity_delete_multiple('comment', $cids);
   db_delete('node_comment_statistics')
-    ->condition('nid', $node->nid)
+    ->condition('nid', $node->id())
     ->execute();
 }
 
@@ -1208,8 +1208,8 @@ function comment_node_update_index(EntityInterface $node, $langcode) {
   }
 
   if ($index_comments) {
-    $mode = variable_get('comment_default_mode_' . $node->type, COMMENT_MODE_THREADED);
-    $comments_per_page = variable_get('comment_default_per_page_' . $node->type, 50);
+    $mode = variable_get('comment_default_mode_' . $node->getType(), COMMENT_MODE_THREADED);
+    $comments_per_page = variable_get('comment_default_per_page_' . $node->getType(), 50);
     if ($node->comment && $cids = comment_get_thread($node, $mode, $comments_per_page)) {
       $comments = comment_load_multiple($cids);
       comment_prepare_thread($comments);
@@ -1237,7 +1237,7 @@ function comment_update_index() {
 function comment_node_search_result(EntityInterface $node) {
   // Do not make a string if comments are hidden.
   if (user_access('access comments') && $node->comment != COMMENT_NODE_HIDDEN) {
-    $comments = db_query('SELECT comment_count FROM {node_comment_statistics} WHERE nid = :nid', array('nid' => $node->nid))->fetchField();
+    $comments = db_query('SELECT comment_count FROM {node_comment_statistics} WHERE nid = :nid', array('nid' => $node->id()))->fetchField();
     // Do not make a string if comments are closed and there are currently
     // zero comments.
     if ($node->comment != COMMENT_NODE_CLOSED || $comments > 0) {
@@ -1252,7 +1252,7 @@ function comment_node_search_result(EntityInterface $node) {
 function comment_user_cancel($edit, $account, $method) {
   switch ($method) {
     case 'user_cancel_block_unpublish':
-      $comments = entity_load_multiple_by_properties('comment', array('uid' => $account->uid));
+      $comments = entity_load_multiple_by_properties('comment', array('uid' => $account->id()));
       foreach ($comments as $comment) {
         $comment->status->value = 0;
         $comment->save();
@@ -1260,7 +1260,7 @@ function comment_user_cancel($edit, $account, $method) {
       break;
 
     case 'user_cancel_reassign':
-      $comments = entity_load_multiple_by_properties('comment', array('uid' => $account->uid));
+      $comments = entity_load_multiple_by_properties('comment', array('uid' => $account->id()));
       foreach ($comments as $comment) {
         $comment->uid->target_id = 0;
         $comment->save();
@@ -1273,7 +1273,7 @@ function comment_user_cancel($edit, $account, $method) {
  * Implements hook_user_predelete().
  */
 function comment_user_predelete($account) {
-  $cids = db_query('SELECT c.cid FROM {comment} c WHERE uid = :uid', array(':uid' => $account->uid))->fetchCol();
+  $cids = db_query('SELECT c.cid FROM {comment} c WHERE uid = :uid', array(':uid' => $account->id()))->fetchCol();
   entity_delete_multiple('comment', $cids);
 }
 
@@ -1325,7 +1325,7 @@ function comment_load($cid, $reset = FALSE) {
 function comment_num_new($nid, $timestamp = 0) {
   global $user;
 
-  if ($user->uid && module_exists('history')) {
+  if ($user->isAuthenticated() && module_exists('history')) {
     // Retrieve the timestamp at which the current user last viewed this node.
     if (!$timestamp) {
       $timestamp = history_read($nid);
@@ -1423,16 +1423,16 @@ function comment_preview(Comment $comment) {
     if (!empty($comment->name->value)) {
       $account = user_load_by_name($comment->name->value);
     }
-    elseif ($user->uid && empty($comment->is_anonymous)) {
+    elseif ($user->isAuthenticated() && empty($comment->is_anonymous)) {
       $account = $user;
     }
 
-    if (!empty($account->uid)) {
-      $comment->uid->target_id = $account->uid;
-      $comment->name->value = check_plain($account->name);
+    if ($account->id()) {
+      $comment->uid->target_id = $account->id();
+      $comment->name->value = check_plain($account->getUsername());
     }
     elseif (empty($comment->name->value)) {
-      $comment->name->value = config('user.settings')->get('anonymous');
+      $comment->name->value = Drupal::config('user.settings')->get('anonymous');
     }
 
     $comment->created->value = !empty($comment->created->value) ? $comment->created->value : REQUEST_TIME;
@@ -1476,7 +1476,7 @@ function comment_preprocess_block(&$variables) {
  * This helper handles anonymous authors in addition to registered comment
  * authors.
  *
- * @return \Drupal\user\Plugin\Core\Entity\User
+ * @return \Drupal\user\Entity\User
  *   A user account, for use with theme_username() or the user_picture template.
  */
 function comment_prepare_author(Comment $comment) {
@@ -1485,7 +1485,7 @@ function comment_prepare_author(Comment $comment) {
   if (empty($account->uid->value)) {
     $account = entity_create('user', array('uid' => 0, 'name' => $comment->name->value, 'homepage' => $comment->homepage->value));
   }
-  return $account->getBCEntity();
+  return $account;
 }
 
 /**
@@ -1530,8 +1530,8 @@ function template_preprocess_comment(&$variables) {
     $variables['user_picture'] = array();
   }
 
-  if (config('user.settings')->get('signatures') && !empty($account->signature)) {
-    $variables['signature'] = check_markup($account->signature, $account->signature_format, '', TRUE) ;
+  if (Drupal::config('user.settings')->get('signatures') && $account->getSignature()) {
+    $variables['signature'] = check_markup($account->getSignature(), $account->getSignatureFormat(), '', TRUE) ;
   }
   else {
     $variables['signature'] = '';
@@ -1610,10 +1610,10 @@ function template_preprocess_comment(&$variables) {
     $variables['attributes']['class'][] = 'by-anonymous';
   }
   else {
-    if ($comment->uid->target_id == $variables['node']->uid) {
+    if ($comment->uid->target_id == $variables['node']->getAuthorId()) {
       $variables['attributes']['class'][] = 'by-node-author';
     }
-    if ($comment->uid->target_id == $variables['user']->uid) {
+    if ($comment->uid->target_id == $variables['user']->id()) {
       $variables['attributes']['class'][] = 'by-viewer';
     }
   }
@@ -1640,7 +1640,7 @@ function theme_comment_post_forbidden($variables) {
   // comments only has to query the database once for all the links.
   $authenticated_post_comments = &drupal_static(__FUNCTION__, NULL);
 
-  if (!$user->uid) {
+  if ($user->isAnonymous()) {
     if (!isset($authenticated_post_comments)) {
       // We only output a link if we are certain that users will get permission
       // to post comments by logging in.
@@ -1651,14 +1651,14 @@ function theme_comment_post_forbidden($variables) {
     if ($authenticated_post_comments) {
       // We cannot use drupal_get_destination() because these links
       // sometimes appear on /node and taxonomy listing pages.
-      if (variable_get('comment_form_location_' . $node->type, COMMENT_FORM_BELOW) == COMMENT_FORM_SEPARATE_PAGE) {
-        $destination = array('destination' => "comment/reply/$node->nid#comment-form");
+      if (variable_get('comment_form_location_' . $node->getType(), COMMENT_FORM_BELOW) == COMMENT_FORM_SEPARATE_PAGE) {
+        $destination = array('destination' => 'comment/reply/' . $node->id() . '#comment-form');
       }
       else {
-        $destination = array('destination' => "node/$node->nid#comment-form");
+        $destination = array('destination' => 'node/' . $node->id() . '#comment-form');
       }
 
-      if (config('user.settings')->get('register') != USER_REGISTER_ADMINISTRATORS_ONLY) {
+      if (Drupal::config('user.settings')->get('register') != USER_REGISTER_ADMINISTRATORS_ONLY) {
         // Users can register themselves.
         return t('<a href="@login">Log in</a> or <a href="@register">register</a> to post comments', array('@login' => url('user/login', array('query' => $destination)), '@register' => url('user/register', array('query' => $destination))));
       }
@@ -1683,7 +1683,7 @@ function theme_comment_post_forbidden($variables) {
 function template_preprocess_comment_wrapper(&$variables) {
   // Provide contextual information.
   $variables['node'] = $variables['content']['#node'];
-  $variables['display_mode'] = variable_get('comment_default_mode_' . $variables['node']->type, COMMENT_MODE_THREADED);
+  $variables['display_mode'] = variable_get('comment_default_mode_' . $variables['node']->getType(), COMMENT_MODE_THREADED);
 
   // The comment form is optional and may not exist.
   $variables['content'] += array('comment_form' => array());

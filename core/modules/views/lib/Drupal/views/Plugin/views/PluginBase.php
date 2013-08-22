@@ -7,11 +7,36 @@
 
 namespace Drupal\views\Plugin\views;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginBase;
+use Drupal\Component\Plugin\PluginBase as ComponentPluginBase;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-abstract class PluginBase extends ContainerFactoryPluginBase {
+/**
+ * Base class for any views plugin types.
+ *
+ * Via the @Plugin definition the plugin may specify a theme function or
+ * template to be used for the plugin. It also can auto-register the theme
+ * implementation for that file or function.
+ * - theme: the theme implementation to use in the plugin. This may be the name
+ *   of the function (without theme_ prefix) or the template file (without
+ *   template engine extension).
+ *   If a template file should be used, the file has to be placed in the
+ *   module's templates folder.
+ *   Example: theme = "mymodule_row" of module "mymodule" will implement either
+ *   theme_mymodule_row() or mymodule-row.tpl.php in the
+ *   [..]/modules/mymodule/templates folder.
+ * - register_theme: (optional) When set to TRUE (default) the theme is
+ *   registered automatically. When set to FALSE the plugin reuses an existing
+ *   theme implementation, defined by another module or views plugin.
+ * - theme_file: (optional) the location of an include file that may hold the
+ *   theme or preprocess function. The location has to be relative to module's
+ *   root directory.
+ * - module: machine name of the module. It must be present for any plugin that
+ *   wants to register a theme.
+ */
+abstract class PluginBase extends ComponentPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * Options for this plugin will be held here.
@@ -60,6 +85,13 @@ abstract class PluginBase extends ContainerFactoryPluginBase {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->definition = $plugin_definition + $configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
+    return new static($configuration, $plugin_id, $plugin_definition);
   }
 
   /**

@@ -285,8 +285,8 @@ abstract class CachePluginBase extends PluginBase {
       }
       $key_data = array(
         'build_info' => $build_info,
-        'roles' => $user->roles,
-        'super-user' => $user->uid == 1, // special caching for super user.
+        'roles' => $user->getRoles(),
+        'super-user' => $user->id() == 1, // special caching for super user.
         'langcode' => language(Language::TYPE_INTERFACE)->id,
         'base_url' => $GLOBALS['base_url'],
       );
@@ -314,8 +314,8 @@ abstract class CachePluginBase extends PluginBase {
     if (!isset($this->outputKey)) {
       $key_data = array(
         'result' => $this->view->result,
-        'roles' => $user->roles,
-        'super-user' => $user->uid == 1, // special caching for super user.
+        'roles' => $user->getRoles(),
+        'super-user' => $user->id() == 1, // special caching for super user.
         'theme' => $GLOBALS['theme'],
         'langcode' => language(Language::TYPE_INTERFACE)->id,
         'base_url' => $GLOBALS['base_url'],

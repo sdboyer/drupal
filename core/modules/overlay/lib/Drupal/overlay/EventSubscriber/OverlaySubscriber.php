@@ -78,10 +78,10 @@ class OverlaySubscriber implements EventSubscriberInterface {
 
     // Only act if the user has access to the overlay and a mode was not already
     // set. Other modules can also enable the overlay directly for other uses.
-    $user_data = $this->userData->get('overlay', $user->uid, 'enabled');
+    $user_data = $this->userData->get('overlay', $user->id(), 'enabled');
     $use_overlay = !isset($user_data) || $user_data;
     if (empty($mode) && user_access('access overlay') && $use_overlay) {
-      $current_path = $request->attributes->get('system_path');
+      $current_path = $request->attributes->get('_system_path');
       // After overlay is enabled on the modules page, redirect to
       // <front>#overlay=admin/modules to actually enable the overlay.
       if (isset($_SESSION['overlay_enable_redirect']) && $_SESSION['overlay_enable_redirect']) {

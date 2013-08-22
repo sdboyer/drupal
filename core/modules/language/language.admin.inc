@@ -11,84 +11,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * User interface for the language overview screen.
- */
-function language_admin_overview_form($form, &$form_state) {
-  drupal_static_reset('language_list');
-  $languages = language_list();
-  $default = language_default();
-
-  $form['languages'] = array(
-    '#languages' => $languages,
-    '#language_default' => $default,
-    '#type' => 'table',
-    '#header' => array(
-      t('Name'),
-      t('Weight'),
-      t('Operations'),
-    ),
-    '#tabledrag' => array(
-      array('order', 'sibling', 'language-order-weight'),
-    ),
-  );
-
-  foreach ($languages as $langcode => $language) {
-    $form['languages'][$langcode]['#attributes']['class'][] = 'draggable';
-    $form['languages'][$langcode]['name'] = array(
-      '#markup' => check_plain($language->name),
-    );
-    $form['languages'][$langcode]['weight'] = array(
-      '#type' => 'weight',
-      '#title' => t('Weight for @title', array('@title' => $language->name)),
-      '#title_display' => 'invisible',
-      '#default_value' => $language->weight,
-      '#attributes' => array(
-        'class' => array('language-order-weight'),
-      ),
-      '#delta' => 30,
-    );
-    $links = array();
-    $links['edit'] = array(
-      'title' => t('edit'),
-      'href' => 'admin/config/regional/language/edit/' . $langcode,
-    );
-    if ($langcode != $default->id) {
-      $links['delete'] = array(
-        'title' => t('delete'),
-        'href' => 'admin/config/regional/language/delete/' . $langcode,
-      );
-    }
-    $form['languages'][$langcode]['operations'] = array(
-      '#type' => 'operations',
-      '#links' => $links,
-      '#weight' => 100,
-    );
-  }
-
-  $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration'),
-  );
-
-  return $form;
-}
-
-/**
- * Process language overview form submissions, updating existing languages.
- */
-function language_admin_overview_form_submit($form, &$form_state) {
-  $languages = language_list();
-
-  foreach ($languages as $langcode => $language) {
-    $language->weight = $form_state['values']['languages'][$langcode]['weight'];
-    language_save($language);
-  }
-
-  drupal_set_message(t('Configuration saved.'));
-}
-
-/**
  * User interface for the language addition screen.
  */
 function language_admin_add_form($form, &$form_state) {
@@ -187,7 +109,7 @@ function _language_admin_common_controls(&$form, $language = NULL) {
   }
   $form['name'] = array(
     '#type' => 'textfield',
-    '#title' => t('Language name'),
+    '#title' => t('Language name in English'),
     '#maxlength' => 64,
     '#default_value' => @$language->name,
     '#required' => TRUE,
@@ -362,7 +284,7 @@ function language_negotiation_configure_form() {
     '#language_negotiation_info' => language_negotiation_info(),
   );
   $form['#language_types'] = array();
-  $configurable = config('system.language.types')->get('configurable');
+  $configurable = Drupal::config('system.language.types')->get('configurable');
   foreach ($form['#language_types_info'] as $type => $info) {
     // Show locked language types only if they are configurable.
     if (empty($info['locked']) || in_array($type, $configurable)) {
@@ -398,7 +320,7 @@ function language_negotiation_configure_form_table(&$form, $type) {
   );
   // Only show configurability checkbox for the unlocked language types.
   if (empty($info['locked'])) {
-    $configurable = config('system.language.types')->get('configurable');
+    $configurable = Drupal::config('system.language.types')->get('configurable');
     $table_form['configurable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Customize %language_name language detection to differ from User interface text language detection settings.', array('%language_name' => $info['name'])),
@@ -561,7 +483,7 @@ function theme_language_negotiation_configure_form($variables) {
 function language_negotiation_configure_form_submit($form, &$form_state) {
   $configurable_types = $form['#language_types'];
 
-  $stored_values = config('system.language.types')->get('configurable');
+  $stored_values = Drupal::config('system.language.types')->get('configurable');
   $customized = array();
   $method_weights_type = array();
 

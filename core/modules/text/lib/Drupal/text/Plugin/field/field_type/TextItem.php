@@ -9,14 +9,13 @@ namespace Drupal\text\Plugin\field\field_type;
 
 use Drupal\Core\Entity\Annotation\FieldType;
 use Drupal\Core\Annotation\Translation;
-use Drupal\field\Plugin\Core\Entity\Field;
+use Drupal\field\FieldInterface;
 
 /**
  * Plugin implementation of the 'text' field type.
  *
  * @FieldType(
  *   id = "text",
- *   module = "text",
  *   label = @Translation("Text"),
  *   description = @Translation("This field stores varchar text in the database."),
  *   settings = {
@@ -34,7 +33,7 @@ class TextItem extends TextItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(Field $field) {
+  public static function schema(FieldInterface $field) {
     return array(
       'columns' => array(
         'value' => array(
@@ -63,20 +62,38 @@ class TextItem extends TextItemBase {
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, array &$form_state) {
+  public function getConstraints() {
+    $constraint_manager = \Drupal::typedData()->getValidationConstraintManager();
+    $constraints = parent::getConstraints();
+
+    if ($max_length = $this->getFieldSetting('max_length')) {
+      $constraints[] = $constraint_manager->create('ComplexData', array(
+        'value' => array(
+          'Length' => array(
+            'max' => $max_length,
+            'maxMessage' => t('%name: the text may not be longer than @max characters.', array('%name' => $this->getFieldDefinition()->getFieldLabel(), '@max' => $max_length)),
+          )
+        ),
+      ));
+    }
+
+    return $constraints;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, array &$form_state, $has_data) {
     $element = array();
-    $field = $this->getInstance()->getField();
 
     $element['max_length'] = array(
       '#type' => 'number',
       '#title' => t('Maximum length'),
-      '#default_value' => $field->settings['max_length'],
+      '#default_value' => $this->getFieldSetting('max_length'),
       '#required' => TRUE,
       '#description' => t('The maximum length of the field in characters.'),
       '#min' => 1,
-      // @todo: If $has_data, add a validate handler that only allows
-      // max_length to increase.
-      '#disabled' => $field->hasData(),
+      '#disabled' => $has_data,
     );
 
     return $element;
@@ -91,7 +108,7 @@ class TextItem extends TextItemBase {
     $element['text_processing'] = array(
       '#type' => 'radios',
       '#title' => t('Text processing'),
-      '#default_value' => $this->getInstance()->settings['text_processing'],
+      '#default_value' => $this->getFieldSetting('text_processing'),
       '#options' => array(
         t('Plain text'),
         t('Filtered text (user selects text format)'),

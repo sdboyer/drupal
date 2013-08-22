@@ -28,17 +28,17 @@ function contextual_toolbar() {
   }
 
   $tab['contextual'] = array(
-    '#type' => 'toolbar_item',
     'tab' => array(
       '#type' => 'html_tag',
       '#tag' => 'button',
       '#value' => t('Edit'),
       '#attributes' => array(
-        'class' => array('icon', 'icon-edit'),
+        'class' => array('toolbar-icon', 'toolbar-icon-edit'),
         'role' => 'button',
         'aria-pressed' => 'false',
       ),
     ),
+    '#theme_wrappers' => array('toolbar_tab_wrapper'),
     '#wrapper_attributes' => array(
       'class' => array('hidden', 'contextual-toolbar-tab'),
     ),

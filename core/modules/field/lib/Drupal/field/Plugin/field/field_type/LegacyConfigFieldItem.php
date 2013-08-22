@@ -7,8 +7,9 @@
 
 namespace Drupal\field\Plugin\field\field_type;
 
+use Drupal\Core\Entity\Field\PrepareCacheInterface;
 use Drupal\field\Plugin\Type\FieldType\ConfigFieldItemBase;
-use Drupal\field\Plugin\Core\Entity\Field;
+use Drupal\field\FieldInterface;
 
 /**
  * Plugin implementation for legacy field types.
@@ -23,14 +24,14 @@ use Drupal\field\Plugin\Core\Entity\Field;
  * @todo Remove once all core field types have been converted (see
  * http://drupal.org/node/2014671).
  */
-abstract class LegacyConfigFieldItem extends ConfigFieldItemBase {
+abstract class LegacyConfigFieldItem extends ConfigFieldItemBase implements PrepareCacheInterface {
 
   /**
    * {@inheritdoc}
    */
-  public static function schema(Field $field) {
+  public static function schema(FieldInterface $field) {
     $definition = \Drupal::service('plugin.manager.entity.field.field_type')->getDefinition($field->type);
-    $module = $definition['module'];
+    $module = $definition['provider'];
     module_load_install($module);
     $callback = "{$module}_field_schema";
     if (function_exists($callback)) {
@@ -54,11 +55,11 @@ abstract class LegacyConfigFieldItem extends ConfigFieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, array &$form_state) {
+  public function settingsForm(array $form, array &$form_state, $has_data) {
     if ($callback = $this->getLegacyCallback('settings_form')) {
       // hook_field_settings_form() used to receive the $instance (not actually
       // needed), and the value of field_has_data().
-      return $callback($this->getInstance()->getField(), $this->getInstance(), $this->getInstance()->getField()->hasData());
+      return $callback($this->getInstance()->getField(), $this->getInstance(), $has_data);
     }
     return array();
   }
@@ -117,7 +118,7 @@ abstract class LegacyConfigFieldItem extends ConfigFieldItemBase {
    */
   protected function getLegacyCallback($hook) {
     $definition = $this->getPluginDefinition();
-    $module = $definition['module'];
+    $module = $definition['provider'];
     $callback = "{$module}_field_{$hook}";
     if (function_exists($callback)) {
       return $callback;

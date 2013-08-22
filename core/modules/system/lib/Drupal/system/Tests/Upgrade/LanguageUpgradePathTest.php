@@ -84,9 +84,9 @@ class LanguageUpgradePathTest extends UpgradePathTestBase {
     $spanish_nid = 51;
     $translation_source_nid = 52;
     $translation_nid = 53;
-    // Check directly for the $node->langcode property.
-    $this->assertEqual(node_load($language_none_nid)->langcode, Language::LANGCODE_NOT_SPECIFIED, "'language' property was renamed to 'langcode' for Language::LANGCODE_NOT_SPECIFIED node.");
-    $this->assertEqual(node_load($spanish_nid)->langcode, 'ca', "'language' property was renamed to 'langcode' for Catalan node.");
+    // Check directly for the node langcode.
+    $this->assertEqual(node_load($language_none_nid)->language()->id, Language::LANGCODE_NOT_SPECIFIED, "'language' property was renamed to 'langcode' for Language::LANGCODE_NOT_SPECIFIED node.");
+    $this->assertEqual(node_load($spanish_nid)->language()->id, 'ca', "'language' property was renamed to 'langcode' for Catalan node.");
     // Check that the translation table works correctly.
     $this->drupalGet("node/$translation_source_nid/translate");
     $this->assertResponse(200, 'The translated node has a proper translation table.');
@@ -108,7 +108,7 @@ class LanguageUpgradePathTest extends UpgradePathTestBase {
 
     // A langcode property was added to vocabularies and terms. Check that
     // existing vocabularies and terms got assigned the site default language.
-    $vocabulary = taxonomy_vocabulary_load('tags');
+    $vocabulary = entity_load('taxonomy_vocabulary', 'tags');
     $this->assertEqual($vocabulary->langcode, 'ca');
     $term = db_query('SELECT * FROM {taxonomy_term_data} WHERE tid = :tid', array(':tid' => 1))->fetchObject();
     $this->assertEqual($term->langcode, 'ca');

@@ -48,7 +48,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     // Check that the file exists on disk and in the database.
     $node = node_load($nid, TRUE);
     $node_file_r1 = file_load($node->{$field_name}[Language::LANGCODE_NOT_SPECIFIED][0]['target_id']);
-    $node_vid_r1 = $node->vid;
+    $node_vid_r1 = $node->getRevisionId();
     $this->assertFileExists($node_file_r1, 'New file saved to disk on node creation.');
     $this->assertFileEntryExists($node_file_r1, 'File entry exists in database on node creation.');
     $this->assertFileIsPermanent($node_file_r1, 'File is permanent.');
@@ -57,7 +57,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     $this->replaceNodeFile($test_file, $field_name, $nid);
     $node = node_load($nid, TRUE);
     $node_file_r2 = file_load($node->{$field_name}[Language::LANGCODE_NOT_SPECIFIED][0]['target_id']);
-    $node_vid_r2 = $node->vid;
+    $node_vid_r2 = $node->getRevisionId();
     $this->assertFileExists($node_file_r2, 'Replacement file exists on disk after creating new revision.');
     $this->assertFileEntryExists($node_file_r2, 'Replacement file entry exists in database after creating new revision.');
     $this->assertFileIsPermanent($node_file_r2, 'Replacement file is permanent.');
@@ -75,7 +75,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     $this->drupalPost('node/' . $nid . '/edit', array('revision' => '1'), t('Save and keep published'));
     $node = node_load($nid, TRUE);
     $node_file_r3 = file_load($node->{$field_name}[Language::LANGCODE_NOT_SPECIFIED][0]['target_id']);
-    $node_vid_r3 = $node->vid;
+    $node_vid_r3 = $node->getRevisionId();
     $this->assertEqual($node_file_r2->id(), $node_file_r3->id(), 'Previous revision file still in place after creating a new revision without a new file.');
     $this->assertFileIsPermanent($node_file_r3, 'New revision file is permanent.');
 
@@ -83,7 +83,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     $this->drupalPost('node/' . $nid . '/revisions/' . $node_vid_r1 . '/revert', array(), t('Revert'));
     $node = node_load($nid, TRUE);
     $node_file_r4 = file_load($node->{$field_name}[Language::LANGCODE_NOT_SPECIFIED][0]['target_id']);
-    $node_vid_r4 = $node->vid;
+    $node_vid_r4 = $node->getRevisionId();
     $this->assertEqual($node_file_r1->id(), $node_file_r4->id(), 'Original revision file still in place after reverting to the original revision.');
     $this->assertFileIsPermanent($node_file_r4, 'Original revision file still permanent after reverting to the original revision.');
 
@@ -96,10 +96,10 @@ class FileFieldRevisionTest extends FileFieldTestBase {
 
     // Attach the second file to a user.
     $user = $this->drupalCreateUser();
-    $user->{$field_name}[Language::LANGCODE_NOT_SPECIFIED][0]['target_id'] = $node_file_r3->id();
-    $user->{$field_name}[Language::LANGCODE_NOT_SPECIFIED][0]['display'] = 1;
+    $user->$field_name->target_id = $node_file_r3->id();
+    $user->$field_name->display = 1;
     $user->save();
-    $this->drupalGet('user/' . $user->uid . '/edit');
+    $this->drupalGet('user/' . $user->id() . '/edit');
 
     // Delete the third revision and check that the file is not deleted yet.
     $this->drupalPost('node/' . $nid . '/revisions/' . $node_vid_r3 . '/delete', array(), t('Delete'));
@@ -108,7 +108,7 @@ class FileFieldRevisionTest extends FileFieldTestBase {
     $this->assertFileIsPermanent($node_file_r3, 'Second file entry is still permanent after deleting third revision, since it is being used by the user.');
 
     // Delete the user and check that the file is also deleted.
-    user_delete($user->uid);
+    $user->delete();
     // TODO: This seems like a bug in File API. Clearing the stat cache should
     // not be necessary here. The file really is deleted, but stream wrappers
     // doesn't seem to think so unless we clear the PHP file stat() cache.

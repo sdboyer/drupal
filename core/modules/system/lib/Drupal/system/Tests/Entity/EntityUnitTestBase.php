@@ -57,7 +57,7 @@ abstract class EntityUnitTestBase extends DrupalUnitTestBase {
    *   (optional) Array of permission names to assign to user. The
    *   users_roles tables must be installed before this can be used.
    *
-   * @return \Drupal\user\Plugin\Core\Entity\User
+   * @return \Drupal\user\Entity\User
    *   The created user entity.
    */
   protected function createUser($values = array(), $permissions = array()) {
@@ -91,11 +91,9 @@ abstract class EntityUnitTestBase extends DrupalUnitTestBase {
    *   The reloaded entity.
    */
   protected function reloadEntity(EntityInterface $entity) {
-    $ids = array($entity->id());
     $controller = $this->entityManager->getStorageController($entity->entityType());
-    $controller->resetCache($ids);
-    $entities = $controller->loadMultiple($ids);
-    return reset($entities);
+    $controller->resetCache(array($entity->id()));
+    return $controller->load($entity->id());
   }
 
   /**

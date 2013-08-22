@@ -132,7 +132,7 @@ class UserLoginForm implements FormInterface, ControllerInterface {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, array &$form_state) {
-    $account = $this->storageController->load($form_state['uid'])->getBCEntity();
+    $account = $this->storageController->load($form_state['uid']);
     $form_state['redirect'] = 'user/' . $account->id();
 
     user_login_finalize($account);
@@ -190,7 +190,7 @@ class UserLoginForm implements FormInterface, ControllerInterface {
         }
       }
       // We are not limited by flood control, so try to authenticate.
-      // Set $form_state['uid'] as a flag for user_login_final_validate().
+      // Set $form_state['uid'] as a flag for self::validateFinal().
       $form_state['uid'] = user_authenticate($form_state['values']['name'], $password);
     }
   }

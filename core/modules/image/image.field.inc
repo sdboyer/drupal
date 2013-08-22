@@ -57,7 +57,7 @@ function image_field_info() {
  * Implements hook_field_settings_form().
  */
 function image_field_settings_form($field, $instance) {
-  $defaults = field_info_field_settings($field['type']);
+  $defaults = \Drupal::service('plugin.manager.entity.field.field_type')->getDefaultSettings($field['type']);
   $settings = array_merge($defaults, $field['settings']);
 
   $scheme_options = array();
@@ -226,15 +226,14 @@ function _image_field_resolution_validate($element, &$form_state) {
  * Implements hook_field_presave().
  */
 function image_field_presave(EntityInterface $entity, $field, $instance, $langcode, &$items) {
-
+  $image_factory = Drupal::service('image.factory');
   // Determine the dimensions if necessary.
   foreach ($items as &$item) {
     if (!isset($item['width']) || !isset($item['height'])) {
-      $info = image_get_info(file_load($item['target_id'])->getFileUri());
-
-      if (is_array($info)) {
-        $item['width'] = $info['width'];
-        $item['height'] = $info['height'];
+      $image = $image_factory->get(file_load($item['target_id'])->getFileUri());
+      if ($image->getExtension()) {
+        $item['width'] = $image->getWidth();
+        $item['height'] = $image->getHeight();
       }
     }
   }
@@ -301,11 +300,10 @@ function image_field_widget_process($element, &$form_state, $form) {
       $variables['height'] = $element['#value']['height'];
     }
     else {
-      $info = image_get_info($file->getFileUri());
-
-      if (is_array($info)) {
-        $variables['width'] = $info['width'];
-        $variables['height'] = $info['height'];
+      $image = Drupal::service('image.factory')->get($file->getFileUri());
+      if ($image->getExtension()) {
+        $variables['width'] = $image->getWidth();
+        $variables['height'] = $image->getHeight();
       }
       else {
         $variables['width'] = $variables['height'] = NULL;
@@ -404,7 +402,7 @@ function theme_image_widget($variables) {
   $output .= '<div class="image-widget-data">';
   if (!empty($element['fids']['#value'])) {
     $file = reset($element['#files']);
-    $element['file_' . $file->id()]['filename']['#markup'] .= ' <span class="file-size">(' . format_size($file->getSize()) . ')</span> ';
+    $element['file_' . $file->id()]['filename']['#suffix'] = ' <span class="file-size">(' . format_size($file->getSize()) . ')</span> ';
   }
   $output .= drupal_render_children($element);
   $output .= '</div>';
@@ -426,22 +424,32 @@ function theme_image_widget($variables) {
  */
 function theme_image_formatter($variables) {
   $item = $variables['item'];
+  $image = array();
 
   // Do not output an empty 'title' attribute.
-  if (isset($item['title']) && drupal_strlen($item['title']) == 0) {
-    unset($item['title']);
+  if (isset($item['title']) && drupal_strlen($item['title']) != 0) {
+    $image['#title'] = $item['title'];
   }
 
   if (isset($item['entity']) && empty($item['uri'])) {
-    $item['uri'] = $item['entity']->getFileUri();
+    $image['#uri'] = $item['entity']->getFileUri();
+  }
+  else {
+    $image['#uri'] = $item['uri'];
+  }
+
+  foreach (array('width', 'height', 'alt', 'attributes') as $key) {
+    if (isset($item[$key]) || array_key_exists($key, $item)) {
+      $image["#$key"] = $item[$key];
+    }
   }
 
   if ($variables['image_style']) {
-    $item['style_name'] = $variables['image_style'];
-    $output = theme('image_style', $item);
+    $image['#theme'] = 'image_style';
+    $image['#style_name'] = $variables['image_style'];
   }
   else {
-    $output = theme('image', $item);
+    $image['#theme'] = 'image';
   }
 
   // The link path and link options are both optional, but for the options to be
@@ -451,7 +459,10 @@ function theme_image_formatter($variables) {
     $options = isset($variables['path']['options']) ? $variables['path']['options'] : array();
     // When displaying an image inside a link, the html option must be TRUE.
     $options['html'] = TRUE;
-    $output = l($output, $path, $options);
+    $output = l($image, $path, $options);
+  }
+  else {
+    $output = drupal_render($image);
   }
 
   return $output;

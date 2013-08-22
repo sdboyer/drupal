@@ -7,20 +7,20 @@
 
 namespace Drupal\system\Tests\Common;
 
-use Drupal\simpletest\WebTestBase;
+use Drupal\simpletest\DrupalUnitTestBase;
 use Drupal\Component\Utility\Crypt;
 
 /**
  * Tests the JavaScript system.
  */
-class JavaScriptTest extends WebTestBase {
+class JavaScriptTest extends DrupalUnitTestBase {
 
   /**
    * Enable Language and SimpleTest in the test environment.
    *
    * @var array
    */
-  public static $modules = array('language', 'simpletest', 'common_test', 'path');
+  public static $modules = array('language', 'simpletest', 'common_test', 'system');
 
   /**
    * Stores configured value for JavaScript preprocessing.
@@ -39,7 +39,7 @@ class JavaScriptTest extends WebTestBase {
     parent::setUp();
 
     // Disable preprocessing
-    $config = config('system.performance');
+    $config = \Drupal::config('system.performance');
     $this->preprocess_js = $config->get('js.preprocess');
     $config->set('js.preprocess', 0);
     $config->save();
@@ -51,7 +51,7 @@ class JavaScriptTest extends WebTestBase {
 
   function tearDown() {
     // Restore configured value for JavaScript preprocessing.
-    $config = config('system.performance');
+    $config = \Drupal::config('system.performance');
     $config->set('js.preprocess', $this->preprocess_js);
     $config->save();
     parent::tearDown();
@@ -80,7 +80,7 @@ class JavaScriptTest extends WebTestBase {
     drupal_add_library('system', 'drupalSettings');
     $javascript = drupal_add_js();
     $last_settings = reset($javascript['settings']['data']);
-    $this->assertTrue($last_settings['currentPath'], 'The current path JavaScript setting is set correctly.');
+    $this->assertTrue(array_key_exists('currentPath', $last_settings), 'The current path JavaScript setting is set correctly.');
 
     $javascript = drupal_add_js(array('drupal' => 'rocks', 'dries' => 280342800), 'setting');
     $last_settings = end($javascript['settings']['data']);
@@ -120,7 +120,7 @@ class JavaScriptTest extends WebTestBase {
    */
   function testAggregatedAttributes() {
     // Enable aggregation.
-    config('system.performance')->set('js.preprocess', 1)->save();
+    \Drupal::config('system.performance')->set('js.preprocess', 1)->save();
 
     $default_query_string = variable_get('css_js_query_string', '0');
 
@@ -196,14 +196,6 @@ class JavaScriptTest extends WebTestBase {
     $settings_two['moduleName']['thingiesOnPage']['id1'] = array();
     $this->assertIdentical($settings_one, $parsed_settings['commonTestRealWorldIdentical'], 'drupal_add_js handled real world test case 1 correctly.');
     $this->assertEqual($settings_two, $parsed_settings['commonTestRealWorldAlmostIdentical'], 'drupal_add_js handled real world test case 2 correctly.');
-
-    // Check in a rendered page.
-    $this->drupalGet('common-test/query-string');
-    $this->assertPattern('@<script>.+drupalSettings.+"currentPath":"common-test\\\/query-string"@s', 'currentPath is in the JS settings');
-    $path = array('source' => 'common-test/query-string', 'alias' => 'common-test/currentpath-check');
-    drupal_container()->get('path.crud')->save($path['source'], $path['alias']);
-    $this->drupalGet('common-test/currentpath-check');
-    $this->assertPattern('@<script>.+drupalSettings.+"currentPath":"common-test\\\/query-string"@s', 'currentPath is in the JS settings for an aliased path');
   }
 
   /**
@@ -335,7 +327,7 @@ class JavaScriptTest extends WebTestBase {
     // Now ensure that with aggregation on, one file is made for the
     // 'every_page' files, and one file is made for the others.
     drupal_static_reset('drupal_add_js');
-    $config = config('system.performance');
+    $config = \Drupal::config('system.performance');
     $config->set('js.preprocess', 1);
     $config->save();
     drupal_add_library('system', 'drupal');
@@ -357,7 +349,7 @@ class JavaScriptTest extends WebTestBase {
    */
   function testAggregationOrder() {
     // Enable JavaScript aggregation.
-    config('system.performance')->set('js.preprocess', 1)->save();
+    \Drupal::config('system.performance')->set('js.preprocess', 1)->save();
     drupal_static_reset('drupal_add_js');
 
     // Add two JavaScript files to the current request and build the cache.
@@ -488,9 +480,10 @@ class JavaScriptTest extends WebTestBase {
     $this->assertTrue(strpos($styles, 'core/assets/vendor/farbtastic/farbtastic.css'), 'Stylesheet of library was added to the page.');
 
     $result = drupal_add_library('common_test', 'shorthand.plugin');
-    $path = drupal_get_path('module', 'common_test') . '/js/shorthand.js';
+    $path = drupal_get_path('module', 'common_test') . '/js/shorthand.js?v=0.8.3.37';
     $scripts = drupal_get_js();
     $this->assertTrue(strpos($scripts, $path), 'JavaScript specified in hook_library_info() using shorthand format (without any options) was added to the page.');
+    $this->assertEqual(substr_count($scripts, 'shorthand.js'), 1, 'Shorthand JavaScript file only added once.');
   }
 
   /**
@@ -567,9 +560,12 @@ class JavaScriptTest extends WebTestBase {
    * Tests JavaScript files that have querystrings attached get added right.
    */
   function testAddJsFileWithQueryString() {
-    $this->drupalGet('common-test/query-string');
+    $js = drupal_get_path('module', 'node') . '/node.js';
+    drupal_add_js($js);
+
     $query_string = variable_get('css_js_query_string', '0');
-    $this->assertRaw(drupal_get_path('module', 'node') . '/node.js?' . $query_string, 'Query string was appended correctly to js.');
+    $scripts = drupal_get_js();
+    $this->assertTrue(strpos($scripts, $js . '?' . $query_string), 'Query string was appended correctly to JS.');
   }
 
   /**

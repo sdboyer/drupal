@@ -280,21 +280,34 @@ abstract class HandlerBase extends PluginBase {
     // be moved to their fieldset during preRender.
     $form['#pre_render'][] = 'views_ui_pre_render_add_fieldset_markup';
 
+    parent::buildOptionsForm($form, $form_state);
+
+    $form['fieldsets'] = array(
+      '#type' => 'value',
+      '#value' => array('more', 'admin_label'),
+    );
+
     $form['admin_label'] = array(
+      '#type' => 'details',
+      '#title' => t('Administrative title'),
+      '#collapsed' => TRUE,
+      '#weight' => 150,
+    );
+    $form['admin_label']['admin_label'] = array(
       '#type' => 'textfield',
       '#title' => t('Administrative title'),
       '#description' => t('This title will be displayed on the views edit page instead of the default one. This might be useful if you have the same item twice.'),
       '#default_value' => $this->options['admin_label'],
-      '#fieldset' => 'more',
+      '#parents' => array('options', 'admin_label'),
     );
 
     // This form is long and messy enough that the "Administrative title" option
-    // belongs in "more options" details at the bottom of the form.
+    // belongs in "Administrative title" fieldset at the bottom of the form.
     $form['more'] = array(
       '#type' => 'details',
       '#title' => t('More'),
       '#collapsed' => TRUE,
-      '#weight' => 150,
+      '#weight' => 200,
     );
     // Allow to alter the default values brought into the form.
     // @todo Do we really want to keep this hook.
@@ -834,7 +847,7 @@ abstract class HandlerBase extends PluginBase {
       $this->defaultExposeOptions();
     }
 
-    $form_state['view']->get('executable')->setItem($form_state['display_id'], $form_state['type'], $form_state['id'], $item);
+    $form_state['view']->getExecutable()->setItem($form_state['display_id'], $form_state['type'], $form_state['id'], $item);
 
     $form_state['view']->addFormToStack($form_state['form_key'], $form_state['display_id'], $form_state['type'], $form_state['id'], TRUE, TRUE);
 
@@ -862,7 +875,7 @@ abstract class HandlerBase extends PluginBase {
     }
 
     $override = NULL;
-    $executable = $form_state['view']->get('executable');
+    $executable = $form_state['view']->getExecutable();
     if ($executable->display_handler->useGroupBy() && !empty($item['group_type'])) {
       if (empty($executable->query)) {
         $executable->initQuery();
@@ -887,7 +900,7 @@ abstract class HandlerBase extends PluginBase {
     $handler->unpackOptions($handler->options, $options, NULL, FALSE);
 
     // Store the item back on the view.
-    $executable = $form_state['view']->get('executable');
+    $executable = $form_state['view']->getExecutable();
     $executable->temporary_options[$type][$form_state['id']] = $handler->options;
 
     // @todo Decide if \Drupal\views_ui\Form\Ajax\ViewsFormBase::getForm() is

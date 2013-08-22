@@ -28,7 +28,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
 
     // Create an alias for the node so we can test aliases.
     $path = array(
-      'source' => 'node/' . $this->node->nid,
+      'source' => 'node/' . $this->node->id(),
       'alias' => $this->randomName(8),
     );
     $this->container->get('path.crud')->save($path['source'], $path['alias']);
@@ -38,7 +38,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
       array('path' => ''),
       array('path' => 'admin'),
       array('path' => 'admin/config/system/site-information'),
-      array('path' => "node/{$this->node->nid}/edit"),
+      array('path' => 'node/' . $this->node->id() . '/edit'),
       array('path' => $path['alias']),
     );
 
@@ -64,7 +64,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
    */
   function testShortcutQuickLink() {
     theme_enable(array('seven'));
-    config('system.theme')->set('admin', 'seven')->save();
+    \Drupal::config('system.theme')->set('admin', 'seven')->save();
     variable_set('node_admin_theme', TRUE);
 
     $link = reset($this->set->links);
@@ -136,7 +136,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
    */
   function testNoShortcutLink() {
     // Change to a theme that displays shortcuts.
-    config('system.theme')
+    \Drupal::config('system.theme')
       ->set('default', 'seven')
       ->save();
 

@@ -32,14 +32,14 @@ class LegacyAccessSubscriber implements EventSubscriberInterface {
 
     $request_attributes = $event->getRequest()->attributes;
 
-    $router_item = $request_attributes->get('drupal_menu_item');
+    $router_item = $request_attributes->get('_drupal_menu_item');
 
     // For legacy routes we do not allow any user not authenticated by cookie
     // provider.
     $provider = $request_attributes->get('_authentication_provider');
     if ($request_attributes->get('_legacy') && $provider && $provider != 'cookie') {
       $GLOBALS['user'] = drupal_anonymous_user();
-      $request_attributes->set('account', $GLOBALS['user']);
+      $request_attributes->set('_account', $GLOBALS['user']);
       throw new AccessDeniedHttpException();
     }
 

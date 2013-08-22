@@ -5,14 +5,14 @@
  * Page callbacks for the taxonomy module.
  */
 
-use Drupal\taxonomy\Plugin\Core\Entity\Term;
-use Drupal\taxonomy\Plugin\Core\Entity\Vocabulary;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\taxonomy\Entity\Vocabulary;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Menu callback; displays all nodes associated with a term.
  *
- * @param Drupal\taxonomy\Plugin\Core\Entity\Term $term
+ * @param Drupal\taxonomy\Entity\Term $term
  *   The taxonomy term entity.
  */
 function taxonomy_term_page(Term $term) {
@@ -44,7 +44,7 @@ function taxonomy_term_page(Term $term) {
   }
 
   $build['taxonomy_terms'] = taxonomy_term_view_multiple(array($term->id() => $term));
-  if ($nids = taxonomy_select_nodes($term->id(), TRUE, config('node.settings')->get('items_per_page'))) {
+  if ($nids = taxonomy_select_nodes($term->id(), TRUE, Drupal::config('node.settings')->get('items_per_page'))) {
     $nodes = node_load_multiple($nids);
     $build['nodes'] = node_view_multiple($nodes);
     $build['pager'] = array(
@@ -65,16 +65,16 @@ function taxonomy_term_page(Term $term) {
 /**
  * Generate the content feed for a taxonomy term.
  *
- * @param Drupal\taxonomy\Plugin\Core\Entity\Term $term
+ * @param Drupal\taxonomy\Entity\Term $term
  *   The taxonomy term entity.
  */
 function taxonomy_term_feed(Term $term) {
   $channel['link'] = url('taxonomy/term/' . $term->id(), array('absolute' => TRUE));
-  $channel['title'] = config('system.site')->get('name') . ' - ' . $term->label();
+  $channel['title'] = Drupal::config('system.site')->get('name') . ' - ' . $term->label();
   // Only display the description if we have a single term, to avoid clutter and confusion.
   // HTML will be removed from feed description.
   $channel['description'] = check_markup($term->description->value, $term->format->value, '', TRUE);
-  $nids = taxonomy_select_nodes($term->id(), FALSE, config('system.rss')->get('items.limit'));
+  $nids = taxonomy_select_nodes($term->id(), FALSE, Drupal::config('system.rss')->get('items.limit'));
 
   return node_feed($nids, $channel);
 }

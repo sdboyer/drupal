@@ -14,7 +14,7 @@ use Drupal\Core\Session\AccountInterface;
 /**
  * Defines an access controller for the node type entity.
  *
- * @see \Drupal\node\Plugin\Core\Entity\NodeType.
+ * @see \Drupal\node\Entity\NodeType.
  */
 class NodeTypeAccessController extends EntityAccessController {
 
@@ -25,6 +25,13 @@ class NodeTypeAccessController extends EntityAccessController {
     if ($operation == 'delete' && $entity->isLocked()) {
       return FALSE;
     }
+    return user_access('administer content types', $account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL) {
     return user_access('administer content types', $account);
   }
 

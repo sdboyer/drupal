@@ -7,8 +7,10 @@
 
 namespace Drupal\field_test\Plugin\field\widget;
 
-use Drupal\Component\Annotation\Plugin;
+
+use Drupal\field\Annotation\FieldWidget;
 use Drupal\Core\Annotation\Translation;
+use Drupal\Core\Entity\Field\FieldInterface;
 use Drupal\field\Plugin\Type\Widget\WidgetBase;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 
@@ -19,9 +21,8 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
  *
  * @see field_test_field_widget_info_alter()
  *
- * @Plugin(
+ * @FieldWidget(
  *   id = "test_field_widget_multiple",
- *   module = "field_test",
  *   label = @Translation("Test widget - multiple"),
  *   settings = {
  *     "test_widget_setting_multiple" = "dummy test string"
@@ -57,10 +58,10 @@ class TestFieldWidgetMultiple extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
+  public function formElement(FieldInterface $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
     $values = array();
-    foreach ($items as $delta => $value) {
-      $values[] = $value['value'];
+    foreach ($items as $delta => $item) {
+      $values[] = $item->value;
     }
     $element += array(
       '#type' => 'textfield',

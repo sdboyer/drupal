@@ -101,7 +101,7 @@ abstract class ViewFormControllerBase extends EntityFormController {
    *   The display_id which is edited on the current request.
    */
   public function getDisplayTabs(ViewUI $view) {
-    $executable = $view->get('executable');
+    $executable = $view->getExecutable();
     $executable->initDisplay();
     $display_id = $this->displayID;
     $tabs = array();
@@ -157,10 +157,10 @@ abstract class ViewFormControllerBase extends EntityFormController {
    */
   public function isDefaultDisplayShown(ViewUI $view) {
     // Always show the default display for advanced users who prefer that mode.
-    $advanced_mode = config('views.settings')->get('ui.show.master_display');
+    $advanced_mode = \Drupal::config('views.settings')->get('ui.show.master_display');
     // For other users, show the default display only if there are no others, and
     // hide it if there's at least one "real" display.
-    $additional_displays = (count($view->get('executable')->displayHandlers) == 1);
+    $additional_displays = (count($view->getExecutable()->displayHandlers) == 1);
 
     return $advanced_mode || $additional_displays;
   }

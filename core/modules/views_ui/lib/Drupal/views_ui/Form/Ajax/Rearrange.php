@@ -53,10 +53,8 @@ class Rearrange extends ViewsFormBase {
     $type = $form_state['type'];
 
     $types = ViewExecutable::viewsHandlerTypes();
-    $executable = $view->get('executable');
-    if (!$executable->setDisplay($display_id)) {
-      views_ajax_error(t('Invalid display id @display', array('@display' => $display_id)));
-    }
+    $executable = $view->getExecutable();
+    $executable->setDisplay($display_id);
     $display = &$executable->displayHandlers->get($display_id);
     $form['#title'] = t('Rearrange @type', array('@type' => $types[$type]['ltitle']));
     $form['#section'] = $display_id . 'rearrange-item';
@@ -136,7 +134,7 @@ class Rearrange extends ViewsFormBase {
    */
   public function submitForm(array &$form, array &$form_state) {
     $types = ViewExecutable::viewsHandlerTypes();
-    $display = &$form_state['view']->get('executable')->displayHandlers->get($form_state['display_id']);
+    $display = &$form_state['view']->getExecutable()->displayHandlers->get($form_state['display_id']);
 
     $old_fields = $display->getOption($types[$form_state['type']]['plural']);
     $new_fields = $order = array();

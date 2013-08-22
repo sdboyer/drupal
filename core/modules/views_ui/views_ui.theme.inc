@@ -8,14 +8,6 @@
 use Drupal\Core\Template\Attribute;
 
 /**
- * Generic <div> container function.
- */
-function theme_views_ui_container($variables) {
-  $element = $variables['element'];
-  return '<div' . new Attribute($element['#attributes']) . '>' . $element['#children'] . '</div>';
-}
-
-/**
  * Prepares variables for Views UI display tab setting templates.
  *
  * Default template: views-ui-display-tab-setting.html.twig.
@@ -89,21 +81,17 @@ function template_preprocess_views_ui_display_tab_bucket(&$variables) {
 }
 
 /**
- * Implements hook_preprocess_HOOK() for theme_views_ui_view_info().
+ * Prepares variables for Views UI View info templates.
+ *
+ * Default template: views-ui-view-info.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - view: The View object.
  */
 function template_preprocess_views_ui_view_info(&$variables) {
   $variables['title'] = $variables['view']->label();
   $variables['displays'] = empty($variables['displays']) ? t('None') : format_plural(count($variables['displays']), 'Display', 'Displays') . ': ' . '<em>' . implode(', ', $variables['displays']) . '</em>';
-}
-
-/**
- * Returns basic administrative information about a view.
- */
-function theme_views_ui_view_info($variables) {
-  $output = '';
-  $output .= '<h3 class="views-ui-view-title">' . $variables['title'] . "</h3>\n";
-  $output .= '<div class="views-ui-view-displays">' . $variables['displays'] . "</div>\n";
-  return $output;
 }
 
 /**
@@ -192,7 +180,7 @@ function theme_views_ui_build_group_filter_form($variables) {
     drupal_render($form['default_group']['All']),
     '',
     array(
-      'data' => config('views.settings')->get('ui.exposed_filter_any_label') == 'old_any' ? t('&lt;Any&gt;') : t('- Any -'),
+      'data' => Drupal::config('views.settings')->get('ui.exposed_filter_any_label') == 'old_any' ? t('&lt;Any&gt;') : t('- Any -'),
       'colspan' => 4,
       'class' => array('class' => 'any-default-radios-row'),
     ),
@@ -227,8 +215,8 @@ function theme_views_ui_build_group_filter_form($variables) {
 /**
  * Turn the rearrange form into a proper table
  */
-function theme_views_ui_rearrange_filter_form(&$vars) {
-  $form = $vars['form'];
+function theme_views_ui_rearrange_filter_form(&$variables) {
+  $form = $variables['form'];
   $rows = $ungroupable_rows = array();
   // Enable grouping only if > 1 group.
   $grouping = count(array_keys($form['#group_options'])) > 1;
@@ -335,12 +323,16 @@ function theme_views_ui_rearrange_filter_form(&$vars) {
 }
 
 /**
- * Theme the form for the table style plugin
- */
-function theme_views_ui_style_plugin_table($variables) {
+ * Prepares variables for style plugin table templates.
+ *
+ * Default template: views-ui-style-plugin-table.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+*/
+function template_preprocess_views_ui_style_plugin_table(&$variables) {
   $form = $variables['form'];
-
-  $output = drupal_render($form['description_markup']);
 
   $header = array(
     t('Field'),
@@ -371,21 +363,22 @@ function theme_views_ui_style_plugin_table($variables) {
   $rows = array();
   foreach (element_children($form['columns']) as $id) {
     $row = array();
-    $row[] = drupal_render($form['info'][$id]['name']);
-    $row[] = drupal_render($form['columns'][$id]);
-    $row[] = drupal_render($form['info'][$id]['align']);
-    $row[] = drupal_render($form['info'][$id]['separator']);
+    $row[]['data'] = $form['info'][$id]['name'];
+    $row[]['data'] = $form['columns'][$id];
+    $row[]['data'] = $form['info'][$id]['align'];
+    $row[]['data'] = $form['info'][$id]['separator'];
+
     if (!empty($form['info'][$id]['sortable'])) {
       $row[] = array(
-        'data' => drupal_render($form['info'][$id]['sortable']),
+        'data' => $form['info'][$id]['sortable'],
         'align' => 'center',
       );
       $row[] = array(
-        'data' => drupal_render($form['info'][$id]['default_sort_order']),
+        'data' => $form['info'][$id]['default_sort_order'],
         'align' => 'center',
       );
       $row[] = array(
-        'data' => drupal_render($form['default'][$id]),
+        'data' => $form['default'][$id],
         'align' => 'center',
       );
     }
@@ -395,27 +388,32 @@ function theme_views_ui_style_plugin_table($variables) {
       $row[] = '';
     }
     $row[] = array(
-      'data' => drupal_render($form['info'][$id]['empty_column']),
+      'data' => $form['info'][$id]['empty_column'],
       'align' => 'center',
     );
     $row[] = array(
-      'data' => drupal_render($form['info'][$id]['responsive']),
+      'data' => $form['info'][$id]['responsive'],
       'align' => 'center',
     );
     $rows[] = $row;
   }
 
   // Add the special 'None' row.
-  $rows[] = array(t('None'), '', '', '', '', '', array('align' => 'center', 'data' => drupal_render($form['default'][-1])), '', '');
+  $rows[] = array(array('data' => t('None'), 'colspan' => 6), array('align' => 'center', 'data' => $form['default'][-1]), array('colspan' => 2));
 
-  $table = array(
-    '#theme' => 'table',
+  // Unset elements from the form array that are used to build the table so that
+  // they are not rendered twice.
+  unset($form['default']);
+  unset($form['info']);
+  unset($form['columns']);
+
+  $variables['table'] = array(
+    '#type' => 'table',
+    '#theme' => 'table__views_ui_style_plugin_table',
     '#header' => $header,
     '#rows' => $rows,
   );
-  $output .= drupal_render($table);
-  $output .= drupal_render_children($form);
-  return $output;
+  $variables['form'] = $form;
 }
 
 /**
@@ -428,49 +426,49 @@ function theme_views_ui_style_plugin_table($variables) {
  *   - view: The view object.
  *   - section: The section name of a View (e.g. title, rows or pager).
  */
-function template_preprocess_views_ui_view_preview_section(&$vars) {
-  switch ($vars['section']) {
+function template_preprocess_views_ui_view_preview_section(&$variables) {
+  switch ($variables['section']) {
     case 'title':
-      $vars['title'] = t('Title');
-      $links = views_ui_view_preview_section_display_category_links($vars['view'], 'title', $vars['title']);
+      $variables['title'] = t('Title');
+      $links = views_ui_view_preview_section_display_category_links($variables['view'], 'title', $variables['title']);
       break;
     case 'header':
-      $vars['title'] = t('Header');
-      $links = views_ui_view_preview_section_handler_links($vars['view'], $vars['section']);
+      $variables['title'] = t('Header');
+      $links = views_ui_view_preview_section_handler_links($variables['view'], $variables['section']);
       break;
     case 'empty':
-      $vars['title'] = t('No results behavior');
-      $links = views_ui_view_preview_section_handler_links($vars['view'], $vars['section']);
+      $variables['title'] = t('No results behavior');
+      $links = views_ui_view_preview_section_handler_links($variables['view'], $variables['section']);
       break;
     case 'exposed':
       // @todo Sorts can be exposed too, so we may need a better title.
-      $vars['title'] = t('Exposed Filters');
-      $links = views_ui_view_preview_section_display_category_links($vars['view'], 'exposed_form_options', $vars['title']);
+      $variables['title'] = t('Exposed Filters');
+      $links = views_ui_view_preview_section_display_category_links($variables['view'], 'exposed_form_options', $variables['title']);
       break;
     case 'rows':
       // @todo The title needs to depend on what is being viewed.
-      $vars['title'] = t('Content');
-      $links = views_ui_view_preview_section_rows_links($vars['view']);
+      $variables['title'] = t('Content');
+      $links = views_ui_view_preview_section_rows_links($variables['view']);
       break;
     case 'pager':
-      $vars['title'] = t('Pager');
-      $links = views_ui_view_preview_section_display_category_links($vars['view'], 'pager_options', $vars['title']);
+      $variables['title'] = t('Pager');
+      $links = views_ui_view_preview_section_display_category_links($variables['view'], 'pager_options', $variables['title']);
       break;
     case 'more':
-      $vars['title'] = t('More');
-      $links = views_ui_view_preview_section_display_category_links($vars['view'], 'use_more', $vars['title']);
+      $variables['title'] = t('More');
+      $links = views_ui_view_preview_section_display_category_links($variables['view'], 'use_more', $variables['title']);
       break;
     case 'footer':
-      $vars['title'] = t('Footer');
-      $links = views_ui_view_preview_section_handler_links($vars['view'], $vars['section']);
+      $variables['title'] = t('Footer');
+      $links = views_ui_view_preview_section_handler_links($variables['view'], $variables['section']);
       break;
     case 'attachment_before':
       // @todo: Add links to the attachment configuration page.
-      $vars['title'] = t('Attachment before');
+      $variables['title'] = t('Attachment before');
       break;
     case 'attachment_after':
       // @todo: Add links to the attachment configuration page.
-      $vars['title'] = t('Attachment after');
+      $variables['title'] = t('Attachment after');
       break;
   }
 
@@ -483,7 +481,7 @@ function template_preprocess_views_ui_view_preview_section(&$vars) {
         'library' => array(array('contextual', 'drupal.contextual-links')),
       ),
     );
-    $vars['links'] = $build;
+    $variables['links'] = $build;
   }
-  $vars['theme_hook_suggestions'][] = 'views_ui_view_preview_section__' . $vars['section'];
+  $variables['theme_hook_suggestions'][] = 'views_ui_view_preview_section__' . $variables['section'];
 }

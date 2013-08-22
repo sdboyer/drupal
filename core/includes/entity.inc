@@ -65,7 +65,7 @@ function entity_get_bundles($entity_type = NULL) {
       $bundles = $cache->data;
     }
     else {
-      $bundles = module_invoke_all('entity_bundle_info');
+      $bundles = Drupal::moduleHandler()->invokeAll('entity_bundle_info');
       // If no bundles are provided, use the entity type name and label.
       foreach (entity_get_info() as $type => $entity_info) {
         if (!isset($bundles[$type])) {
@@ -102,7 +102,7 @@ function entity_get_bundles($entity_type = NULL) {
  */
 function entity_invoke_bundle_hook($hook, $entity_type, $bundle, $bundle_new = NULL) {
   entity_info_cache_clear();
-  module_invoke_all('entity_bundle_' . $hook, $entity_type, $bundle, $bundle_new);
+  Drupal::moduleHandler()->invokeAll('entity_bundle_' . $hook, array($entity_type, $bundle, $bundle_new));
 }
 
 /**
@@ -293,7 +293,7 @@ function entity_load_by_uuid($entity_type, $uuid, $reset = FALSE) {
  * can either implement the Drupal\Core\Entity\EntityStorageControllerInterface
  * interface, or, most commonly, extend the
  * Drupal\Core\Entity\DatabaseStorageController class.
- * See Drupal\node\Plugin\Core\Entity\Node and Drupal\node\NodeStorageController
+ * See Drupal\node\Entity\Node and Drupal\node\NodeStorageController
  * for an example.
  *
  * @param string $entity_type
@@ -555,7 +555,7 @@ function entity_get_form(EntityInterface $entity, $operation = 'default', array 
  * so the builder function for such forms needs to implement the required
  * functionality instead of calling this function.
  */
-function entity_form_submit_build_entity($entity_type, $entity, $form, &$form_state) {
+function entity_form_submit_build_entity($entity_type, $entity, $form, &$form_state, array $options = array()) {
   $info = entity_get_info($entity_type);
 
   // Copy top-level form values that are not for fields to entity properties,
@@ -576,7 +576,7 @@ function entity_form_submit_build_entity($entity_type, $entity, $form, &$form_st
 
   // Copy field values to the entity.
   if ($info['fieldable']) {
-    field_attach_extract_form_values($entity, $form, $form_state);
+    field_attach_extract_form_values($entity, $form, $form_state, $options);
   }
 }
 
@@ -689,7 +689,7 @@ function entity_view_multiple(array $entities, $view_mode, $langcode = NULL) {
  *   The view mode, or 'default' to retrieve the 'default' display object for
  *   this bundle.
  *
- * @return \Drupal\entity\Plugin\Core\Entity\EntityDisplay
+ * @return \Drupal\entity\Entity\EntityDisplay
  *   The display object associated to the view mode.
  */
 function entity_get_display($entity_type, $bundle, $view_mode) {
@@ -731,7 +731,7 @@ function entity_get_display($entity_type, $bundle, $view_mode) {
  * @param string $view_mode
  *  The view mode being rendered.
  *
- * @return \Drupal\entity\Plugin\Core\Entity\EntityDisplay
+ * @return \Drupal\entity\Entity\EntityDisplay
  *   The display object that should be used to render the entity.
  *
  * @see entity_get_display().
@@ -784,7 +784,7 @@ function entity_get_render_display(EntityInterface $entity, $view_mode) {
  * @param string $form_mode
  *   The form mode.
  *
- * @return \Drupal\entity\Plugin\Core\Entity\EntityFormDisplay
+ * @return \Drupal\entity\Entity\EntityFormDisplay
  *   The EntityFormDisplay object associated to the form mode.
  */
 function entity_get_form_display($entity_type, $bundle, $form_mode) {
@@ -822,7 +822,7 @@ function entity_get_form_display($entity_type, $bundle, $form_mode) {
  * @param string $form_mode
  *   The form mode being rendered.
  *
- * @return \Drupal\entity\Plugin\Core\Entity\EntityFormDisplay
+ * @return \Drupal\entity\Entity\EntityFormDisplay
  *   The form display object that should be used to render the entity form.
  *
  * @see entity_get_form_display().
@@ -865,21 +865,11 @@ function entity_page_access(EntityInterface $entity, $operation = 'view') {
  *   The entity type.
  * @param string $bundle
  *   (optional) The bundle of the entity. Required if the entity supports
- *   bundles, defaults to the entity type otherwise.
+ *   bundles, defaults to NULL otherwise.
  *
  * @return bool
  *   TRUE if the access is granted. FALSE if access is denied.
  */
 function entity_page_create_access($entity_type, $bundle = NULL) {
-  $definition = Drupal::entityManager()->getDefinition($entity_type);
-
-  // Pass in the entity bundle if given and required.
-  $values = array();
-  if ($bundle && isset($definition['entity_keys']['bundle'])) {
-    $values[$definition['entity_keys']['bundle']] = $bundle;
-  }
-  $entity = Drupal::entityManager()
-    ->getStorageController($entity_type)
-    ->create($values);
-  return $entity->access('create');
+  return Drupal::entityManager()->getAccessController($entity_type)->createAccess($bundle);
 }

@@ -36,7 +36,7 @@ class SelectionTest extends WebTestBase {
 
     $nodes = array();
     foreach (array($node1, $node2, $node3) as $node) {
-      $nodes[$node->type][$node->nid] = $node->label();
+      $nodes[$node->getType()][$node->id()] = $node->label();
     }
 
     // Create a field and instance.
@@ -70,7 +70,7 @@ class SelectionTest extends WebTestBase {
     $instance->save();
 
     // Get values from selection handler.
-    $handler = entity_reference_get_selection_handler($instance);
+    $handler = $this->container->get('plugin.manager.entity_reference.selection')->getSelectionHandler($instance);
     $result = $handler->getReferenceableEntities();
 
     $success = FALSE;

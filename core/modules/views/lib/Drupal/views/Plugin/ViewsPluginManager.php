@@ -8,8 +8,7 @@
 namespace Drupal\views\Plugin;
 
 use Drupal\Component\Plugin\PluginManagerBase;
-use Drupal\Component\Plugin\Discovery\DerivativeDiscoveryDecorator;
-use Drupal\Component\Plugin\Factory\DefaultFactory;
+use Drupal\Core\Plugin\Discovery\ContainerDerivativeDiscoveryDecorator;
 use Drupal\Component\Plugin\Discovery\ProcessDecorator;
 use Drupal\Core\Plugin\Discovery\AlterDecorator;
 use Drupal\Core\Plugin\Discovery\AnnotatedClassDiscovery;
@@ -31,8 +30,8 @@ class ViewsPluginManager extends PluginManagerBase {
    *   keyed by the corresponding namespace to look for plugin implementations,
    */
   public function __construct($type, \Traversable $namespaces) {
-    $this->discovery = new AnnotatedClassDiscovery("views/$type", $namespaces);
-    $this->discovery = new DerivativeDiscoveryDecorator($this->discovery);
+    $this->discovery = new AnnotatedClassDiscovery("Plugin/views/$type", $namespaces);
+    $this->discovery = new ContainerDerivativeDiscoveryDecorator($this->discovery);
     $this->discovery = new ProcessDecorator($this->discovery, array($this, 'processDefinition'));
     $this->discovery = new AlterDecorator($this->discovery, 'views_plugins_' . $type);
     $this->discovery = new CacheDecorator($this->discovery, 'views:' . $type, 'views_info');

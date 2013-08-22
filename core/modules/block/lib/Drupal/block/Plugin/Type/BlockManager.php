@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Contains \Drupal\block\Plugin\Type\BlockManager.
  */
 
@@ -10,6 +11,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManager;
 use Drupal\Core\Plugin\DefaultPluginManager;
+
 /**
  * Manages discovery and instantiation of block plugins.
  *
@@ -33,8 +35,21 @@ class BlockManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, LanguageManager $language_manager, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Block', $namespaces);
+    parent::__construct('Plugin/Block', $namespaces);
     $this->alterInfo($module_handler, 'block');
     $this->setCacheBackend($cache_backend, $language_manager, 'block_plugins');
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function processDefinition(&$definition, $plugin_id) {
+    parent::processDefinition($definition, $plugin_id);
+
+    // Ensure that every block has a category.
+    $definition += array(
+      'category' => $definition['provider'],
+    );
+  }
+
 }

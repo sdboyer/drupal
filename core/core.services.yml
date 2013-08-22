@@ -159,7 +159,7 @@ services:
       - { name: persist }
   plugin.manager.entity:
     class: Drupal\Core\Entity\EntityManager
-    arguments: ['@container.namespaces', '@service_container', '@module_handler', '@cache.cache', '@language_manager']
+    arguments: ['@container.namespaces', '@service_container', '@module_handler', '@cache.cache', '@language_manager', '@string_translation']
   plugin.manager.entity.field.field_type:
     class: Drupal\Core\Entity\Field\FieldTypePluginManager
     arguments: ['@container.namespaces', '@cache.entity', '@language_manager', '@module_handler']
@@ -169,6 +169,12 @@ services:
   plugin.manager.action:
     class: Drupal\Core\Action\ActionManager
     arguments: ['@container.namespaces']
+  plugin.manager.menu.local_action:
+    class: Drupal\Core\Menu\LocalActionManager
+    arguments: ['@container.namespaces', '@controller_resolver', '@request', '@module_handler', '@cache.cache', '@language_manager']
+  plugin.manager.menu.local_task:
+    class: Drupal\Core\Menu\LocalTaskManager
+    arguments: ['@container.namespaces', '@controller_resolver', '@request', '@router.route_provider', '@module_handler']
   request:
     class: Symfony\Component\HttpFoundation\Request
     # @TODO the synthetic setting must be uncommented whenever drupal_session_initialize()
@@ -187,6 +193,7 @@ services:
     arguments: ['@event_dispatcher', '@service_container', '@controller_resolver']
   language_manager:
     class: Drupal\Core\Language\LanguageManager
+    arguments: ['@state']
   string_translator.custom_strings:
     class: Drupal\Core\StringTranslation\Translator\CustomStrings
     tags:
@@ -230,6 +237,7 @@ services:
     arguments: ['@router.route_provider', '@path_processor_manager', '@config.factory', '@settings']
     calls:
       - [setRequest, ['@?request']]
+      - [setContext, ['@?router.request_context']]
     tags:
       - { name: persist }
   router.dynamic:
@@ -286,12 +294,24 @@ services:
       - { name: route_filter }
   paramconverter_manager:
     class: Drupal\Core\ParamConverter\ParamConverterManager
+    calls:
+      - [setContainer, ['@service_container']]
     tags:
       - { name: route_enhancer }
+  paramconverter_subscriber:
+    class: Drupal\Core\EventSubscriber\ParamConverterSubscriber
+    tags:
+      - { name: event_subscriber }
+    arguments: ['@paramconverter_manager']
   paramconverter.entity:
     class: Drupal\Core\ParamConverter\EntityConverter
     tags:
       - { name: paramconverter }
+    arguments: ['@plugin.manager.entity']
+  route_subscriber.entity:
+    class: Drupal\Core\EventSubscriber\EntityRouteAlterSubscriber
+    tags:
+      - { name: event_subscriber }
     arguments: ['@plugin.manager.entity']
   reverse_proxy_subscriber:
     class: Drupal\Core\EventSubscriber\ReverseProxySubscriber
@@ -324,9 +344,13 @@ services:
     arguments: ['@content_negotiation']
     tags:
       - { name: route_enhancer, priority: 10 }
+  route_special_attributes_subscriber:
+    class: Drupal\Core\EventSubscriber\SpecialAttributesRouteSubscriber
+    tags:
+      - { name: event_subscriber }
   controller.page:
     class: Drupal\Core\Controller\HtmlPageController
-    arguments: ['@http_kernel']
+    arguments: ['@http_kernel', '@controller_resolver']
   controller.dialog:
     class: Drupal\Core\Controller\DialogController
     arguments: ['@http_kernel']
@@ -346,10 +370,20 @@ services:
     class: Drupal\Core\EventSubscriber\LegacyAccessSubscriber
     tags:
       - { name: event_subscriber }
+  private_key:
+    class: Drupal\Core\PrivateKey
+    arguments: ['@state']
+  csrf_token:
+    class: Drupal\Core\Access\CsrfTokenGenerator
+    arguments: ['@private_key']
+    calls:
+      - [setRequest, ['@?request']]
   access_manager:
     class: Drupal\Core\Access\AccessManager
+    arguments: ['@router.route_provider', '@url_generator', '@paramconverter_manager']
     calls:
       - [setContainer, ['@service_container']]
+      - [setRequest, ['@?request']]
   access_subscriber:
     class: Drupal\Core\EventSubscriber\AccessSubscriber
     tags:
@@ -473,6 +507,9 @@ services:
     class: Drupal\system\Plugin\ImageToolkitInterface
     factory_method: getDefaultToolkit
     factory_service: image.toolkit.manager
+  image.factory:
+    class: Drupal\Core\Image\ImageFactory
+    arguments: ['@image.toolkit']
   breadcrumb:
     class: Drupal\Core\Breadcrumb\BreadcrumbManager
   token:
@@ -490,7 +527,7 @@ services:
     arguments: ['@module_handler']
   date:
     class: Drupal\Core\Datetime\Date
-    arguments: ['@config.factory', '@language_manager']
+    arguments: ['@plugin.manager.entity', '@language_manager']
   feed.bridge.reader:
     class: Drupal\Component\Bridge\ZfExtensionManagerSfContainer
     calls:

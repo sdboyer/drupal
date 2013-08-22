@@ -299,7 +299,7 @@ class Field extends FieldPluginBase {
 
     // defineOptions runs before init/construct, so no $this->field_info
     $field = field_info_field($this->definition['field_name']);
-    $field_type = field_info_field_types($field['type']);
+    $field_type = \Drupal::service('plugin.manager.entity.field.field_type')->getDefinition($field['type']);
     $column_names = array_keys($field['columns']);
     $default_column = '';
     // Try to determine a sensible default.
@@ -393,7 +393,6 @@ class Field extends FieldPluginBase {
         '#options' => drupal_map_assoc($column_names),
         '#default_value' => $this->options['click_sort_column'],
         '#description' => t('Used by Style: Table to determine the actual column to click sort the field on. The default is usually fine.'),
-        '#fieldset' => 'more',
       );
     }
 
@@ -425,7 +424,7 @@ class Field extends FieldPluginBase {
     // Get the currently selected formatter.
     $format = $this->options['type'];
 
-    $settings = $this->options['settings'] + field_info_formatter_settings($format);
+    $settings = $this->options['settings'] + \Drupal::service('plugin.manager.field.formatter')->getDefaultSettings($format);
 
     $options = array(
       'field_definition' => $field,
@@ -625,12 +624,13 @@ class Field extends FieldPluginBase {
         return implode(filter_xss_admin($this->options['separator']), $items);
       }
       else {
-        return theme('item_list',
-          array(
-            'items' => $items,
-            'title' => NULL,
-            'list_type' => $this->options['multi_type'],
-          ));
+        $item_list = array(
+          '#theme' => 'item_list',
+          '#items' => $items,
+          '#title' => NULL,
+          '#list_type' => $this->options['multi_type'],
+        );
+        return drupal_render($item_list);
       }
     }
   }

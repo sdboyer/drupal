@@ -120,11 +120,11 @@ class NodeTranslationUITest extends ContentTranslationUITest {
     foreach ($this->langcodes as $index => $langcode) {
       $user = $this->drupalCreateUser();
       $values[$langcode] = array(
-        'uid' => $user->uid,
+        'uid' => $user->id(),
         'created' => REQUEST_TIME - mt_rand(0, 1000),
       );
       $edit = array(
-        'name' => $user->name,
+        'name' => $user->getUsername(),
         'date[date]' => format_date($values[$langcode]['created'], 'custom', 'Y-m-d'),
         'date[time]' => format_date($values[$langcode]['created'], 'custom', 'H:i:s'),
       );
@@ -151,8 +151,8 @@ class NodeTranslationUITest extends ContentTranslationUITest {
     // Verify translation links.
     $this->drupalGet('admin/content');
     $this->assertResponse(200);
-    $this->assertLinkByHref('node/' . $article->nid . '/translations');
-    $this->assertNoLinkByHref('node/' . $page->nid . '/translations');
+    $this->assertLinkByHref('node/' . $article->id() . '/translations');
+    $this->assertNoLinkByHref('node/' . $page->id() . '/translations');
   }
 
   /**
@@ -165,14 +165,14 @@ class NodeTranslationUITest extends ContentTranslationUITest {
     $article = $this->drupalCreateNode(array('type' => 'article', 'langcode' => 'en'));
 
     // Visit translation page.
-    $this->drupalGet('node/' . $article->nid . '/translations');
+    $this->drupalGet('node/' . $article->id() . '/translations');
     $this->assertRaw('Not translated');
 
     // Delete the only translatable field.
     field_info_field('field_test_et_ui_test')->delete();
 
     // Visit translation page.
-    $this->drupalGet('node/' . $article->nid . '/translations');
+    $this->drupalGet('node/' . $article->id() . '/translations');
     $this->assertRaw('No translatable fields');
   }
 

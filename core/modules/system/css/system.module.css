@@ -186,25 +186,50 @@ table.sticky-header {
  *
  * @see progress.js
  */
-/* Bar */
-.progress .bar {
+.progress {
+  position: relative;
+}
+.progress__track {
   background-color: #fff;
   border: 1px solid;
+  margin-top: 5px;
+  max-width: 100%;
+  min-width: 100px;
+  height: 16px;
+  background-color: #fff;
 }
-.progress .filled {
+.progress__bar {
   background-color: #000;
   height: 1.5em;
-  width: 5px;
+  width: 3%;
 }
-.progress .percentage {
-  float: right; /* LTR */
+.progress__description,
+.progress__percentage {
+  color: #555;
+  overflow: hidden;
+  font-size: .875em;
+  margin-top: 0.2em;
 }
-[dir="rtl"] .progress .percentage {
-  float: left;
+.progress__description {
+  float: left; /* LTR */
 }
-[dir="rtl"] .progress-disabled {
+[dir="rtl"] .progress__description {
   float: right;
 }
+.progress__percentage {
+  float: right; /* LTR */
+}
+[dir="rtl"] .progress__percentage {
+  float: left;
+}
+.progress--small .progress__track {
+  height: 7px;
+}
+.progress--small .progress__bar {
+  height: 7px;
+  background-size: 20px 20px;
+}
+
 /* Throbber */
 .ajax-progress {
   display: inline-block;
@@ -227,16 +252,6 @@ tr .ajax-progress-throbber .throbber {
 }
 .ajax-progress-bar {
   width: 16em;
-}
-
-/**
- *  Keep form elements from overflowing their containers.
- */
-input {
-  max-width: 100%;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
 }
 
 /**
@@ -302,6 +317,7 @@ input {
   overflow: hidden;
   height: 1px;
   width: 1px;
+  word-wrap: normal;
 }
 
 /**
@@ -352,26 +368,4 @@ input {
 }
 .align-justify {
   text-align: justify;
-}
-
-/**
- * Block-level HTML5 display definition.
- *
- * Provides display values for browsers that don't recognize the new elements
- * and therefore display them inline by default.
- */
-article,
-aside,
-details,
-figcaption,
-figure,
-footer,
-header,
-hgroup,
-main,
-menu,
-nav,
-section,
-summary {
-  display: block;
 }

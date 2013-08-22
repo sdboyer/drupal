@@ -161,7 +161,7 @@ class MenuTest extends MenuWebTestBase {
     // Enable the custom menu block.
     $menu_name = 'menu-' . $menu_name; // Drupal prepends the name with 'menu-'.
     // Confirm that the custom menu block is available.
-    $this->drupalGet('admin/structure/block/list/block_plugin_ui:' . config('system.theme')->get('default') . '/add');
+    $this->drupalGet('admin/structure/block/list/' . \Drupal::config('system.theme')->get('default'));
     $this->assertText($label);
 
     // Enable the block.
@@ -188,7 +188,7 @@ class MenuTest extends MenuWebTestBase {
     $this->assertFalse($result, 'All menu links associated to the custom menu were deleted.');
 
     // Make sure there's no delete button on system menus.
-    $this->drupalGet('admin/structure/menu/manage/main/edit');
+    $this->drupalGet('admin/structure/menu/manage/main');
     $this->assertNoRaw('edit-delete', 'The delete button was not found');
 
     // Try to delete the main menu.
@@ -208,9 +208,9 @@ class MenuTest extends MenuWebTestBase {
     $node5 = $this->drupalCreateNode(array('type' => 'article'));
 
     // Add menu links.
-    $item1 = $this->addMenuLink(0, 'node/' . $node1->nid, $menu_name);
-    $item2 = $this->addMenuLink($item1['mlid'], 'node/' . $node2->nid, $menu_name, FALSE);
-    $item3 = $this->addMenuLink($item2['mlid'], 'node/' . $node3->nid, $menu_name);
+    $item1 = $this->addMenuLink(0, 'node/' . $node1->id(), $menu_name);
+    $item2 = $this->addMenuLink($item1['mlid'], 'node/' . $node2->id(), $menu_name, FALSE);
+    $item3 = $this->addMenuLink($item2['mlid'], 'node/' . $node3->id(), $menu_name);
     $this->assertMenuLink($item1['mlid'], array(
       'depth' => 1,
       'has_children' => 1,
@@ -245,8 +245,8 @@ class MenuTest extends MenuWebTestBase {
     $this->verifyMenuLink($item3, $node3, $item2, $node2);
 
     // Add more menu links.
-    $item4 = $this->addMenuLink(0, 'node/' . $node4->nid, $menu_name);
-    $item5 = $this->addMenuLink($item4['mlid'], 'node/' . $node5->nid, $menu_name);
+    $item4 = $this->addMenuLink(0, 'node/' . $node4->id(), $menu_name);
+    $item5 = $this->addMenuLink($item4['mlid'], 'node/' . $node5->id(), $menu_name);
     $this->assertMenuLink($item4['mlid'], array(
       'depth' => 1,
       'has_children' => 1,
@@ -326,7 +326,7 @@ class MenuTest extends MenuWebTestBase {
     // item's weight doesn't get changed because of the old hardcoded delta=50
     $items = array();
     for ($i = -50; $i <= 51; $i++) {
-      $items[$i] = $this->addMenuLink(0, 'node/' . $node1->nid, $menu_name, TRUE, strval($i));
+      $items[$i] = $this->addMenuLink(0, 'node/' . $node1->id(), $menu_name, TRUE, strval($i));
     }
     $this->assertMenuLink($items[51]['mlid'], array('weight' => '51'));
 
@@ -375,11 +375,11 @@ class MenuTest extends MenuWebTestBase {
     $edit = array(
       'label' => $this->randomName(16),
     );
-    $this->drupalPost('admin/structure/menu/manage/main/edit', $edit, t('Save'));
+    $this->drupalPost('admin/structure/menu/manage/main', $edit, t('Save'));
 
     // Make sure menu shows up with new name in block addition.
     $default_theme = variable_get('theme_default', 'stark');
-    $this->drupalget('admin/structure/block/list/block_plugin_ui:' . $default_theme . '/add');
+    $this->drupalget('admin/structure/block/list/' . $default_theme);
     $this->assertText($edit['label']);
   }
 
@@ -430,7 +430,7 @@ class MenuTest extends MenuWebTestBase {
 
     // Test if moving a menu link between menus changes the bundle.
     $node = $this->drupalCreateNode(array('type' => 'article'));
-    $item = $this->addMenuLink(0, 'node/' . $node->nid, 'tools');
+    $item = $this->addMenuLink(0, 'node/' . $node->id(), 'tools');
     $this->moveMenuLink($item, 0, $menu->id());
     $this->assertEqual($item->bundle(), 'tools', 'Menu link bundle matches the menu');
 
@@ -452,7 +452,7 @@ class MenuTest extends MenuWebTestBase {
    * @param string $menu_name Menu name.
    * @param string $weight Menu weight
    *
-   * @return \Drupal\menu_link\Plugin\Core\Entity\MenuLink $menu_link
+   * @return \Drupal\menu_link\Entity\MenuLink $menu_link
    *   A menu link entity.
    */
   function addMenuLink($plid = 0, $link = '<front>', $menu_name = 'tools', $expanded = TRUE, $weight = '0') {
@@ -658,6 +658,24 @@ class MenuTest extends MenuWebTestBase {
 
     // Verify in the database.
     $this->assertMenuLink($mlid, array('hidden' => 0));
+  }
+
+  /**
+   * Test administrative users other than user 1 can access the menu parents AJAX callback.
+   */
+  public function testMenuParentsJsAccess() {
+
+    $admin = $this->drupalCreateUser(array('administer menu'));
+    $this->drupalLogin($admin);
+    // Just check access to the callback overall, the POST data is irrelevant.
+    $this->drupalGetAJAX('admin/structure/menu/parents');
+    $this->assertResponse(200);
+
+    // Do standard user tests.
+    // Login the user.
+    $this->drupalLogin($this->std_user);
+    $this->drupalGetAJAX('admin/structure/menu/parents');
+    $this->assertResponse(403);
   }
 
   /**

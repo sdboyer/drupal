@@ -9,14 +9,13 @@ namespace Drupal\text\Plugin\field\field_type;
 
 use Drupal\Core\Entity\Annotation\FieldType;
 use Drupal\Core\Annotation\Translation;
-use Drupal\field\Plugin\Core\Entity\Field;
+use Drupal\field\FieldInterface;
 
 /**
  * Plugin implementation of the 'text_with_summary' field type.
  *
  * @FieldType(
  *   id = "text_with_summary",
- *   module = "text",
  *   label = @Translation("Long text and summary"),
  *   description = @Translation("This field stores long text in the database along with optional summary text."),
  *   instance_settings = {
@@ -64,7 +63,7 @@ class TextWithSummaryItem extends TextItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(Field $field) {
+  public static function schema(FieldInterface $field) {
     return array(
       'columns' => array(
         'value' => array(
@@ -106,35 +105,14 @@ class TextWithSummaryItem extends TextItemBase {
   /**
    * {@inheritdoc}
    */
-  public function getConstraints() {
-    $constraint_manager = \Drupal::typedData()->getValidationConstraintManager();
-    $constraints = parent::getConstraints();
-
-    if (!empty($this->getInstance()->getField()->settings['max_length'])) {
-      $max_length = $this->getInstance()->getField()->settings['max_length'];
-      $constraints[] = $constraint_manager->create('ComplexData', array(
-        'summary' => array(
-          'Length' => array(
-            'max' => $max_length,
-            'maxMessage' => t('%name: the summary may not be longer than @max characters.', array('%name' => $this->getInstance()->label, '@max' => $max_length)),
-          )
-        ),
-      ));
-    }
-
-    return $constraints;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function instanceSettingsForm(array $form, array &$form_state) {
     $element = array();
+    $settings = $this->getFieldSettings();
 
     $element['text_processing'] = array(
       '#type' => 'radios',
       '#title' => t('Text processing'),
-      '#default_value' => $this->getInstance()->settings['text_processing'],
+      '#default_value' => $settings['text_processing'],
       '#options' => array(
         t('Plain text'),
         t('Filtered text (user selects text format)'),
@@ -143,7 +121,7 @@ class TextWithSummaryItem extends TextItemBase {
     $element['display_summary'] = array(
       '#type' => 'checkbox',
       '#title' => t('Summary input'),
-      '#default_value' => $this->getInstance()->settings['display_summary'],
+      '#default_value' => $settings['display_summary'],
       '#description' => t('This allows authors to input an explicit summary, to be displayed instead of the automatically trimmed text when using the "Summary or trimmed" display type.'),
     );
 

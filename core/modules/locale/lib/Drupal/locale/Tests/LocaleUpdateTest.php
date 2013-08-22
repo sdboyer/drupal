@@ -65,7 +65,7 @@ class LocaleUpdateTest extends LocaleUpdateBase {
    */
   function testUpdateProjectsHidden() {
     module_load_include('compare.inc', 'locale');
-    $config = config('locale.settings');
+    $config = \Drupal::config('locale.settings');
 
     // Make the test modules look like a normal custom module.
     \Drupal::state()->set('locale.test_system_info_alter', TRUE);
@@ -97,7 +97,7 @@ class LocaleUpdateTest extends LocaleUpdateBase {
    * for local files only, check for both local and remote files.
    */
   function testUpdateCheckStatus() {
-    $config = config('locale.settings');
+    $config = \Drupal::config('locale.settings');
     // Set a flag to let the locale_test module replace the project data with a
     // set of test projects.
     \Drupal::state()->set('locale.test_projects_alter', TRUE);
@@ -149,7 +149,7 @@ class LocaleUpdateTest extends LocaleUpdateBase {
    *  - Import overwrite: all existing translations
    */
   function testUpdateImportSourceRemote() {
-    $config = config('locale.settings');
+    $config = \Drupal::config('locale.settings');
 
     // Build the test environment.
     $this->setTranslationFiles();
@@ -211,7 +211,7 @@ class LocaleUpdateTest extends LocaleUpdateBase {
    *  - Import overwrite: all existing translations
    */
   function testUpdateImportSourceLocal() {
-    $config = config('locale.settings');
+    $config = \Drupal::config('locale.settings');
 
     // Build the test environment.
     $this->setTranslationFiles();
@@ -265,7 +265,7 @@ class LocaleUpdateTest extends LocaleUpdateBase {
    *  - Import overwrite: only overwrite non-customized translations
    */
   function testUpdateImportModeNonCustomized() {
-    $config = config('locale.settings');
+    $config = \Drupal::config('locale.settings');
 
     // Build the test environment.
     $this->setTranslationFiles();
@@ -301,7 +301,7 @@ class LocaleUpdateTest extends LocaleUpdateBase {
    *  - Import overwrite: don't overwrite any existing translation
    */
   function testUpdateImportModeNone() {
-    $config = config('locale.settings');
+    $config = \Drupal::config('locale.settings');
 
     // Build the test environment.
     $this->setTranslationFiles();
@@ -443,8 +443,8 @@ class LocaleUpdateTest extends LocaleUpdateBase {
 
     // Ensure the translation file is automatically imported when the language
     // was added.
-    $this->assertText(t('One translation file imported.'), t('Language file automatically imported.'));
-    $this->assertText(t('One translation string was skipped because of disallowed or malformed HTML'), t('Language file automatically imported.'));
+    $this->assertText(t('One translation file imported.'), 'Language file automatically imported.');
+    $this->assertText(t('One translation string was skipped because of disallowed or malformed HTML'), 'Language file automatically imported.');
 
     // Ensure the strings were successfully imported.
     $search = array(
@@ -453,7 +453,7 @@ class LocaleUpdateTest extends LocaleUpdateBase {
       'translation' => 'translated',
     );
     $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
-    $this->assertNoText(t('No strings available.'), t('String successfully imported.'));
+    $this->assertNoText(t('No strings available.'), 'String successfully imported.');
 
     // Ensure the multiline string was imported.
     $search = array(
@@ -462,7 +462,7 @@ class LocaleUpdateTest extends LocaleUpdateBase {
       'translation' => 'all',
     );
     $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
-    $this->assertText('Multiline translation string to make sure that import works with it.', t('String successfully imported.'));
+    $this->assertText('Multiline translation string to make sure that import works with it.', 'String successfully imported.');
 
     // Ensure 'Allowed HTML source string' was imported but the translation for
     // 'Another allowed HTML source string' was not because it contains invalid
@@ -473,8 +473,8 @@ class LocaleUpdateTest extends LocaleUpdateBase {
       'translation' => 'all',
     );
     $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
-    $this->assertText('Allowed HTML source string', t('String successfully imported.'));
-    $this->assertNoText('Another allowed HTML source string', t('String with disallowed translation not imported.'));
+    $this->assertText('Allowed HTML source string', 'String successfully imported.');
+    $this->assertNoText('Another allowed HTML source string', 'String with disallowed translation not imported.');
   }
 
 }

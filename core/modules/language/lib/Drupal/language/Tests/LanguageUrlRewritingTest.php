@@ -62,7 +62,7 @@ class LanguageUrlRewritingTest extends WebTestBase {
     $request = $this->prepareRequestForGenerator();
     // Check that URL rewriting is not applied to subrequests.
     $this->drupalGet('language_test/subrequest');
-    $this->assertText($this->web_user->name, 'Page correctly retrieved');
+    $this->assertText($this->web_user->getUsername(), 'Page correctly retrieved');
   }
 
   /**
@@ -114,7 +114,7 @@ class LanguageUrlRewritingTest extends WebTestBase {
     $this->rebuildContainer();
 
     // Enable domain configuration.
-    config('language.negotiation')
+    \Drupal::config('language.negotiation')
       ->set('url.source', LANGUAGE_NEGOTIATION_URL_DOMAIN)
       ->save();
 

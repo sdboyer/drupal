@@ -22,7 +22,7 @@ function tracker_page($account = NULL, $set_title = FALSE) {
     $query = db_select('tracker_user', 't')
       ->extend('Drupal\Core\Database\Query\PagerSelectExtender')
       ->addMetaData('base_table', 'tracker_user')
-      ->condition('t.uid', $account->uid);
+      ->condition('t.uid', $account->id());
 
     if ($set_title) {
       // When viewed from user/%user/track, display the name of the user
@@ -68,29 +68,28 @@ function tracker_page($account = NULL, $set_title = FALSE) {
       if ($node->comment_count) {
         $comments = $node->comment_count;
 
-        if ($new = comment_num_new($node->nid)) {
+        if ($new = comment_num_new($node->id())) {
           $comments .= '<br />';
-          $comments .= l(format_plural($new, '1 new', '@count new'), 'node/' . $node->nid, array('fragment' => 'new'));
+          $comments .= l(format_plural($new, '1 new', '@count new'), 'node/' . $node->id(), array('fragment' => 'new'));
         }
       }
 
       $mark_build = array(
         '#theme' => 'mark',
-        '#status' => node_mark($node->nid, $node->changed),
+        '#status' => node_mark($node->id(), $node->getChangedTime()),
       );
 
       $row = array(
         'type' => check_plain(node_get_type_label($node)),
-        // Do not use $node->label(), because $node comes from the database.
-        'title' => array('data' => l($node->title, 'node/' . $node->nid) . ' ' . drupal_render($mark_build)),
-        'author' => array('data' => array('#theme' => 'username', '#account' => $node)),
+        'title' => array('data' => l($node->getTitle(), 'node/' . $node->id()) . ' ' . drupal_render($mark_build)),
+        'author' => array('data' => array('#theme' => 'username', '#account' => $node->getAuthor())),
         'replies' => array('class' => array('replies'), 'data' => $comments),
         'last updated' => array('data' => t('!time ago', array('!time' => format_interval(REQUEST_TIME - $node->last_activity)))),
       );
 
       // Adds extra RDFa markup to the $row array if the RDF module is enabled.
       if (module_exists('rdf')) {
-        $mapping = rdf_get_mapping('node', $node->type);
+        $mapping = rdf_get_mapping('node', $node->getType());
         // Adds RDFa markup to the title of the node. Because the RDFa markup is
         // added to the td tag which might contain HTML code, we specify an
         // empty datatype to ensure the value of the title read by the RDFa
@@ -125,7 +124,7 @@ function tracker_page($account = NULL, $set_title = FALSE) {
         // node the RDFa annotations above apply to. We move the content of
         // $row to a 'data' sub array so we can specify attributes for the row.
         $row = array('data' => $row);
-        $row['about'] = url('node/' . $node->nid);
+        $row['about'] = url('node/' . $node->id());
       }
       $rows[] = $row;
     }

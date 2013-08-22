@@ -10,10 +10,7 @@ namespace Drupal\views_ui;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\views\ViewExecutable;
-use Drupal\Core\Entity\EntityControllerInterface;
 use Drupal\user\TempStoreFactory;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Form controller for the Views edit form.
  */
-class ViewEditFormController extends ViewFormControllerBase implements EntityControllerInterface {
+class ViewEditFormController extends ViewFormControllerBase {
 
   /**
    * The views temp store.
@@ -40,16 +37,12 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
   /**
    * Constructs a new ViewEditFormController object.
    *
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface
-   *   The module handler service.
    * @param \Drupal\user\TempStoreFactory $temp_store_factory
    *   The factory for the temp store object.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request object.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, TempStoreFactory $temp_store_factory, Request $request) {
-    parent::__construct($module_handler);
-
+  public function __construct(TempStoreFactory $temp_store_factory, Request $request) {
     $this->tempStore = $temp_store_factory->get('views');
     $this->request = $request;
   }
@@ -57,9 +50,8 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, $entity_type, array $entity_info, $operation = NULL) {
+  public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('module_handler'),
       $container->get('user.tempstore'),
       $container->get('request')
     );
@@ -82,7 +74,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
     $form_state['no_cache'] = TRUE;
 
     if ($display_id) {
-      if (!$view->get('executable')->setDisplay($display_id)) {
+      if (!$view->getExecutable()->setDisplay($display_id)) {
         $form['#markup'] = t('Invalid display id @display', array('@display' => $display_id));
         return $form;
       }
@@ -95,7 +87,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
     $form['#attached']['library'][] = array('system', 'drupal.states');
     $form['#attached']['library'][] = array('system', 'drupal.tabledrag');
 
-    if (!config('views.settings')->get('no_javascript')) {
+    if (!\Drupal::config('views.settings')->get('no_javascript')) {
       $form['#attached']['library'][] = array('views_ui', 'views_ui.admin');
     }
 
@@ -176,8 +168,8 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
       $display_title = $this->getDisplayLabel($view, $display_id, FALSE);
 
       // Add a text that the display is disabled.
-      if ($view->get('executable')->displayHandlers->has($display_id)) {
-        if (!$view->get('executable')->displayHandlers->get($display_id)->isEnabled()) {
+      if ($view->getExecutable()->displayHandlers->has($display_id)) {
+        if (!$view->getExecutable()->displayHandlers->get($display_id)->isEnabled()) {
           $form['displays']['settings']['disabled']['#markup'] = t('This display is disabled.');
         }
       }
@@ -194,7 +186,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
       }
       // Mark disabled displays as such.
 
-      if ($view->get('executable')->displayHandlers->has($display_id) && !$view->get('executable')->displayHandlers->get($display_id)->isEnabled()) {
+      if ($view->getExecutable()->displayHandlers->has($display_id) && !$view->getExecutable()->displayHandlers->get($display_id)->isEnabled()) {
         $tab_content['#attributes']['class'][] = 'views-display-disabled';
       }
       $form['displays']['settings']['settings_content'] = array(
@@ -243,7 +235,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
     parent::validate($form, $form_state);
 
     $view = $this->entity;
-    foreach ($view->get('executable')->validate() as $display_errors) {
+    foreach ($view->getExecutable()->validate() as $display_errors) {
       foreach ($display_errors as $error) {
         form_set_error('', $error);
       }
@@ -261,16 +253,16 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
     $displays = $view->get('display');
     foreach ($displays as $id => $display) {
       if (!empty($display['deleted'])) {
-        $view->get('executable')->displayHandlers->remove($id);
+        $view->getExecutable()->displayHandlers->remove($id);
         unset($displays[$id]);
       }
     }
     // Rename display ids if needed.
-    foreach ($view->get('executable')->displayHandlers as $id => $display) {
+    foreach ($view->getExecutable()->displayHandlers as $id => $display) {
       if (!empty($display->display['new_id'])) {
         $new_id = $display->display['new_id'];
-        $view->get('executable')->displayHandlers->set($new_id, $view->get('executable')->displayHandlers->get($id));
-        $view->get('executable')->displayHandlers->get($new_id)->display['id'] = $new_id;
+        $view->getExecutable()->displayHandlers->set($new_id, $view->getExecutable()->displayHandlers->get($id));
+        $view->getExecutable()->displayHandlers->get($new_id)->display['id'] = $new_id;
 
         $displays[$new_id] = $displays[$id];
         unset($displays[$id]);
@@ -295,8 +287,8 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
           continue;
         }
 
-        if (($display->getPluginId() == 'page') && ($old_path == $destination) && ($old_path != $view->get('executable')->displayHandlers->get($id)->getOption('path'))) {
-          $destination = $view->get('executable')->displayHandlers->get($id)->getOption('path');
+        if (($display->getPluginId() == 'page') && ($old_path == $destination) && ($old_path != $view->getExecutable()->displayHandlers->get($id)->getOption('path'))) {
+          $destination = $view->getExecutable()->displayHandlers->get($id)->getOption('path');
           $query->remove('destination');
           // @todo For whatever reason drupal_goto is still using $_GET.
           // @see http://drupal.org/node/1668866
@@ -334,7 +326,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
   public function getDisplayTab($view) {
     $build = array();
     $display_id = $this->displayID;
-    $display = $view->get('executable')->displayHandlers->get($display_id);
+    $display = $view->getExecutable()->displayHandlers->get($display_id);
     // If the plugin doesn't exist, display an error message instead of an edit
     // page.
     if (empty($display)) {
@@ -371,7 +363,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
     // The master display cannot be cloned.
     $is_default = $display['id'] == 'default';
     // @todo: Figure out why getOption doesn't work here.
-    $is_enabled = $view->get('executable')->displayHandlers->get($display['id'])->isEnabled();
+    $is_enabled = $view->getExecutable()->displayHandlers->get($display['id'])->isEnabled();
 
     if ($display['id'] != 'default') {
       $build['top']['#theme_wrappers'] = array('container');
@@ -400,8 +392,8 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
         }
         // Add a link to view the page unless the view is disabled or has no
         // path.
-        elseif ($view->status() && $view->get('executable')->displayHandlers->get($display['id'])->hasPath()) {
-          $path = $view->get('executable')->displayHandlers->get($display['id'])->getPath();
+        elseif ($view->status() && $view->getExecutable()->displayHandlers->get($display['id'])->hasPath()) {
+          $path = $view->getExecutable()->displayHandlers->get($display['id'])->getPath();
           if ($path && (strpos($path, '%') === FALSE)) {
             $build['top']['actions']['path'] = array(
               '#type' => 'link',
@@ -474,7 +466,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
       $build['top']['display_title'] = array(
         '#theme' => 'views_ui_display_tab_setting',
         '#description' => t('Display name'),
-        '#link' => $view->get('executable')->displayHandlers->get($display['id'])->optionLink(check_plain($display_title), 'display_title'),
+        '#link' => $view->getExecutable()->displayHandlers->get($display['id'])->optionLink(check_plain($display_title), 'display_title'),
       );
     }
 
@@ -499,7 +491,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
       '#type' => 'details',
       '#title' => t('Advanced'),
       '#collapsed' => TRUE,
-      '#theme_wrappers' => array('details', 'container'),
+      '#theme_wrappers' => array('details'),
       '#attributes' => array(
         'class' => array(
           'views-display-column',
@@ -509,7 +501,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
     );
 
     // Collapse the details by default.
-    if (config('views.settings')->get('ui.show.advanced_column')) {
+    if (\Drupal::config('views.settings')->get('ui.show.advanced_column')) {
       $build['columns']['third']['#collapsed'] = FALSE;
     }
 
@@ -519,7 +511,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
 
     // Fetch options from the display plugin, with a list of buckets they go into.
     $options = array();
-    $view->get('executable')->displayHandlers->get($display['id'])->optionsSummary($buckets, $options);
+    $view->getExecutable()->displayHandlers->get($display['id'])->optionsSummary($buckets, $options);
 
     // Place each option into its bucket.
     foreach ($options as $id => $option) {
@@ -583,7 +575,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
     $view = $this->entity;
     $id = $form_state['display_id'];
     // setOption doesn't work because this would might affect upper displays
-    $view->get('executable')->displayHandlers->get($id)->setOption('enabled', TRUE);
+    $view->getExecutable()->displayHandlers->get($id)->setOption('enabled', TRUE);
 
     // Store in cache
     $view->cacheSet();
@@ -598,7 +590,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
   public function submitDisplayDisable($form, &$form_state) {
     $view = $this->entity;
     $id = $form_state['display_id'];
-    $view->get('executable')->displayHandlers->get($id)->setOption('enabled', FALSE);
+    $view->getExecutable()->displayHandlers->get($id)->setOption('enabled', FALSE);
 
     // Store in cache
     $view->cacheSet();
@@ -637,7 +629,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
    */
   public function rebuildCurrentTab(ViewUI $view, AjaxResponse $response, $display_id) {
     $this->displayID = $display_id;
-    if (!$view->get('executable')->setDisplay('default')) {
+    if (!$view->getExecutable()->setDisplay('default')) {
       return;
     }
 
@@ -783,7 +775,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
 
     // By setting the current display the changed marker will appear on the new
     // display.
-    $view->get('executable')->current_display = $new_display_id;
+    $view->getExecutable()->current_display = $new_display_id;
     $view->cacheSet();
 
     // Redirect to the new display's edit page.
@@ -801,7 +793,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
     $display_id = $view->addDisplay($display_type);
     // A new display got added so the asterisks symbol should appear on the new
     // display.
-    $view->get('executable')->current_display = $display_id;
+    $view->getExecutable()->current_display = $display_id;
     $view->cacheSet();
 
     // Redirect to the new display's edit page.
@@ -833,7 +825,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
 
     // By setting the current display the changed marker will appear on the new
     // display.
-    $view->get('executable')->current_display = $new_display_id;
+    $view->getExecutable()->current_display = $new_display_id;
     $view->cacheSet();
 
     // Redirect to the new display's edit page.
@@ -852,23 +844,23 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
 
     $option_build['#description'] = $option['title'];
 
-    $option_build['#link'] = $view->get('executable')->displayHandlers->get($display['id'])->optionLink($option['value'], $id, '', empty($option['desc']) ? '' : $option['desc']);
+    $option_build['#link'] = $view->getExecutable()->displayHandlers->get($display['id'])->optionLink($option['value'], $id, '', empty($option['desc']) ? '' : $option['desc']);
 
     $option_build['#links'] = array();
     if (!empty($option['links']) && is_array($option['links'])) {
       foreach ($option['links'] as $link_id => $link_value) {
-        $option_build['#settings_links'][] = $view->get('executable')->displayHandlers->get($display['id'])->optionLink($option['setting'], $link_id, 'views-button-configure', $link_value);
+        $option_build['#settings_links'][] = $view->getExecutable()->displayHandlers->get($display['id'])->optionLink($option['setting'], $link_id, 'views-button-configure', $link_value);
       }
     }
 
-    if (!empty($view->get('executable')->displayHandlers->get($display['id'])->options['defaults'][$id])) {
+    if (!empty($view->getExecutable()->displayHandlers->get($display['id'])->options['defaults'][$id])) {
       $display_id = 'default';
       $option_build['#defaulted'] = TRUE;
     }
     else {
       $display_id = $display['id'];
-      if (!$view->get('executable')->displayHandlers->get($display['id'])->isDefaultDisplay()) {
-        if ($view->get('executable')->displayHandlers->get($display['id'])->defaultableSections($id)) {
+      if (!$view->getExecutable()->displayHandlers->get($display['id'])->isDefaultDisplay()) {
+        if ($view->getExecutable()->displayHandlers->get($display['id'])->defaultableSections($id)) {
           $option_build['#overridden'] = TRUE;
         }
       }
@@ -881,7 +873,7 @@ class ViewEditFormController extends ViewFormControllerBase implements EntityCon
    * Add information about a section to a display.
    */
   public function getFormBucket(ViewUI $view, $type, $display) {
-    $executable = $view->get('executable');
+    $executable = $view->getExecutable();
     $executable->setDisplay($display['id']);
     $executable->initStyle();
 

@@ -201,7 +201,7 @@ class ModuleTest extends ViewUnitTestBase {
     // Test $exclude_view parameter.
     $this->assertFalse(array_key_exists('archive', views_get_views_as_options(TRUE, 'all', 'archive')), 'View excluded from options based on name');
     $this->assertFalse(array_key_exists('archive:default', views_get_views_as_options(FALSE, 'all', 'archive:default')), 'View display excluded from options based on name');
-    $this->assertFalse(array_key_exists('archive', views_get_views_as_options(TRUE, 'all', $archive->get('executable'))), 'View excluded from options based on object');
+    $this->assertFalse(array_key_exists('archive', views_get_views_as_options(TRUE, 'all', $archive->getExecutable())), 'View excluded from options based on object');
 
     // Test the $opt_group parameter.
     $expected_opt_groups = array();
@@ -247,7 +247,7 @@ class ModuleTest extends ViewUnitTestBase {
     // Test using the 'test' style plugin type only returns the test_style and
     // mapping_test plugins.
     $plugins = views_fetch_plugin_names('style', 'test');
-    $this->assertIdentical(array_keys($plugins), array('mapping_test', 'test_style'));
+    $this->assertIdentical(array_keys($plugins), array('mapping_test', 'test_style', 'test_template_style'));
 
     // Test a non existent style plugin type returns no plugins.
     $plugins = views_fetch_plugin_names('style', $this->randomString());
@@ -258,7 +258,7 @@ class ModuleTest extends ViewUnitTestBase {
    * Helper to return an expected views option array.
    *
    * @param array $views
-   *   An array of Drupal\views\Plugin\Core\Entity\View objects for which to
+   *   An array of Drupal\views\Entity\View objects for which to
    *   create an options array.
    *
    * @return array

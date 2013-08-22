@@ -63,10 +63,8 @@ class Display extends ViewsFormBase {
     $display_id = $form_state['display_id'];
     $section = $form_state['section'];
 
-    $executable = $view->get('executable');
-    if (!$executable->setDisplay($display_id)) {
-      views_ajax_error(t('Invalid display id @display', array('@display' => $display_id)));
-    }
+    $executable = $view->getExecutable();
+    $executable->setDisplay($display_id);
     $display = &$executable->display[$display_id];
 
     // Get form from the handler.
@@ -100,7 +98,7 @@ class Display extends ViewsFormBase {
    * Overrides \Drupal\views_ui\Form\Ajax\ViewsFormBase::validateForm().
    */
   public function validateForm(array &$form, array &$form_state) {
-    $form_state['view']->get('executable')->displayHandlers->get($form_state['display_id'])->validateOptionsForm($form['options'], $form_state);
+    $form_state['view']->getExecutable()->displayHandlers->get($form_state['display_id'])->validateOptionsForm($form['options'], $form_state);
 
     if (form_get_errors()) {
       $form_state['rerender'] = TRUE;
@@ -111,7 +109,7 @@ class Display extends ViewsFormBase {
    * Overrides \Drupal\views_ui\Form\Ajax\ViewsFormBase::submitForm().
    */
   public function submitForm(array &$form, array &$form_state) {
-    $form_state['view']->get('executable')->displayHandlers->get($form_state['display_id'])->submitOptionsForm($form['options'], $form_state);
+    $form_state['view']->getExecutable()->displayHandlers->get($form_state['display_id'])->submitOptionsForm($form['options'], $form_state);
 
     $form_state['view']->cacheSet();
   }

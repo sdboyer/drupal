@@ -71,7 +71,7 @@ class Rss extends RowPluginBase {
   /**
    * {@inheritdoc}
    */
-  function render($row) {
+  public function render($row) {
     $entity = $row->_entity;
 
     $item = new \stdClass();
@@ -99,11 +99,13 @@ class Rss extends RowPluginBase {
       ),
     );
 
-    return theme($this->themeFunctions(), array(
-      'view' => $this->view,
-      'options' => $this->options,
-      'row' => $item,
-    ));
+    $build = array(
+      '#theme' => $this->themeFunctions(),
+      '#view' => $this->view,
+      '#options' => $this->options,
+      '#row' => $item,
+    );
+    return drupal_render($build);
   }
 
 }

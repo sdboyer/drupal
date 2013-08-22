@@ -87,12 +87,12 @@ class UserPasswordForm implements FormInterface, ControllerInterface {
       ),
     );
     // Allow logged in users to request this also.
-    if ($user->uid > 0) {
+    if ($user->isAuthenticated()) {
       $form['name']['#type'] = 'value';
-      $form['name']['#value'] = $user->mail;
+      $form['name']['#value'] = $user->getEmail();
       $form['mail'] = array(
         '#prefix' => '<p>',
-        '#markup' =>  t('Password reset instructions will be mailed to %email. You must log out to use the password reset link in the e-mail.', array('%email' => $user->mail)),
+        '#markup' =>  t('Password reset instructions will be mailed to %email. You must log out to use the password reset link in the e-mail.', array('%email' => $user->getEmail())),
         '#suffix' => '</p>',
       );
     }
@@ -117,7 +117,7 @@ class UserPasswordForm implements FormInterface, ControllerInterface {
       $users = $this->userStorageController->loadByProperties(array('name' => $name, 'status' => '1'));
     }
     $account = reset($users);
-    if (isset($account->uid)) {
+    if ($account && $account->id()) {
       form_set_value(array('#parents' => array('account')), $account, $form_state);
     }
     else {
@@ -133,9 +133,9 @@ class UserPasswordForm implements FormInterface, ControllerInterface {
 
     $account = $form_state['values']['account'];
     // Mail one time login URL and instructions using current language.
-    $mail = _user_mail_notify('password_reset', $account->getBCEntity(), $langcode);
+    $mail = _user_mail_notify('password_reset', $account, $langcode);
     if (!empty($mail)) {
-      watchdog('user', 'Password reset instructions mailed to %name at %email.', array('%name' => $account->name, '%email' => $account->mail));
+      watchdog('user', 'Password reset instructions mailed to %name at %email.', array('%name' => $account->getUsername(), '%email' => $account->getEmail()));
       drupal_set_message(t('Further instructions have been sent to your e-mail address.'));
     }
 

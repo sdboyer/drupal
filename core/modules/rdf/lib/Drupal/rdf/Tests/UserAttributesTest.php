@@ -53,15 +53,14 @@ class UserAttributesTest extends WebTestBase {
     $user2 = $this->drupalCreateUser();
     $this->drupalLogin($user1);
 
-    $account_uri = url('user/' . $user2->uid, array('absolute' => TRUE));
-    $person_uri = url('user/' . $user2->uid, array('fragment' => 'me', 'absolute' => TRUE));
+    $account_uri = url('user/' . $user2->id(), array('absolute' => TRUE));
 
     // Parses the user profile page where the default bundle mapping for user
     // should be used.
     $parser = new \EasyRdf_Parser_Rdfa();
     $graph = new \EasyRdf_Graph();
     $base_uri = url('<front>', array('absolute' => TRUE));
-    $parser->parse($graph, $this->drupalGet('user/' . $user2->uid), 'rdfa', $base_uri);
+    $parser->parse($graph, $this->drupalGet('user/' . $user2->id()), 'rdfa', $base_uri);
 
     // Inspects RDF graph output.
     // User type.
@@ -73,7 +72,7 @@ class UserAttributesTest extends WebTestBase {
     // User name.
     $expected_value = array(
       'type' => 'literal',
-      'value' => $user2->name,
+      'value' => $user2->getUsername(),
     );
     $this->assertTrue($graph->hasProperty($account_uri, 'http://xmlns.com/foaf/0.1/name', $expected_value), 'User name found in RDF output (foaf:name).');
 
@@ -87,7 +86,7 @@ class UserAttributesTest extends WebTestBase {
     $parser = new \EasyRdf_Parser_Rdfa();
     $graph = new \EasyRdf_Graph();
     $base_uri = url('<front>', array('absolute' => TRUE));
-    $parser->parse($graph, $this->drupalGet('node/' . $node->nid), 'rdfa', $base_uri);
+    $parser->parse($graph, $this->drupalGet('node/' . $node->id()), 'rdfa', $base_uri);
 
     // Ensures the default bundle mapping for user is used on the Authored By
     // information on the node.
@@ -100,7 +99,7 @@ class UserAttributesTest extends WebTestBase {
     // User name.
     $expected_value = array(
       'type' => 'literal',
-      'value' => $user2->name,
+      'value' => $user2->getUsername(),
     );
     $this->assertTrue($graph->hasProperty($account_uri, 'http://xmlns.com/foaf/0.1/name', $expected_value), 'User name found in RDF output (foaf:name).');
   }

@@ -8,7 +8,7 @@
 namespace Drupal\Core\Plugin;
 
 use Drupal\Component\Plugin\Discovery\CachedDiscoveryInterface;
-use Drupal\Component\Plugin\Discovery\DerivativeDiscoveryDecorator;
+use Drupal\Core\Plugin\Discovery\ContainerDerivativeDiscoveryDecorator;
 use Drupal\Component\Plugin\PluginManagerBase;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Utility\NestedArray;
@@ -60,9 +60,10 @@ class DefaultPluginManager extends PluginManagerBase implements PluginManagerInt
   protected $alterHook;
 
   /**
-   * The plugin's subdirectory, for example views/filter.
+   * The subdirectory within a namespace to look for plugins, or FALSE if the
+   * plugins are in the top level of the namespace.
    *
-   * @var string
+   * @var string|bool
    */
   protected $subdir;
 
@@ -83,11 +84,11 @@ class DefaultPluginManager extends PluginManagerBase implements PluginManagerInt
   /**
    * Creates the discovery object.
    *
-   * @param string $subdir
-   *   The plugin's subdirectory, for example views/filter.
+   * @param string|bool $subdir
+   *   The plugin's subdirectory, for example Plugin/views/filter.
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
-   *   keyed by the corresponding namespace to look for plugin implementations
+   *   keyed by the corresponding namespace to look for plugin implementations.
    * @param array $annotation_namespaces
    *   (optional) The namespaces of classes that can be used as annotations.
    *   Defaults to an empty array.
@@ -98,7 +99,7 @@ class DefaultPluginManager extends PluginManagerBase implements PluginManagerInt
   public function __construct($subdir, \Traversable $namespaces, $annotation_namespaces = array(), $plugin_definition_annotation_name = 'Drupal\Component\Annotation\Plugin') {
     $this->subdir = $subdir;
     $this->discovery = new AnnotatedClassDiscovery($subdir, $namespaces, $annotation_namespaces, $plugin_definition_annotation_name);
-    $this->discovery = new DerivativeDiscoveryDecorator($this->discovery);
+    $this->discovery = new ContainerDerivativeDiscoveryDecorator($this->discovery);
     $this->factory = new ContainerFactory($this);
   }
 

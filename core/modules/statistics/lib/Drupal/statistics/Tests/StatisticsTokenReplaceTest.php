@@ -30,12 +30,12 @@ class StatisticsTokenReplaceTest extends StatisticsTestBase {
     // Create user and node.
     $user = $this->drupalCreateUser(array('create page content'));
     $this->drupalLogin($user);
-    $node = $this->drupalCreateNode(array('type' => 'page', 'uid' => $user->uid));
+    $node = $this->drupalCreateNode(array('type' => 'page', 'uid' => $user->id()));
 
     // Hit the node.
-    $this->drupalGet('node/' . $node->nid);
+    $this->drupalGet('node/' . $node->id());
     // Manually calling statistics.php, simulating ajax behavior.
-    $nid = $node->nid;
+    $nid = $node->id();
     $post = http_build_query(array('nid' => $nid));
     $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
     global $base_url;
@@ -43,7 +43,7 @@ class StatisticsTokenReplaceTest extends StatisticsTestBase {
     $client = \Drupal::httpClient();
     $client->setConfig(array('curl.options' => array(CURLOPT_TIMEOUT => 10)));
     $client->post($stats_path, $headers, $post)->send();
-    $statistics = statistics_get($node->nid);
+    $statistics = statistics_get($node->id());
 
     // Generate and test tokens.
     $tests = array();

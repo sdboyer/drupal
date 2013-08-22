@@ -38,7 +38,7 @@ function file_field_info() {
  * Implements hook_field_settings_form().
  */
 function file_field_settings_form($field, $instance) {
-  $defaults = field_info_field_settings($field['type']);
+  $defaults = \Drupal::service('plugin.manager.entity.field.field_type')->getDefaultSettings($field['type']);
   $settings = array_merge($defaults, $field['settings']);
 
   $form['#attached']['library'][] = array('file', 'drupal.file');
@@ -414,7 +414,7 @@ function file_field_widget_process($element, &$form_state, $form) {
 
   // Add the description field if enabled.
   if ($element['#description_field'] && $item['fids']) {
-    $config = config('file.settings');
+    $config = Drupal::config('file.settings');
     $element['description'] = array(
       '#type' => $config->get('description.type'),
       '#title' => t('Description'),
@@ -428,12 +428,19 @@ function file_field_widget_process($element, &$form_state, $form) {
   // file, the entire group of file fields is updated together.
   if ($element['#cardinality'] != 1) {
     $parents = array_slice($element['#array_parents'], 0, -1);
-    $new_path = 'file/ajax/' . implode('/', $parents) . '/' . $form['form_build_id']['#value'];
+    $new_path = 'file/ajax';
+    $new_options = array(
+      'query' => array(
+        'element_parents' => implode('/', $parents),
+        'form_build_id' => $form['form_build_id']['#value'],
+      ),
+    );
     $field_element = NestedArray::getValue($form, $parents);
     $new_wrapper = $field_element['#id'] . '-ajax-wrapper';
     foreach (element_children($element) as $key) {
       if (isset($element[$key]['#ajax'])) {
         $element[$key]['#ajax']['path'] = $new_path;
+        $element[$key]['#ajax']['options'] = $new_options;
         $element[$key]['#ajax']['wrapper'] = $new_wrapper;
       }
     }
@@ -596,7 +603,7 @@ function theme_file_widget($variables) {
   if (!empty($element['fids']['#value'])) {
     // Add the file size after the file name.
     $file = reset($element['#files']);
-    $element['file_' . $file->id()]['filename']['#markup'] .= ' <span class="file-size">(' . format_size($file->getSize()) . ')</span> ';
+    $element['file_' . $file->id()]['filename']['#suffix'] = ' <span class="file-size">(' . format_size($file->getSize()) . ')</span> ';
   }
   $output .= drupal_render_children($element);
   $output .= '</div>';
@@ -645,7 +652,7 @@ function theme_file_widget_multiple($variables) {
     // Save the uploading row for last.
     if (empty($widget['#files'])) {
       $widget['#title'] = $element['#file_upload_title'];
-      $widget['#description'] = $element['#file_upload_description'];
+      $widget['#description'] = drupal_render($element['#file_upload_description']);
       continue;
     }
 
@@ -703,8 +710,16 @@ function theme_file_widget_multiple($variables) {
 
   drupal_add_tabledrag($table_id, 'order', 'sibling', $weight_class);
 
-  $output = '';
-  $output = empty($rows) ? '' : theme('table', array('header' => $headers, 'rows' => $rows, 'attributes' => array('id' => $table_id)));
+  $build = array(
+    '#theme' => 'table',
+    '#header' => $headers,
+    '#rows' => $rows,
+    '#attributes' => array(
+      'id' => $table_id,
+    ),
+  );
+
+  $output = empty($rows) ? '' : drupal_render($build);
   $output .= drupal_render_children($element);
   return $output;
 }
@@ -804,11 +819,22 @@ function theme_file_formatter_table($variables) {
   foreach ($variables['items'] as $delta => $item) {
     if ($item['display'] && $item['entity']) {
       $rows[] = array(
-        theme('file_link', array('file' => $item['entity'])),
+        array(
+          'data' => array(
+            '#theme' => 'file_link',
+            '#file' => $item['entity'],
+          ),
+        ),
         format_size($item['entity']->getSize()),
       );
     }
   }
 
-  return empty($rows) ? '' : theme('table', array('header' => $header, 'rows' => $rows));
+  $build = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+
+  return empty($rows) ? '' : drupal_render($build);
 }

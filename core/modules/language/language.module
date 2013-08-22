@@ -70,10 +70,7 @@ function language_menu() {
   $items['admin/config/regional/language'] = array(
     'title' => 'Languages',
     'description' => 'Configure languages for content and the user interface.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('language_admin_overview_form'),
-    'access arguments' => array('administer languages'),
-    'file' => 'language.admin.inc',
+    'route_name' => 'language_admin_overview',
     'weight' => -10,
   );
   $items['admin/config/regional/language/list'] = array(
@@ -160,6 +157,8 @@ function language_menu() {
 
 /**
  * Editing or deleting locked languages should not be possible.
+ *
+ * @deprecated Use \Drupal\language\LanguageAccessController instead.
  */
 function language_access_language_edit_or_delete($language) {
   return !$language->locked && user_access('administer languages');
@@ -364,7 +363,7 @@ function language_configuration_element_submit(&$form, &$form_state) {
  *   - language_show: if the language element should be hidden or not.
  */
 function language_save_default_configuration($entity_type, $bundle, $values = array()) {
-  config('language.settings')->set(language_get_default_configuration_settings_key($entity_type, $bundle), array('langcode' => $values['langcode'], 'language_show' => $values['language_show']))->save();
+  Drupal::config('language.settings')->set(language_get_default_configuration_settings_key($entity_type, $bundle), array('langcode' => $values['langcode'], 'language_show' => $values['language_show']))->save();
 }
 
 /**
@@ -381,7 +380,7 @@ function language_save_default_configuration($entity_type, $bundle, $values = ar
  *   - language_show: if the language element is hidden or not.
  */
 function language_get_default_configuration($entity_type, $bundle) {
-  $configuration = config('language.settings')->get(language_get_default_configuration_settings_key($entity_type, $bundle));
+  $configuration = Drupal::config('language.settings')->get(language_get_default_configuration_settings_key($entity_type, $bundle));
   if (is_null($configuration)) {
     $configuration = array();
   }
@@ -398,7 +397,7 @@ function language_get_default_configuration($entity_type, $bundle) {
  *   A string representing the bundle.
  */
 function language_clear_default_configuration($entity_type, $bundle) {
-  config('language.settings')->clear(language_get_default_configuration_settings_key($entity_type, $bundle))->save();
+  Drupal::config('language.settings')->clear(language_get_default_configuration_settings_key($entity_type, $bundle))->save();
 }
 
 /**
@@ -463,8 +462,9 @@ function language_get_default_langcode($entity_type, $bundle) {
 
     case 'authors_default':
       global $user;
-      if (!empty($user->preferred_langcode)) {
-        $default_value = $user->preferred_langcode;
+      $language_code = $user->getPreferredLangcode();
+      if (!empty($language_code)) {
+        $default_value = $language_code;
       }
       else {
         $default_value = $language_interface->id;
@@ -497,7 +497,7 @@ function language_save($language) {
   $language->is_new = $language_entity->isNew();
 
   // Let other modules modify $language before saved.
-  module_invoke_all('language_presave', $language);
+  Drupal::moduleHandler()->invokeAll('language_presave', array($language));
 
   // Assign language properties to language entity.
   $language_entity->label = isset($language->name) ? $language->name : '';
@@ -509,11 +509,11 @@ function language_save($language) {
   $language_entity->save();
   $t_args = array('%language' => $language->name, '%langcode' => $language->id);
   if ($language->is_new) {
-    module_invoke_all('language_insert', $language);
+    Drupal::moduleHandler()->invokeAll('language_insert', array($language));
     watchdog('language', 'The %language (%langcode) language has been created.', $t_args);
   }
   else {
-    module_invoke_all('language_update', $language);
+    Drupal::moduleHandler()->invokeAll('language_update', array($language));
     watchdog('language', 'The %language (%langcode) language has been updated.', $t_args);
   }
 
@@ -522,14 +522,14 @@ function language_save($language) {
     variable_set('language_default', (array) $language);
   }
 
+  // Kill the static cache in language_list().
+  drupal_static_reset('language_list');
+
   // Update language count based on unlocked language count.
   language_update_count();
 
   // Update weight of locked system languages.
   language_update_locked_weights();
-
-  // Kill the static cache in language_list().
-  drupal_static_reset('language_list');
 
   language_negotiation_include();
 
@@ -541,7 +541,7 @@ function language_save($language) {
 }
 
 /**
- * Updates the language_count variable.
+ * Updates the language_count state.
  *
  * This is used to check if a site is multilingual or not.
  *
@@ -554,7 +554,7 @@ function language_update_count() {
       $count++;
     }
   }
-  variable_set('language_count', $count);
+  Drupal::state()->set('language_count', $count);
 }
 
 /**
@@ -571,17 +571,17 @@ function language_delete($langcode) {
   if (isset($languages[$langcode]) && !$languages[$langcode]->locked) {
     $language = $languages[$langcode];
 
-    module_invoke_all('language_delete', $language);
+    Drupal::moduleHandler()->invokeAll('language_delete', array($language));
 
     // Remove the language.
     entity_delete_multiple('language_entity', array($language->id));
+
+    drupal_static_reset('language_list');
 
     language_update_count();
 
     // Update weight of locked system languages.
     language_update_locked_weights();
-
-    drupal_static_reset('language_list');
 
     $t_args = array('%language' => $language->name, '%langcode' => $language->id);
     watchdog('language', 'The %language (%langcode) language has been removed.', $t_args);
@@ -803,7 +803,7 @@ function language_preprocess_block(&$variables) {
  *   Drupal language codes as values.
  */
 function language_get_browser_drupal_langcode_mappings() {
-  $config = config('language.mappings');
+  $config = Drupal::config('language.mappings');
   if ($config->isNew()) {
     return array();
   }
@@ -818,7 +818,7 @@ function language_get_browser_drupal_langcode_mappings() {
  *   Drupal language codes as values.
  */
 function language_set_browser_drupal_langcode_mappings($mappings) {
-  $config = config('language.mappings');
+  $config = Drupal::config('language.mappings');
   $config->setData($mappings);
   $config->save();
 }

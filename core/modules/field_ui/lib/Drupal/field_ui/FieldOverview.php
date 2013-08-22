@@ -7,14 +7,58 @@
 
 namespace Drupal\field_ui;
 
+use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\Field\FieldTypePluginManager;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\field_ui\OverviewBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\field\Plugin\Core\Entity\Field;
+use Drupal\field\Entity\Field;
 
 /**
  * Field UI field overview form.
  */
 class FieldOverview extends OverviewBase {
+
+  /**
+   *  The field type manager.
+   *
+   * @var \Drupal\Core\Entity\Field\FieldTypePluginManager
+   */
+  protected $fieldTypeManager;
+
+  /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * Constructs a new FieldOverview.
+   *
+   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   *   The entity manager.
+   * @param \Drupal\Core\Entity\Field\FieldTypePluginManager $field_type_manager
+   *   The field type manager
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler to invoke hooks on.
+   */
+  public function __construct(EntityManager $entity_manager, FieldTypePluginManager $field_type_manager, ModuleHandlerInterface $module_handler) {
+    parent::__construct($entity_manager);
+    $this->fieldTypeManager = $field_type_manager;
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('plugin.manager.entity'),
+      $container->get('plugin.manager.entity.field.field_type'),
+      $container->get('module_handler')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -45,10 +89,10 @@ class FieldOverview extends OverviewBase {
 
     // Gather bundle information.
     $instances = field_info_instances($this->entity_type, $this->bundle);
-    $field_types = field_info_field_types();
+    $field_types = $this->fieldTypeManager->getDefinitions();
 
     // Field prefix.
-    $field_prefix = config('field_ui.settings')->get('field_prefix');
+    $field_prefix = \Drupal::config('field_ui.settings')->get('field_prefix');
 
     $form += array(
       '#entity_type' => $this->entity_type,
@@ -110,6 +154,8 @@ class FieldOverview extends OverviewBase {
         'href' => "$admin_field_path/delete",
         'attributes' => array('title' => t('Delete instance.')),
       );
+      // Allow altering the operations on this entity listing.
+      $this->moduleHandler->alter('entity_operation', $links, $instance);
       $table[$name]['operations']['data'] = array(
         '#type' => 'operations',
         '#links' => $links,
@@ -281,7 +327,7 @@ class FieldOverview extends OverviewBase {
         $field_name = $field['field_name'];
 
         // Add the field prefix.
-        $field_name = config('field_ui.settings')->get('field_prefix') . $field_name;
+        $field_name = \Drupal::config('field_ui.settings')->get('field_prefix') . $field_name;
         form_set_value($form['fields']['_add_new_field']['field_name'], $field_name, $form_state);
       }
 
@@ -445,7 +491,7 @@ class FieldOverview extends OverviewBase {
    */
   protected function getExistingFieldOptions() {
     $info = array();
-    $field_types = field_info_field_types();
+    $field_types = \Drupal::service('plugin.manager.entity.field.field_type')->getDefinitions();
 
     foreach (field_info_instances() as $existing_entity_type => $bundles) {
       foreach ($bundles as $existing_bundle => $instances) {

@@ -17,15 +17,6 @@ class RoleStorageController extends ConfigStorageController implements RoleStora
   /**
    * {@inheritdoc}
    */
-  public function resetCache(array $ids = NULL) {
-    parent::resetCache($ids);
-    // Clear the user access cache.
-    drupal_static_reset('user_access');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function deleteRoleReferences(array $rids) {
     // Remove the role from all users.
     db_delete('users_roles')
@@ -38,7 +29,7 @@ class RoleStorageController extends ConfigStorageController implements RoleStora
    */
   protected function attachLoad(&$queried_entities, $revision_id = FALSE) {
     // Sort the queried roles by their weight.
-    uasort($queried_entities, 'Drupal\Core\Config\Entity\ConfigEntityBase::sort');
+    uasort($queried_entities, array($this->entityInfo['class'], 'sort'));
 
     parent::attachLoad($queried_entities, $revision_id);
   }

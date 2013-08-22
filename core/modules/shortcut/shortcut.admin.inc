@@ -33,7 +33,7 @@ function shortcut_set_switch($form, &$form_state, $account = NULL) {
   }
 
   // Prepare the list of shortcut sets.
-  $sets = entity_load_multiple('shortcut');
+  $sets = entity_load_multiple('shortcut_set');
   $current_set = shortcut_current_displayed_set($account);
 
   $options = array();
@@ -55,7 +55,7 @@ function shortcut_set_switch($form, &$form_state, $account = NULL) {
 
     $form['set'] = array(
       '#type' => 'radios',
-      '#title' => $user->uid == $account->uid ? t('Choose a set of shortcuts to use') : t('Choose a set of shortcuts for this user'),
+      '#title' => $user->id() == $account->id() ? t('Choose a set of shortcuts to use') : t('Choose a set of shortcuts for this user'),
       '#options' => $options,
       '#default_value' => $current_set->id(),
     );
@@ -85,7 +85,7 @@ function shortcut_set_switch($form, &$form_state, $account = NULL) {
       '#required' => FALSE,
     );
 
-    if ($user->uid != $account->uid) {
+    if ($user->id() != $account->id()) {
       $default_set = shortcut_default_set($account);
       $form['new']['#description'] = t('The new set is created by copying items from the %default set.', array('%default' => $default_set->label()));
     }
@@ -136,18 +136,18 @@ function shortcut_set_switch_submit($form, &$form_state) {
   if ($form_state['values']['set'] == 'new') {
     // Save a new shortcut set with links copied from the user's default set.
     $default_set = shortcut_default_set($account);
-    $set = entity_create('shortcut', array(
+    $set = entity_create('shortcut_set', array(
       'id' => $form_state['values']['id'],
       'label' => $form_state['values']['label'],
       'links' => $default_set->links,
     ));
     $set->save();
     $replacements = array(
-      '%user' => $account->name,
+      '%user' => $account->getUsername(),
       '%set_name' => $set->label(),
       '@switch-url' => url(current_path()),
     );
-    if ($account->uid == $user->uid) {
+    if ($account->id() == $user->id()) {
       // Only administrators can create new shortcut sets, so we know they have
       // access to switch back.
       drupal_set_message(t('You are now using the new %set_name shortcut set. You can edit it from this page or <a href="@switch-url">switch back to a different one.</a>', $replacements));
@@ -161,22 +161,14 @@ function shortcut_set_switch_submit($form, &$form_state) {
     // Switch to a different shortcut set.
     $set = shortcut_set_load($form_state['values']['set']);
     $replacements = array(
-      '%user' => $account->name,
+      '%user' => $account->getUsername(),
       '%set_name' => $set->label(),
     );
-    drupal_set_message($account->uid == $user->uid ? t('You are now using the %set_name shortcut set.', $replacements) : t('%user is now using the %set_name shortcut set.', $replacements));
+    drupal_set_message($account->id() == $user->id() ? t('You are now using the %set_name shortcut set.', $replacements) : t('%user is now using the %set_name shortcut set.', $replacements));
   }
 
   // Assign the shortcut set to the provided user account.
   shortcut_set_assign_user($set, $account);
-}
-
-/**
- * Page callback: provides the shortcut set creation form.
- */
-function shortcut_set_add() {
-  $entity = entity_create('shortcut', array());
-  return Drupal::entityManager()->getForm($entity);
 }
 
 /**
@@ -186,7 +178,7 @@ function shortcut_set_add() {
  *   An associative array containing the structure of the form.
  * @param $form_state
  *   An associative array containing the current state of the form.
- * @param $shortcut_set Drupal\shortcut\Plugin\Core\Entity\Shortcut
+ * @param $shortcut_set Drupal\shortcut\Entity\Shortcut
  *   An object representing the shortcut set to which the link will be added.
  *
  * @return
@@ -334,7 +326,7 @@ function shortcut_link_add_submit($form, &$form_state) {
  *
  * @param $link
  *   An array representing a shortcut link.
- * @param $shortcut_set Drupal\shortcut\Plugin\Core\Entity\Shortcut
+ * @param $shortcut_set Drupal\shortcut\Entity\Shortcut
  *   An object representing the shortcut set which the link will be added to.
  *   The links in the shortcut set will be re-weighted so that the new link is
  *   at the end, and some existing links may be disabled (if the $limit

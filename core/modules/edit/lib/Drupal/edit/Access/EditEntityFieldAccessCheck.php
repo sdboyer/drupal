@@ -7,7 +7,8 @@
 
 namespace Drupal\edit\Access;
 
-use Drupal\Core\Access\AccessCheckInterface;
+use Drupal\Core\Access\StaticAccessCheckInterface;
+use Drupal\edit\Access\EditEntityFieldAccessCheckInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -16,18 +17,17 @@ use Drupal\Core\Entity\EntityInterface;
 /**
  * Access check for editing entity fields.
  */
-class EditEntityFieldAccessCheck implements AccessCheckInterface, EditEntityFieldAccessCheckInterface {
+class EditEntityFieldAccessCheck implements StaticAccessCheckInterface, EditEntityFieldAccessCheckInterface {
 
   /**
-   * Implements AccessCheckInterface::applies().
+   * {@inheritdoc}
    */
-  public function applies(Route $route) {
-    // @see edit.routing.yml
-    return array_key_exists('_access_edit_entity_field', $route->getRequirements());
+  public function appliesTo() {
+    return array('_access_edit_entity_field');
   }
 
   /**
-   * Implements AccessCheckInterface::access().
+   * {@inheritdoc}
    */
   public function access(Route $route, Request $request) {
     // @todo Request argument validation and object loading should happen
@@ -35,11 +35,11 @@ class EditEntityFieldAccessCheck implements AccessCheckInterface, EditEntityFiel
     //   http://drupal.org/node/1798214.
     $this->validateAndUpcastRequestAttributes($request);
 
-    return $this->accessEditEntityField($request->attributes->get('entity'), $request->attributes->get('field_name'));
+    return $this->accessEditEntityField($request->attributes->get('entity'), $request->attributes->get('field_name'))  ? static::ALLOW : static::DENY;
   }
 
   /**
-   * Implements EntityFieldAccessCheckInterface::accessEditEntityField().
+   * {@inheritdoc}
    */
   public function accessEditEntityField(EntityInterface $entity, $field_name) {
     return $entity->access('update') && ($field = field_info_field($field_name)) && field_access('edit', $field, $entity->entityType(), $entity);

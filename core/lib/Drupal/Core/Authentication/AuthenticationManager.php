@@ -110,7 +110,7 @@ class AuthenticationManager implements AuthenticationProviderInterface, Authenti
 
     // Save the authenticated account and the provider that supplied it
     //  for later access.
-    $request->attributes->set('account', $account);
+    $request->attributes->set('_account', $account);
     $request->attributes->set('_authentication_provider', $this->triggeredProviderId);
 
     // The global $user object is included for backward compatibility only and
@@ -141,7 +141,7 @@ class AuthenticationManager implements AuthenticationProviderInterface, Authenti
    * @return array
    *   An array of authentication provider objects.
    */
-  protected function getSortedProviders() {
+  public function getSortedProviders() {
     if (!isset($this->sortedProviders)) {
       // Sort the builders according to priority.
       krsort($this->providerOrders);
@@ -182,7 +182,7 @@ class AuthenticationManager implements AuthenticationProviderInterface, Authenti
     // instead.  Assume those were authenticated by cookie, because the legacy
     // router didn't support anything else.
     // @todo Remove this check once the old router is fully removed.
-    if ($request->attributes->has('drupal_menu_item')) {
+    if ($request->attributes->has('_drupal_menu_item')) {
       $active_providers = array('cookie');
     }
     else {

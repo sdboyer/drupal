@@ -41,14 +41,14 @@ class User extends ArgumentDefaultPluginBase {
     foreach (range(1, 3) as $i) {
       $user = menu_get_object('user', $i);
       if (!empty($user)) {
-        return $user->uid;
+        return $user->id();
       }
     }
 
     foreach (range(1, 3) as $i) {
       $user = menu_get_object('user_uid_optional', $i);
       if (!empty($user)) {
-        return $user->uid;
+        return $user->id();
       }
     }
 
@@ -56,7 +56,7 @@ class User extends ArgumentDefaultPluginBase {
       foreach (range(1, 3) as $i) {
         $node = menu_get_object('node', $i);
         if (!empty($node)) {
-          return $node->uid;
+          return $node->getAuthorId();
         }
       }
     }
@@ -69,7 +69,7 @@ class User extends ArgumentDefaultPluginBase {
       if (arg(0) == 'node' && is_numeric(arg(1))) {
         $node = node_load(arg(1));
         if ($node) {
-          return $node->uid;
+          return $node->getAuthorId();
         }
       }
     }

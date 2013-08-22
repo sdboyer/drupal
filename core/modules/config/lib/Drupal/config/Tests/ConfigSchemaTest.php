@@ -8,6 +8,8 @@
 namespace Drupal\config\Tests;
 
 use Drupal\Core\Config\TypedConfig;
+use Drupal\Core\TypedData\Type\IntegerInterface;
+use Drupal\Core\TypedData\Type\StringInterface;
 use Drupal\simpletest\DrupalUnitTestBase;
 
 /**
@@ -104,10 +106,10 @@ class ConfigSchemaTest extends DrupalUnitTestBase {
     $expected['mapping']['label']['type'] = 'label';
     $expected['mapping']['effects']['type'] = 'sequence';
     $expected['mapping']['effects']['sequence'][0]['type'] = 'mapping';
-    $expected['mapping']['effects']['sequence'][0]['mapping']['name']['type'] = 'string';
-    $expected['mapping']['effects']['sequence'][0]['mapping']['data']['type'] = 'image.effect.[%parent.name]';
+    $expected['mapping']['effects']['sequence'][0]['mapping']['id']['type'] = 'string';
+    $expected['mapping']['effects']['sequence'][0]['mapping']['data']['type'] = 'image.effect.[%parent.id]';
     $expected['mapping']['effects']['sequence'][0]['mapping']['weight']['type'] = 'integer';
-    $expected['mapping']['effects']['sequence'][0]['mapping']['ieid']['type'] = 'string';
+    $expected['mapping']['effects']['sequence'][0]['mapping']['uuid']['type'] = 'string';
     $expected['mapping']['langcode']['label'] = 'Default language';
     $expected['mapping']['langcode']['type'] = 'string';
 
@@ -162,14 +164,16 @@ class ConfigSchemaTest extends DrupalUnitTestBase {
     // Try some simple properties.
     $meta = config_typed()->get('system.site');
     $property = $meta->get('name');
-    $this->assertTrue(is_a($property, 'Drupal\Core\TypedData\Plugin\DataType\String'), 'Got the right wrapper fo the site name property.');
-    $this->assertEqual($property->getType(), 'label', 'Got the right string type for site name data.');
+    $this->assertTrue($property instanceof StringInterface, 'Got the right wrapper fo the site name property.');
     $this->assertEqual($property->getValue(), 'Drupal', 'Got the right string value for site name data.');
+    $definition = $property->getDefinition();
+    $this->assertTrue($definition['translatable'], 'Got the right translatability setting for site name data.');
 
     $property = $meta->get('page')->get('front');
-    $this->assertTrue(is_a($property, 'Drupal\Core\TypedData\Plugin\DataType\String'), 'Got the right wrapper fo the page.front property.');
-    $this->assertEqual($property->getType(), 'path', 'Got the right type for page.front data (undefined).');
+    $this->assertTrue($property instanceof StringInterface, 'Got the right wrapper fo the page.front property.');
     $this->assertEqual($property->getValue(), 'user', 'Got the right value for page.front data.');
+    $definition = $property->getDefinition();
+    $this->assertTrue(empty($definition['translatable']), 'Got the right translatability setting for page.front data.');
 
     // Check nested array of properties.
     $list = $meta->get('page');
@@ -189,10 +193,10 @@ class ConfigSchemaTest extends DrupalUnitTestBase {
 
     // The function is_array() doesn't work with ArrayAccess, so we use count().
     $this->assertTrue(count($effects) == 1, 'Got an array with effects for image.style.large data');
-    $ieid = key($effects->getValue());
-    $effect = $effects[$ieid];
-    $this->assertTrue(count($effect['data']) && $effect['name']->getValue() == 'image_scale', 'Got data for the image scale effect from metadata.');
-    $this->assertEqual($effect['data']['width']->getType(), 'integer', 'Got the right type for the scale effect width.');
+    $uuid = key($effects->getValue());
+    $effect = $effects[$uuid];
+    $this->assertTrue(count($effect['data']) && $effect['id']->getValue() == 'image_scale', 'Got data for the image scale effect from metadata.');
+    $this->assertTrue($effect['data']['width'] instanceof IntegerInterface, 'Got the right type for the scale effect width.');
     $this->assertEqual($effect['data']['width']->getValue(), 480, 'Got the right value for the scale effect width.' );
 
     // Finally update some object using a configuration wrapper.

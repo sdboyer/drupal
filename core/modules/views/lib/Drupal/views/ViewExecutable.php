@@ -8,9 +8,10 @@
 namespace Drupal\views;
 
 use Drupal;
-use Symfony\Component\HttpFoundation\Response;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ViewStorageInterface;
 use Drupal\Component\Utility\Tags;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @defgroup views_objects Objects that represent a View or part of a view
@@ -28,7 +29,7 @@ class ViewExecutable {
   /**
    * The config entity in which the view is stored.
    *
-   * @var Drupal\views\Plugin\Core\Entity\View
+   * @var Drupal\views\Entity\View
    */
   public $storage;
 
@@ -202,7 +203,7 @@ class ViewExecutable {
    * An array containing Drupal\views\Plugin\views\display\DisplayPluginBase
    * objects.
    *
-   * @var array
+   * @var \Drupal\views\DisplayBag
    */
   public $displayHandlers;
 
@@ -569,7 +570,7 @@ class ViewExecutable {
     // Fill our input either from $_GET or from something previously set on the
     // view.
     if (empty($this->exposed_input)) {
-      $this->exposed_input = drupal_container()->get('request')->query->all();
+      $this->exposed_input = \Drupal::request()->query->all();
       // unset items that are definitely not our input:
       foreach (array('page', 'q') as $key) {
         if (isset($this->exposed_input[$key])) {
@@ -636,6 +637,19 @@ class ViewExecutable {
   }
 
   /**
+   * Gets the current display plugin.
+   *
+   * @return \Drupal\views\Plugin\views\display\DisplayPluginBase
+   */
+  public function getDisplay() {
+    if (!isset($this->display_handler)) {
+      $this->initDisplay();
+    }
+
+    return $this->display_handler;
+  }
+
+  /**
    * Sets the current display.
    *
    * @param string $display_id
@@ -688,6 +702,19 @@ class ViewExecutable {
   }
 
   /**
+   * Gets the current style plugin.
+   *
+   * @return \Drupal\views\Plugin\views\style\StylePluginBase
+   */
+  public function getStyle() {
+    if (!isset($this->style_plugin)) {
+      $this->initStyle();
+    }
+
+    return $this->style_plugin;
+  }
+
+  /**
    * Find and initialize the style plugin.
    *
    * Note that arguments may have changed which style plugin we use, so
@@ -718,6 +745,19 @@ class ViewExecutable {
       }
       $this->inited = TRUE;
     }
+  }
+
+  /**
+   * Get the current pager plugin.
+   *
+   * @return \Drupal\views\Plugin\views\pager\PagerPluginBase
+   */
+  public function getPager() {
+    if (!isset($this->pager)) {
+      $this->initPager();
+    }
+
+    return $this->pager;
   }
 
   /**
@@ -935,6 +975,19 @@ class ViewExecutable {
   }
 
   /**
+   * Gets the current query plugin.
+   *
+   * @return \Drupal\views\Plugin\views\query\QueryPluginBase
+   */
+  public function getQuery() {
+    if (!isset($this->query)) {
+      $this->initQuery();
+    }
+
+    return $this->query;
+  }
+
+  /**
    * Do some common building initialization.
    */
   public function initQuery() {
@@ -1074,7 +1127,7 @@ class ViewExecutable {
       $exposed_form->query();
     }
 
-    if (config('views.settings')->get('sql_signature')) {
+    if (\Drupal::config('views.settings')->get('sql_signature')) {
       $this->query->addSignature($this);
     }
 
@@ -1225,7 +1278,7 @@ class ViewExecutable {
     }
 
     drupal_theme_initialize();
-    $config = config('views.settings');
+    $config = \Drupal::config('views.settings');
 
     $exposed_form = $this->display_handler->getPlugin('exposed_form');
     $exposed_form->preRender($this->result);
@@ -1661,7 +1714,7 @@ class ViewExecutable {
       foreach ($this->build_info['breadcrumb'] as $path => $title) {
         // Check to see if the frontpage is in the breadcrumb trail; if it
         // is, we'll remove that from the actual breadcrumb later.
-        if ($path == config('system.site')->get('page.front')) {
+        if ($path == \Drupal::config('system.site')->get('page.front')) {
           $base = FALSE;
           $title = t('Home');
         }
@@ -1687,7 +1740,7 @@ class ViewExecutable {
    * data, ID, and UUID.
    */
   public function createDuplicate() {
-    return $this->storage->createDuplicate()->get('executable');
+    return $this->storage->createDuplicate()->getExecutable();
   }
 
   /**
