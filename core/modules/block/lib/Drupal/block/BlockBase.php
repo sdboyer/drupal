@@ -191,10 +191,10 @@ abstract class BlockBase extends PluginBase implements BlockPluginInterface {
 
     return $transliterated;
   }
-
-}
-
   /**
    * {@inheritdoc}
    */
   public function declareAssets(AssetCollector $collector) {}
+}
+
+
