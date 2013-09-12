@@ -21,7 +21,7 @@ use Drupal\Core\Asset\AssetInterface;
  * The methods load() and getLastModified() are left undefined, although a
  * reusable doLoad() method is available to child classes.
  */
-abstract class BaseAsset implements AssetInterface {
+abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface {
 
   protected $filters;
 
@@ -35,10 +35,6 @@ abstract class BaseAsset implements AssetInterface {
 
   protected $loaded;
 
-  protected $vars;
-
-  protected $values;
-
   protected $metadata;
 
   protected $metadataDefaults;
@@ -49,8 +45,6 @@ abstract class BaseAsset implements AssetInterface {
     $this->filters = new FilterCollection($filters);
     $this->sourceRoot = $sourceRoot;
     $this->sourcePath = $sourcePath;
-    $this->vars = array(); // TODO remove
-    $this->values = array(); // TODO remove
     $this->loaded = FALSE;
 
     foreach ($options as $k => $v) {
@@ -171,36 +165,6 @@ abstract class BaseAsset implements AssetInterface {
     }
 
     $this->targetPath = $targetPath;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getVars() {
-    // TODO turn this off
-    return $this->vars;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setValues(array $values) {
-    // TODO turn this off
-    foreach ($values as $var => $v) {
-      if (!in_array($var, $this->vars, TRUE)) {
-        throw new \InvalidArgumentException(sprintf('The asset with source path "%s" has no variable named "%s".', $this->sourcePath, $var));
-      }
-    }
-
-    $this->values = $values;
-    $this->loaded = FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getValues() {
-    return $this->values;
   }
 
   /**
