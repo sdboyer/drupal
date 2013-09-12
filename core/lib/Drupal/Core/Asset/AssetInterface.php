@@ -10,12 +10,12 @@ namespace Drupal\Core\Asset;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 
 /**
- * Represents an asset.
+ * Represents a CSS or Javascript asset.
  *
  * This interface extends the AssetInterface provided by Assetic to allow
  * more sophisticated logic and behaviors to be attached to individual assets.
  */
-interface AssetInterface extends AsseticAssetInterface, AssetDependencyInterface, \ArrayAccess {
+interface AssetInterface extends AsseticAssetInterface, AssetDependencyInterface {
 
   /**
    * Indicates whether or not this asset is eligible for preprocessing.

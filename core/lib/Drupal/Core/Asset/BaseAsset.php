@@ -156,14 +156,6 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface {
    * {@inheritdoc}
    */
   public function setTargetPath($targetPath) {
-    if ($this->vars) {
-      foreach ($this->vars as $var) {
-        if (FALSE === strpos($targetPath, $var)) {
-          throw new \RuntimeException(sprintf('The asset target path "%s" must contain the variable "{%s}".', $targetPath, $var));
-        }
-      }
-    }
-
     $this->targetPath = $targetPath;
   }
 
@@ -187,35 +179,6 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface {
     }
 
     return !isset($this->metadata);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetExists($offset) {
-    return isset($this->metadata) || isset($this->metadataDefaults);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetGet($offset) {
-    return $this->metadata[$offset] ?: $this->metadataDefaults[$offset];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetSet($offset, $value) {
-    $this->metadata[$offset] = $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetUnset($offset) {
-    // TODO probably a gotcha that this only unsets the explicit val, but still better than breaking pattern around how defaults work
-    unset($this->metadata[$offset]);
   }
 
   /**
