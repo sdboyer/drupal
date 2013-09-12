@@ -88,7 +88,7 @@ class AssetLibraryRepository implements \IteratorAggregate {
   public function get($module, $name) {
     $this->initialize();
     if (!isset($this->libraries[$module][$name])) {
-      throw new \InvalidArgumentException(sprintf('There is library identified by "%s/%s" in the manager.', $module, $name));
+      throw new \InvalidArgumentException(sprintf('There is no library identified by "%s/%s" in the manager.', $module, $name));
     }
 
     return $this->libraries[$module][$name];
@@ -119,6 +119,35 @@ class AssetLibraryRepository implements \IteratorAggregate {
 
     $this->libraries[$module][$name] = $library;
     $this->flattened = NULL;
+  }
+
+  /**
+   * Retrieves the asset objects on which the passed asset depends.
+   *
+   * @param AssetDependencyInterface $asset
+   *   The asset whose dependencies should be retrieved.
+   *
+   * @return array
+   *   An array of AssetInterface objects if any dependencies were found;
+   *   otherwise, an empty array.
+   */
+  public function resolveDependencies(AssetDependencyInterface $asset) {
+    $dependencies = array();
+
+    if ($asset->hasDependencies()) {
+      foreach ($asset->getDependencies() as $info) {
+        try {
+          $dependencies[] = $this->get($info[0], $info[1]);
+        }
+        // TODO should we really try/catch at a potentially high traffic place like this?
+        catch (\InvalidArgumentException $e) {
+          // TODO we're relying on a method that's not in AssetDependencyInterface...
+          watchdog('assets', 'Asset @asset declared a dependency on nonexistent library @module/@name', array($asset->getSourcePath(), $info[0], $info[1]), WATCHDOG_ERROR);
+        }
+      }
+    }
+
+    return $dependencies;
   }
 
   /**
