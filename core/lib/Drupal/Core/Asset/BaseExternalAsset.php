@@ -11,7 +11,7 @@ use Assetic\Util\PathUtils;
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\BaseAsset;
 use Drupal\Core\Asset\Metadata\AssetMetadataBag;
-use Drupal\Core\Asset\Exception\UnsupportedAsseticMethodException;
+use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 abstract class BaseExternalAsset extends BaseAsset {
 
@@ -65,7 +65,7 @@ abstract class BaseExternalAsset extends BaseAsset {
    */
   public function load(FilterInterface $additionalFilter = NULL) {
     // TODO dumb and kinda wrong, decide how to do this right.
-    throw new UnsupportedAsseticMethodException('Drupal does not support the retrieval or manipulation of remote assets.');
+    throw new UnsupportedAsseticBehaviorException('Drupal does not support the retrieval or manipulation of remote assets.');
   }
 
 }
