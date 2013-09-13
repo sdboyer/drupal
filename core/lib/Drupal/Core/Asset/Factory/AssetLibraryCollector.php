@@ -4,11 +4,12 @@
  * Contains Drupal\Core\Asset\AssetLibraryCollector.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Factory;
 
 use Drupal\Component\Utility\Crypt;
 use \Drupal\Core\Asset\AssetLibraryRepository;
-use \Drupal\Core\Asset\AssetCollector;
+use Drupal\Core\Asset\Factory\AssetCollector;
+use Drupal\Core\Asset\Bag\AssetLibrary;
 
 class AssetLibraryCollector {
 

@@ -9,6 +9,7 @@ namespace Drupal\Core\Asset;
 
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\BaseAsset;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 
 abstract class BaseStringAsset extends BaseAsset {
 

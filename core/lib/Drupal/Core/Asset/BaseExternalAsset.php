@@ -10,7 +10,7 @@ namespace Drupal\Core\Asset;
 use Assetic\Util\PathUtils;
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\BaseAsset;
-use Drupal\Core\Asset\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticMethodException;
 
 abstract class BaseExternalAsset extends BaseAsset {

@@ -1682,9 +1682,9 @@ function drupal_collect_assets($data, $options, $type = '') {
   $bag = &drupal_static('global_asset_bag', FALSE);
   $collector = &drupal_static('global_asset_collector', FALSE);
 
-  $bag = ($bag instanceof \Drupal\Core\Asset\AssetBag) ? $bag : new \Drupal\Core\Asset\AssetBag();
-  if (!$collector instanceof \Drupal\Core\Asset\AssetCollector) {
-    $collector = new \Drupal\Core\Asset\AssetCollector();
+  $bag = ($bag instanceof \Drupal\Core\Asset\Bag\AssetBag) ? $bag : new \Drupal\Core\Asset\Bag\AssetBag();
+  if (!$collector instanceof \Drupal\Core\Asset\Factory\AssetCollector) {
+    $collector = new \Drupal\Core\Asset\Factory\AssetCollector();
     $collector->setBag($bag);
   }
 

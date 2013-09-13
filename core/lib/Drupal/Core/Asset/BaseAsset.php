@@ -10,6 +10,7 @@ namespace Drupal\Core\Asset;
 use Assetic\Filter\FilterCollection;
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 
 /**
  * A base abstract asset.

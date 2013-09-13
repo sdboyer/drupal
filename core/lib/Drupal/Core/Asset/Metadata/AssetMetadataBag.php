@@ -5,7 +5,7 @@
  * Contains \Drupal\Core\Asset\AssetMetadataBag.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Metadata;
 
 /**
  * A bag for holding asset metadata.

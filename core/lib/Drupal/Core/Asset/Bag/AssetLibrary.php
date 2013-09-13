@@ -5,9 +5,10 @@
  * Contains \Drupal\Core\Asset\AssetLibrary.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Bag;
 
-use Drupal\Core\Asset\AssetBag;
+use Drupal\Core\Asset\AssetDependencyInterface;
+use Drupal\Core\Asset\Bag\AssetBag;
 
 class AssetLibrary extends AssetBag implements AssetDependencyInterface {
 

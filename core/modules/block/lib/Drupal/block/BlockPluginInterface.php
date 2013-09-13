@@ -10,7 +10,7 @@ namespace Drupal\block;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\Core\Asset\AssetCollector;
+use Drupal\Core\Asset\Factory\AssetCollector;
 
 /**
  * Defines the required interface for all block plugins.
@@ -138,7 +138,7 @@ interface BlockPluginInterface extends ConfigurablePluginInterface, PluginFormIn
   /**
    * Declares the assets required by this block to a collector.
    *
-   * @param \Drupal\Core\Asset\AssetCollector $collector
+   * @param \Drupal\Core\Asset\Factory\AssetCollector $collector
    *
    * @return void
    */

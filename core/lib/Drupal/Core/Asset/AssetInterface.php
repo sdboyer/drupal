@@ -8,6 +8,7 @@
 namespace Drupal\Core\Asset;
 
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 
 /**
  * Represents a CSS or Javascript asset.

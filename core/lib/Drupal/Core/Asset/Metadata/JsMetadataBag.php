@@ -5,7 +5,8 @@
  * Contains \Drupal\Core\Asset\JsMetadataBag.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Metadata;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 
 /**
  * Manages Javascript asset default and explicit metadata.

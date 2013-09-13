@@ -5,7 +5,8 @@
  * Contains \Drupal\Core\Asset\CssMetadataBag.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Metadata;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 
 /**
  * Manages CSS asset default and explicit metadata.

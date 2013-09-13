@@ -6,7 +6,7 @@
 
 namespace Drupal\Tests\Core\Asset;
 
-use Drupal\Core\Asset\AssetLibrary;
+use Drupal\Core\Asset\Bag\AssetLibrary;
 use Drupal\Tests\UnitTestCase;
 
 /**

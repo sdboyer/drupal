@@ -6,7 +6,7 @@
 
 namespace Drupal\Tests\Core\Asset;
 
-use Drupal\Core\Asset\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Core\Asset\StylesheetFileAsset;
 use Drupal\Tests\UnitTestCase;
 

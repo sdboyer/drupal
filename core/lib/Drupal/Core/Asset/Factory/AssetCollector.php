@@ -4,7 +4,9 @@
  * Contains Drupal\Core\Asset\AssetCollector.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Factory;
+use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\Bag\AssetBagInterface;
 
 /**
  * A class that helps to create and collect assets.
@@ -18,7 +20,7 @@ class AssetCollector {
   /**
    * The bag used to store any assets that are added.
    *
-   * @var \Drupal\Core\Asset\AssetBagInterface
+   * @var \Drupal\Core\Asset\Bag\AssetBagInterface
    */
   protected $bag;
 
@@ -180,6 +182,7 @@ class AssetCollector {
   }
 
   public function setDefaults($type, array $defaults) {
+    // TODO refactor to use AssetMetadataBag system
     if ($this->isLocked()) {
       throw new \Exception('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
     }

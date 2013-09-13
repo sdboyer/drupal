@@ -5,10 +5,12 @@
  * Contains \Drupal\Core\Asset\AssetBag.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Bag;
 
 use Drupal\Core\Asset\AssetInterface;
-use Drupal\Core\Asset\AssetBagInterface;
+use Drupal\Core\Asset\Bag\AssetBagInterface;
+use Drupal\Core\Asset\JavascriptAssetInterface;
+use Drupal\Core\Asset\StylesheetAssetInterface;
 
 /**
  * The default AssetBag, used to declare assets needed for a response.

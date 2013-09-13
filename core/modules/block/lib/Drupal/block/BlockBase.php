@@ -11,7 +11,7 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\block\BlockInterface;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Language\Language;
-use Drupal\Core\Asset\AssetCollector;
+use Drupal\Core\Asset\Factory\AssetCollector;
 
 /**
  * Defines a base block implementation that most blocks plugins will extend.

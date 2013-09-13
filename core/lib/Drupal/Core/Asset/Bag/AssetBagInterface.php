@@ -5,10 +5,9 @@
  * Contains \Drupal\Core\Asset\AssetBagInterface.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Bag;
 
 use Drupal\Core\Asset\AssetInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 
 /**
  * Defines a common interface for asset bags.

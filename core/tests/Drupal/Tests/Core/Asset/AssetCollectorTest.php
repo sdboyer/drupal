@@ -18,8 +18,8 @@ if (!defined('JS_DEFAULT')) {
   define('JS_DEFAULT', 0);
 }
 
-use Drupal\Core\Asset\AssetBag;
-use Drupal\Core\Asset\AssetCollector;
+use Drupal\Core\Asset\Bag\AssetBag;
+use Drupal\Core\Asset\Factory\AssetCollector;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -32,7 +32,7 @@ use Drupal\Tests\UnitTestCase;
 class AssetCollectorTest extends UnitTestCase {
 
   /**
-   * @var \Drupal\Core\Asset\AssetCollector
+   * @var \Drupal\Core\Asset\Factory\AssetCollector
    */
   protected $collector;
 
