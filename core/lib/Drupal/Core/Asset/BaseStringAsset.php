@@ -22,6 +22,14 @@ abstract class BaseStringAsset extends BaseAsset {
     parent::__construct($metadata, $filters);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function id() {
+    // TODO hashing current content means this id is essentially useless.
+    return md5($this->content);
+  }
+
   public function setLastModified($last_modified) {
     $this->lastModified = $last_modified;
   }

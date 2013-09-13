@@ -36,4 +36,17 @@ interface AssetInterface extends AsseticAssetInterface {
    * @return bool
    */
   public function isPreprocessable();
+
+  /**
+   * Returns a unique string identifier that uniquely identifies this asset.
+   *
+   * Note that this id IS subject to change, if certain internal object
+   * properties change.
+   *
+   * // TODO if it's subject to change, 'id' is misleading
+   *
+   * @return string
+   *   The asset id.
+   */
+  public function id();
 }

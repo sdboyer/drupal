@@ -25,6 +25,13 @@ abstract class BaseFileAsset extends BaseAsset {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function id() {
+    return $this->source;
+  }
+
+  /**
    * Returns the time the current asset was last modified.
    *
    * @return integer|null A UNIX timestamp

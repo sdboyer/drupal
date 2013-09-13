@@ -33,6 +33,14 @@ abstract class BaseExternalAsset extends BaseAsset {
 
     parent::__construct($metadata, $filters, $scheme.'://'.$host, $path);
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function id() {
+    return $this->sourceUrl;
+  }
+
   /**
    * Returns the time the current asset was last modified.
    *
