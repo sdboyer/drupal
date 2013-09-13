@@ -52,24 +52,11 @@ abstract class BaseExternalAsset extends BaseAsset {
   }
 
   /**
-   * Loads the asset into memory and applies load filters.
-   *
-   * You may provide an additional filter to apply during load.
-   *
-   * @param FilterInterface $additionalFilter An additional filter
+   * {@inheritdoc}
    */
   public function load(FilterInterface $additionalFilter = NULL) {
-    // TODO convert PathUtils call
-    if (false === $content = @file_get_contents(PathUtils::resolvePath(
-      $this->sourceUrl, $this->getVars(), $this->getValues()))) {
-      if ($this->ignoreErrors) {
-        return;
-      } else {
-        throw new \RuntimeException(sprintf('Unable to load asset from URL "%s"', $this->sourceUrl));
-      }
-    }
-
-    $this->doLoad($content, $additionalFilter);
+    // TODO dumb and kinda wrong, decide how to do this right.
+    throw new UnsupportedAsseticMethodException('Drupal does not support the retrieval or manipulation of remote assets.');
   }
 
 }

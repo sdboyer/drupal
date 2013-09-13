@@ -205,4 +205,33 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   public function getDependencies() {
     return $this->dependencies;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function before($asset) {
+    // TODO: Implement before() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function after($asset) {
+    // TODO: Implement after() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOrderingInfo() {
+    // TODO: Implement getOrderingInfo() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearOrderingInfo() {
+    // TODO: Implement clearOrderingInfo() method.
+  }
+
 }
