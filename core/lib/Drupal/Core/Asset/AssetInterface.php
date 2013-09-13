@@ -12,10 +12,17 @@ use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 /**
  * Represents a CSS or Javascript asset.
  *
- * This interface extends the AssetInterface provided by Assetic to allow
- * more sophisticated logic and behaviors to be attached to individual assets.
+ * This interface extends the AssetInterface provided by Assetic to facilitate
+ * different behaviors by individual assets.
  */
-interface AssetInterface extends AsseticAssetInterface, AssetDependencyInterface {
+interface AssetInterface extends AsseticAssetInterface {
+
+  /**
+   * Returns the metadata bag for this asset.
+   *
+   * @return AssetMetadataBag
+   */
+  public function getMetadata();
 
   /**
    * Indicates whether or not this asset is eligible for preprocessing.
@@ -28,28 +35,4 @@ interface AssetInterface extends AsseticAssetInterface, AssetDependencyInterface
    * @return bool
    */
   public function isPreprocessable();
-
-  /**
-   * Sets default metadata to be used for this asset.
-   *
-   * @param array $defaults
-   *   An associative array of default values for the common metadata properties
-   *   associated with Drupal assets, such as 'browser', 'preprocess', etc. The
-   *   specific values vary by asset type.
-   *
-   * @return void
-   */
-  public function setDefaults(array $defaults);
-
-  /**
-   * Indicates whether the value at the key is explicitly set, or a default.
-   *
-   * @param $key
-   *   The key to check.
-   *
-   * @return bool
-   *   TRUE if the value is served by a default, FALSE if it was explicitly set.
-   */
-  public function isDefault($key);
-
 }

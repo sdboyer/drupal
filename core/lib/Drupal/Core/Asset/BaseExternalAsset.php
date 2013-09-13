@@ -10,12 +10,13 @@ namespace Drupal\Core\Asset;
 use Assetic\Util\PathUtils;
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\BaseAsset;
+use Drupal\Core\Asset\AssetMetadataBag;
 
 abstract class BaseExternalAsset extends BaseAsset {
 
   protected $sourceUrl;
 
-  public function __construct($sourceUrl, $options = array(), $filters = array()) {
+  public function __construct(AssetMetadataBag $metadata, $sourceUrl, $filters = array()) {
     if (0 === strpos($sourceUrl, '//')) {
       $sourceUrl = 'http:' . $sourceUrl;
     }
@@ -29,7 +30,7 @@ abstract class BaseExternalAsset extends BaseAsset {
     list($scheme, $url) = explode('://', $sourceUrl, 2);
     list($host, $path) = explode('/', $url, 2);
 
-    parent::__construct($options, $filters, $scheme.'://'.$host, $path);
+    parent::__construct($metadata, $filters, $scheme.'://'.$host, $path);
   }
   /**
    * Returns the time the current asset was last modified.

@@ -15,12 +15,12 @@ abstract class BaseFileAsset extends BaseAsset {
 
   protected $source;
 
-  public function __construct($source, array $options = array(), $filters = array()) {
+  public function __construct(AssetMetadataBag $metadata, $source, $filters = array()) {
     $sourceRoot = dirname($source);
     $sourcePath = basename($source);
     $this->source = $source;
 
-    parent::__construct($options, $filters, $sourceRoot, $sourcePath);
+    parent::__construct($metadata, $filters, $sourceRoot, $sourcePath);
   }
 
   /**

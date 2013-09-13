@@ -14,11 +14,11 @@ abstract class BaseStringAsset extends BaseAsset {
 
   protected $lastModified;
 
-  public function __construct($content, $options = array(), $filters = array()) {
+  public function __construct(AssetMetadataBag $metadata, $content, $filters = array()) {
     $this->content = $content;
-    $this->lastModified = REQUEST_TIME;
+    $this->lastModified = REQUEST_TIME; // TODO this is terrible
 
-    parent::__construct($options, $filters);
+    parent::__construct($metadata, $filters);
   }
 
   public function setLastModified($last_modified) {

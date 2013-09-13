@@ -21,7 +21,7 @@ use Drupal\Core\Asset\AssetInterface;
  * The methods load() and getLastModified() are left undefined, although a
  * reusable doLoad() method is available to child classes.
  */
-abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface {
+abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, AssetDependencyInterface {
 
   protected $filters;
 
@@ -35,25 +35,33 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface {
 
   protected $loaded;
 
+  /**
+   * @var AssetMetadataBag
+   */
   protected $metadata;
-
-  protected $metadataDefaults;
 
   protected $dependencies;
 
-  public function __construct(array $options = array(), $filters = array(), $sourceRoot = NULL, $sourcePath = NULL) {
+  protected $ordering;
+
+  public function __construct(AssetMetadataBag $metadata, $filters = array(), $sourceRoot = NULL, $sourcePath = NULL) {
     $this->filters = new FilterCollection($filters);
     $this->sourceRoot = $sourceRoot;
     $this->sourcePath = $sourcePath;
     $this->loaded = FALSE;
-
-    foreach ($options as $k => $v) {
-      $this->metadata[$k] = $v;
-    }
+    $this->metadata = $metadata;
   }
 
   public function __clone() {
     $this->filters = clone $this->filters;
+    $this->metadata = clone $this->metadata;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMetadata() {
+    return $this->metadata;
   }
 
   /**
@@ -163,22 +171,11 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface {
    * {@inheritdoc}
    */
   public function isPreprocessable() {
-    return (bool) $this->metadata['preprocess'];
+    return (bool) $this->metadata->get('preprocess');
   }
 
   public function setDefaults(array $defaults) {
     $this->metadataDefaults = $defaults;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isDefault($offset) {
-    if (!$this->offsetExists($offset)) {
-      return;
-    }
-
-    return !isset($this->metadata);
   }
 
   /**
