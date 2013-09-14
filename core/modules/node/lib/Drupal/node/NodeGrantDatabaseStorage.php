@@ -136,7 +136,6 @@ class NodeGrantDatabaseStorage implements NodeGrantDatabaseStorageInterface {
     foreach ($tables as $nalias => $tableinfo) {
       $table = $tableinfo['table'];
       if (!($table instanceof SelectInterface) && $table == $base_table) {
-        $base_table_found = TRUE;
         // Set the subquery.
         $subquery = $this->database->select('node_access', 'na')
           ->fields('na', array('nid'));
@@ -213,7 +212,7 @@ class NodeGrantDatabaseStorage implements NodeGrantDatabaseStorageInterface {
             $grant['nid'] = $node->id();
             $grant['langcode'] = $grant_langcode;
             // The record with the original langcode is used as the fallback.
-            if ($grant['langcode'] == $node->langcode) {
+            if ($grant['langcode'] == $node->language()->id) {
               $grant['fallback'] = 1;
             }
             else {

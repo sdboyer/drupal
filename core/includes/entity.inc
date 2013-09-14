@@ -41,7 +41,6 @@ function entity_get_info($entity_type = NULL) {
  */
 function entity_info_cache_clear() {
   drupal_static_reset('entity_get_view_modes');
-  drupal_static_reset('entity_get_bundles');
   // Clear all languages.
   Drupal::entityManager()->clearCachedDefinitions();
   Drupal::entityManager()->clearCachedFieldDefinitions();
@@ -56,35 +55,17 @@ function entity_info_cache_clear() {
  *
  * @return array
  *   The bundle info for a specific entity type, or all entity types.
+ *
+ * @see \Drupal\Core\Entity\EntityManager::getBundleInfo()
+ * @see \Drupal\Core\Entity\EntityManager::getAllBundleInfo()
  */
 function entity_get_bundles($entity_type = NULL) {
-  $bundles = &drupal_static(__FUNCTION__);
-  if (!$bundles) {
-    $langcode = language(Language::TYPE_INTERFACE)->id;
-    if ($cache = cache()->get("entity_bundle_info:$langcode")) {
-      $bundles = $cache->data;
-    }
-    else {
-      $bundles = Drupal::moduleHandler()->invokeAll('entity_bundle_info');
-      // If no bundles are provided, use the entity type name and label.
-      foreach (entity_get_info() as $type => $entity_info) {
-        if (!isset($bundles[$type])) {
-          $bundles[$type][$type]['label'] = $entity_info['label'];
-        }
-      }
-      drupal_alter('entity_bundle_info', $bundles);
-      cache()->set("entity_bundle_info:$langcode", $bundles, CacheBackendInterface::CACHE_PERMANENT, array('entity_info' => TRUE));
-    }
+  if (isset($entity_type)) {
+    return Drupal::entityManager()->getBundleInfo($entity_type);
   }
-
-  if (empty($entity_type)) {
-    return $bundles;
+  else {
+    return Drupal::entityManager()->getAllBundleInfo();
   }
-  elseif (isset($bundles[$entity_type])) {
-    return $bundles[$entity_type];
-  }
-
-  return array();
 }
 
 /**
@@ -102,6 +83,12 @@ function entity_get_bundles($entity_type = NULL) {
  */
 function entity_invoke_bundle_hook($hook, $entity_type, $bundle, $bundle_new = NULL) {
   entity_info_cache_clear();
+
+  // Notify the entity storage controller.
+  $method = 'onBundle' . ucfirst($hook);
+  Drupal::entityManager()->getStorageController($entity_type)->$method($bundle, $bundle_new);
+
+  // Invoke hook_entity_bundle_*() hooks.
   Drupal::moduleHandler()->invokeAll('entity_bundle_' . $hook, array($entity_type, $bundle, $bundle_new));
 }
 
@@ -186,7 +173,7 @@ function entity_get_view_modes($entity_type = NULL) {
  *
  * @param string $entity_type
  *   The entity type to load, e.g. node or user.
- * @param int $id
+ * @param mixed $id
  *   The id of the entity to load.
  * @param bool $reset
  *   Whether to reset the internal cache for the requested entity type.

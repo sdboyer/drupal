@@ -160,6 +160,8 @@ function _book_admin_table_tree($tree, &$form) {
       'depth' => array('#type' => 'value', '#value' => $data['link']['depth']),
       'href' => array('#type' => 'value', '#value' => $data['link']['href']),
       'title' => array(
+        '#title' => t('Title'),
+        '#title_display' => 'invisible',
         '#type' => 'textfield',
         '#default_value' => $data['link']['link_title'],
         '#maxlength' => 255,
@@ -209,7 +211,7 @@ function theme_book_admin_table($variables) {
 
   $rows = array();
   $destination = drupal_get_destination();
-  $access = user_access('administer nodes');
+  $access = Drupal::currentUser()->hasPermission('administer nodes');
   foreach (element_children($form) as $key) {
     $nid = $form[$key]['nid']['#value'];
     $href = $form[$key]['href']['#value'];

@@ -8,7 +8,7 @@
 namespace Drupal\user\Plugin\Block;
 
 use Drupal\block\BlockBase;
-use Drupal\Component\Annotation\Plugin;
+use Drupal\block\Annotation\Block;
 use Drupal\Core\Annotation\Translation;
 
 /**
@@ -17,18 +17,17 @@ use Drupal\Core\Annotation\Translation;
  * @todo Move this block to the Statistics module and remove its dependency on
  *   {users}.access.
  *
- * @Plugin(
+ * @Block(
  *   id = "user_online_block",
- *   admin_label = @Translation("Who's online"),
- *   module = "user"
+ *   admin_label = @Translation("Who's online")
  * )
  */
 class UserOnlineBlock extends BlockBase {
 
   /**
-   * Overrides \Drupal\block\BlockBase::settings().
+   * {@inheritdoc}
    */
-  public function settings() {
+  public function defaultConfiguration() {
     return array(
       'properties' => array(
         'administrative' => TRUE

@@ -2,6 +2,7 @@
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Json;
+use Drupal\Component\Utility\Settings;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Tags;
@@ -269,11 +270,17 @@ function drupal_get_region_content($region = NULL, $delimiter = ' ') {
 function drupal_get_profile() {
   global $install_state;
 
-  if (isset($install_state['parameters']['profile'])) {
-    $profile = $install_state['parameters']['profile'];
+  if (drupal_installation_attempted()) {
+    // If the profile has been selected return it.
+    if (isset($install_state['parameters']['profile'])) {
+      $profile = $install_state['parameters']['profile'];
+    }
+    else {
+      $profile = '';
+    }
   }
   else {
-    $profile = variable_get('install_profile', 'standard');
+    $profile = settings()->get('install_profile') ?: 'standard';
   }
 
   return $profile;
@@ -354,7 +361,7 @@ function _drupal_default_html_head() {
   );
   // Show Drupal and the major version number in the META GENERATOR tag.
   // Get the major version.
-  list($version, ) = explode('.', VERSION);
+  list($version, ) = explode('.', Drupal::VERSION);
   $elements['system_meta_generator'] = array(
     '#type' => 'html_tag',
     '#tag' => 'meta',
@@ -448,7 +455,6 @@ function drupal_get_query_parameters(array $query = NULL, array $exclude = array
 /**
  * Parses an array into a valid, rawurlencoded query string.
  *
- * @see \Drupal\Core\Routing\PathBasedGeneratorInterface::httpBuildQuery()
  * @see drupal_get_query_parameters()
  * @deprecated as of Drupal 8.0. Use Url::buildQuery() instead.
  * @ingroup php_wrappers
@@ -1192,7 +1198,7 @@ function datetime_default_format_type() {
  * When creating links in modules, consider whether l() could be a better
  * alternative than url().
  *
- * @see \Drupal\Core\Routing\PathBasedGeneratorInterface::generateFromPath().
+ * @see \Drupal\Core\Routing\UrlGeneratorInterface::generateFromPath().
  */
 function url($path = NULL, array $options = array()) {
   $generator = Drupal::urlGenerator();
@@ -1266,6 +1272,12 @@ function drupal_http_header_attributes(array $attributes = array()) {
  * @endcode
  * This keeps the context of the link title ('settings' in the example) for
  * translators.
+ *
+ * This function does not support generating links from internal routes. For
+ * that use \Drupal\Core\Utility\LinkGenerator::generate(), which is exposed via
+ * the 'link_generator' service. It requires an internal route name and does not
+ * support external URLs. Using Drupal 7 style system paths should be avoided if
+ * possible but l() should still be used when rendering links to external URLs.
  *
  * @param string|array $text
  *   The link text for the anchor tag as a translated string or render array.
@@ -1514,14 +1526,7 @@ function drupal_add_html_head_link($attributes, $header = FALSE) {
  *     example, system-menus.css rather than simply menus.css. Themes can
  *     override module-supplied CSS files based on their filenames, and this
  *     prefixing helps prevent confusing name collisions for theme developers.
- *     See drupal_get_css() where the overrides are performed. Also, if the
- *     direction of the current language is right-to-left (Hebrew, Arabic,
- *     etc.), the function will also look for an RTL CSS file and append it to
- *     the list. The name of this file should have an '-rtl.css' suffix. For
- *     example, a CSS file called 'mymodule-name.css' will have a
- *     'mymodule-name-rtl.css' file added to the list, if exists in the same
- *     directory. This CSS file should contain overrides for properties which
- *     should be reversed or otherwise different in a right-to-left display.
+ *     See drupal_get_css() where the overrides are performed.
  *   - 'inline': A string of CSS that should be placed in the given scope. Note
  *     that it is better practice to use 'file' stylesheets, rather than
  *     'inline', as the CSS would then be aggregated and cached.
@@ -1712,10 +1717,6 @@ function drupal_collect_assets($data, $options, $type = '') {
  * same filename. For example, themes/bartik/system-menus.css would replace
  * modules/system/system-menus.css. This allows themes to override complete
  * CSS files, rather than specific selectors, when necessary.
- *
- * If the original CSS file is being overridden by a theme, the theme is
- * responsible for supplying an accompanying RTL CSS file to replace the
- * module's.
  *
  * @param $css
  *   (optional) An array of CSS files. If no array is provided, the default
@@ -3503,8 +3504,12 @@ function drupal_pre_render_html_tag($element) {
  * @param $elements
  *   A structured array whose keys form the arguments to l():
  *   - #title: The link text to pass as argument to l().
- *   - #href: The URL path component to pass as argument to l().
- *   - #options: (optional) An array of options to pass to l().
+ *   - One of the following
+ *     - #route_name and (optionally) and a #route_parameters array; The route
+ *       name and route parameters which will be passed into the link generator.
+ *     - #href: The system path or URL to pass as argument to l().
+ *   - #options: (optional) An array of options to pass to l() or the link
+ *     generator.
  *
  * @return
  *   The passed-in elements containing a rendered link in '#markup'.
@@ -3545,7 +3550,13 @@ function drupal_pre_render_link($element) {
     $element = ajax_pre_render_element($element);
   }
 
-  $element['#markup'] = l($element['#title'], $element['#href'], $element['#options']);
+  if (isset($element['#route_name'])) {
+    $element['#route_parameters'] = empty($element['#route_parameters']) ? array() : $element['#route_parameters'];
+    $element['#markup'] = Drupal::linkGenerator()->generate($element['#title'], $element['#route_name'], $element['#route_parameters'], $element['#options']);
+  }
+  else {
+    $element['#markup'] = l($element['#title'], $element['#href'], $element['#options']);
+  }
   return $element;
 }
 
@@ -4109,7 +4120,7 @@ function show(&$element) {
  * @see drupal_render_cache_set()
  */
 function drupal_render_cache_get($elements) {
-  if (!in_array($_SERVER['REQUEST_METHOD'], array('GET', 'HEAD')) || !$cid = drupal_render_cid_create($elements)) {
+  if (!Drupal::request()->isMethodSafe() || !$cid = drupal_render_cid_create($elements)) {
     return FALSE;
   }
   $bin = isset($elements['#cache']['bin']) ? $elements['#cache']['bin'] : 'cache';
@@ -4141,7 +4152,7 @@ function drupal_render_cache_get($elements) {
  */
 function drupal_render_cache_set(&$markup, $elements) {
   // Create the cache ID for the element.
-  if (!in_array($_SERVER['REQUEST_METHOD'], array('GET', 'HEAD')) || !$cid = drupal_render_cid_create($elements)) {
+  if (!Drupal::request()->isMethodSafe() || !$cid = drupal_render_cid_create($elements)) {
     return FALSE;
   }
 
@@ -4630,7 +4641,7 @@ function drupal_parse_info_file($filename) {
       $parser = new Parser();
       $info[$filename] = $parser->parse(file_get_contents($filename));
       if (isset($info[$filename]['version']) && $info[$filename]['version'] === 'VERSION') {
-        $info[$filename]['version'] = VERSION;
+        $info[$filename]['version'] = Drupal::VERSION;
       }
     }
   }

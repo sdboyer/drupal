@@ -147,18 +147,28 @@ class RouterTest extends WebTestBase {
    * Checks the generate method on the url generator using the front router.
    */
   public function testUrlGeneratorFront() {
-    // Setup the request context of the URL generator. Note: Just calling the
-    // code without a proper request, does not setup the request context
-    // automatically.
-    $context = new RequestContext();
-    $context->fromRequest($this->container->get('request'));
-    $this->container->get('url_generator')->setRequest($this->container->get('request'));
-    $this->container->get('url_generator')->setContext($context);
-
     global $base_path;
 
     $this->assertEqual($this->container->get('url_generator')->generate('<front>'), $base_path);
     $this->assertEqual($this->container->get('url_generator')->generateFromPath('<front>'), $base_path);
+  }
+
+  /**
+   * Tests the user account on the DIC.
+   */
+  public function testUserAccount() {
+    $account = $this->drupalCreateUser();
+    $this->drupalLogin($account);
+
+    $second_account = $this->drupalCreateUser();
+
+    $this->drupalGet('router_test/test12/' . $second_account->id());
+    $this->assertText($account->getUsername() . ':' . $second_account->getUsername());
+    $this->assertEqual($account->id(), $this->loggedInUser->id(), 'Ensure that the user was not changed.');
+
+    $this->drupalGet('router_test/test13/' . $second_account->id());
+    $this->assertText($account->getUsername() . ':' . $second_account->getUsername());
+    $this->assertEqual($account->id(), $this->loggedInUser->id(), 'Ensure that the user was not changed.');
   }
 
   /**

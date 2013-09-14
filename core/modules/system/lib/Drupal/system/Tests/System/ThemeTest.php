@@ -81,7 +81,7 @@ class ThemeTest extends WebTestBase {
         'default_logo' => FALSE,
         'logo_path' => $input,
       );
-      $this->drupalPost('admin/appearance/settings', $edit, t('Save configuration'));
+      $this->drupalPostForm('admin/appearance/settings', $edit, t('Save configuration'));
       $this->assertNoText('The custom logo path is invalid.');
       $this->assertFieldByName('logo_path', $expected['form']);
 
@@ -151,7 +151,7 @@ class ThemeTest extends WebTestBase {
         'default_logo' => FALSE,
         'logo_path' => $path,
       );
-      $this->drupalPost(NULL, $edit, t('Save configuration'));
+      $this->drupalPostForm(NULL, $edit, t('Save configuration'));
       $this->assertText('The custom logo path is invalid.');
     }
 
@@ -161,7 +161,7 @@ class ThemeTest extends WebTestBase {
       'logo_path' => '',
       'files[logo_upload]' => drupal_realpath($file->uri),
     );
-    $this->drupalPost('admin/appearance/settings', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/appearance/settings', $edit, t('Save configuration'));
 
     $fields = $this->xpath($this->constructFieldXpath('name', 'logo_path'));
     $uploaded_filename = 'public://' . $fields[0]['value'];
@@ -183,9 +183,9 @@ class ThemeTest extends WebTestBase {
     // Enable an administration theme and show it on the node admin pages.
     $edit = array(
       'admin_theme' => 'seven',
-      'node_admin_theme' => TRUE,
+      'use_admin_theme' => TRUE,
     );
-    $this->drupalPost('admin/appearance', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/appearance', $edit, t('Save configuration'));
 
     $this->drupalGet('admin/config');
     $this->assertRaw('core/themes/seven', 'Administration theme used on an administration page.');
@@ -201,9 +201,9 @@ class ThemeTest extends WebTestBase {
 
     // Disable the admin theme on the node admin pages.
     $edit = array(
-      'node_admin_theme' => FALSE,
+      'use_admin_theme' => FALSE,
     );
-    $this->drupalPost('admin/appearance', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/appearance', $edit, t('Save configuration'));
 
     $this->drupalGet('admin/config');
     $this->assertRaw('core/themes/seven', 'Administration theme used on an administration page.');
@@ -217,9 +217,9 @@ class ThemeTest extends WebTestBase {
       ->save();
     $edit = array(
       'admin_theme' => '0',
-      'node_admin_theme' => FALSE,
+      'use_admin_theme' => FALSE,
     );
-    $this->drupalPost('admin/appearance', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/appearance', $edit, t('Save configuration'));
 
     $this->drupalGet('admin');
     $this->assertRaw('core/themes/bartik', 'Site default theme used on administration page.');

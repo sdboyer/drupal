@@ -7,13 +7,13 @@
 
 namespace Drupal\common_test\Controller;
 
-use Drupal\Core\Controller\ControllerInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller routines for common_test routes.
  */
-class CommonTestController implements ControllerInterface {
+class CommonTestController implements ContainerInjectionInterface {
 
   /**
    * {@inheritdoc}
@@ -57,6 +57,20 @@ class CommonTestController implements ControllerInterface {
         ),
       ),
     );
+  }
+
+  /**
+   * Renders an element with an invalid render array key.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function drupalRenderInvalidKeys() {
+    define('SIMPLETEST_COLLECT_ERRORS', FALSE);
+    // Keys that begin with # may contain a value of any type, otherwise they must
+    // contain arrays.
+    $element = array('child' => 'This should be an array.');
+    return drupal_render($element);
   }
 
 }

@@ -154,10 +154,6 @@ class CommentLinksTest extends CommentTestBase {
         ));
         $comment->save();
         $this->comment = $comment;
-
-        // comment_num_new() relies on history_read(), so ensure that no one has
-        // seen the node of this comment.
-        db_delete('history')->condition('nid', $this->node->id())->execute();
       }
       else {
         $cids = db_query("SELECT cid FROM {comment}")->fetchCol();
@@ -169,7 +165,7 @@ class CommentLinksTest extends CommentTestBase {
     // Change comment settings.
     variable_set('comment_form_location_' . $this->node->getType(), $info['form']);
     variable_set('comment_anonymous_' . $this->node->getType(), $info['contact']);
-    if ($this->node->comment != $info['comments']) {
+    if ($this->node->comment->value != $info['comments']) {
       $this->node->comment = $info['comments'];
       $this->node->save();
     }

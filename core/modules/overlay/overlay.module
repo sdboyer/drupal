@@ -5,6 +5,7 @@
  * Displays the Drupal administration interface in an overlay.
  */
 
+use Drupal\Core\Template\RenderWrapper;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -22,20 +23,6 @@ function overlay_help($path, $arg) {
       $output .= '<p>' . t('The Overlay module makes the administration pages on your site display in a JavaScript overlay of the page you were viewing when you clicked the administrative link, instead of replacing the page in your browser window. Use the close link on the overlay to return to the page you were viewing when you clicked the link. For more information, see the online handbook entry for <a href="@overlay">Overlay module</a>.', array('@overlay' => 'http://drupal.org/documentation/modules/overlay')) . '</p>';
       return $output;
   }
-}
-
-/**
- * Implements hook_menu()
- */
-function overlay_menu() {
-  $items['overlay-ajax/%'] = array(
-    'title' => '',
-    'page callback' => 'overlay_ajax_render_region',
-    'page arguments' => array(1),
-    'access arguments' => array('access overlay'),
-    'type' => MENU_CALLBACK,
-  );
-  return $items;
 }
 
 /**
@@ -96,7 +83,7 @@ function overlay_field_extra_fields() {
  */
 function overlay_form_user_form_alter(&$form, &$form_state) {
   $account = $form_state['controller']->getEntity();
-  if (user_access('access overlay', $account)) {
+  if ($account->hasPermission('access overlay')) {
     $account_data = Drupal::service('user.data')->get('overlay', $account->id(), 'enabled');
     $form['overlay_control'] = array(
       '#type' => 'details',
@@ -232,7 +219,7 @@ function overlay_disable_message() {
   global $user;
 
   $build = array();
-  if ($user->isAnonymous() || !user_access('access overlay')) {
+  if ($user->isAnonymous() || !$user->hasPermission('access overlay')) {
     return $build;
   }
 
@@ -374,7 +361,13 @@ function overlay_preprocess_maintenance_page(&$variables) {
  */
 function template_preprocess_overlay(&$variables) {
   $variables['tabs'] = menu_primary_local_tasks();
-  $variables['title'] = drupal_get_title();
+
+  if (isset($variables['page']['#title'])) {
+    $variables['title'] = $variables['page']['#title'];
+  }
+  else {
+    $variables['title'] = new RenderWrapper('drupal_get_title');
+  }
   $variables['disable_overlay'] = overlay_disable_message();
 
   // Add attributes for the overlay container.
@@ -842,18 +835,4 @@ function overlay_trigger_refresh() {
     drupal_add_js(array('overlayChild' => array('refreshPage' => TRUE)), array('type' => 'setting'));
     unset($_SESSION['overlay_refresh_parent']);
   }
-}
-
-/**
- * Prints the markup obtained by rendering a single region of the page.
- *
- * This function is intended to be called via Ajax.
- *
- * @param $region
- *   The name of the page region to render.
- *
- * @see Drupal.overlay.refreshRegions()
- */
-function overlay_ajax_render_region($region) {
-  return new Response(overlay_render_region($region));
 }

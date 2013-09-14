@@ -14,21 +14,6 @@ use Drupal\Component\Utility\NestedArray;
 const BLOCK_REGION_NONE = -1;
 
 /**
- * Users cannot control whether or not they see this block.
- */
-const BLOCK_CUSTOM_FIXED = 0;
-
-/**
- *  Shows this block by default, but lets individual users hide it.
- */
-const BLOCK_CUSTOM_ENABLED = 1;
-
-/**
- * Hides this block by default but lets individual users show it.
- */
-const BLOCK_CUSTOM_DISABLED = 2;
-
-/**
  * Shows this block on every page except the listed pages.
  */
 const BLOCK_VISIBILITY_NOTLISTED = 0;
@@ -89,6 +74,10 @@ function block_theme() {
       'render element' => 'elements',
       'template' => 'block',
     ),
+    'block_list' => array(
+      'render element' => 'form',
+      'template' => 'block-list',
+    ),
   );
 }
 
@@ -111,9 +100,13 @@ function block_permission() {
 function block_menu() {
   $default_theme = Drupal::config('system.theme')->get('default');
   $items['admin/structure/block'] = array(
-    'title' => 'Blocks',
+    'title' => 'Block layout',
     'description' => 'Configure what block content appears in your site\'s sidebars and other regions.',
     'route_name' => 'block_admin_display',
+  );
+  $items['admin/structure/block/list'] = array(
+    'title' => 'Block layout',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   $items['admin/structure/block/manage/%block'] = array(
     'title' => 'Configure block',
@@ -286,9 +279,9 @@ function _block_get_renderable_region($list = array()) {
   // the regular 'roles define permissions' schema, it brings too many
   // chances of having unwanted output get in the cache and later be served
   // to other users. We therefore exclude user 1 from block caching.
-  $not_cacheable = $GLOBALS['user']->id() == 1 ||
+  $not_cacheable = Drupal::currentUser()->id() == 1 ||
     count(Drupal::moduleHandler()->getImplementations('node_grants')) ||
-    !\Drupal::request()->isMethodSafe();
+    !Drupal::request()->isMethodSafe();
 
   foreach ($list as $key => $block) {
     $settings = $block->get('settings');
@@ -581,7 +574,7 @@ function block_user_role_delete($role) {
  */
 function block_menu_delete($menu) {
   foreach (entity_load_multiple('block') as $block) {
-    if ($block->get('plugin') == 'menu_menu_block:' . $menu->id()) {
+    if ($block->get('plugin') == 'system_menu_block:' . $menu->id()) {
       $block->delete();
     }
   }
@@ -622,7 +615,7 @@ function block_language_delete($language) {
 function block_library_info() {
   $libraries['drupal.block'] = array(
     'title' => 'Block',
-    'version' => VERSION,
+    'version' => Drupal::VERSION,
     'js' => array(
       drupal_get_path('module', 'block') . '/block.js' => array(),
     ),
@@ -633,7 +626,7 @@ function block_library_info() {
   );
   $libraries['drupal.block.admin'] = array(
     'title' => 'Block admin',
-    'version' => VERSION,
+    'version' => Drupal::VERSION,
     'js' => array(
       drupal_get_path('module', 'block') . '/js/block.admin.js' => array(),
     ),

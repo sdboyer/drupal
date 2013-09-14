@@ -65,7 +65,7 @@ class MenuRouterTest extends WebTestBase {
       ->set('admin', $this->admin_theme)
       ->save();
     theme_disable(array($this->alternate_theme));
-    $this->drupalPlaceBlock('system_menu_block:menu-tools');
+    $this->drupalPlaceBlock('system_menu_block:tools');
   }
 
   /**
@@ -134,15 +134,6 @@ class MenuRouterTest extends WebTestBase {
     $this->drupalGet('menu-test/theme-callback/use-admin-theme/inheritance');
     $this->assertText('Custom theme: seven. Actual theme: seven. Theme callback inheritance is being tested.', 'Theme callback inheritance correctly uses the administrative theme.');
     $this->assertRaw('seven/style.css', "The administrative theme's CSS appears on the page.");
-  }
-
-  /**
-   * Test that 'page callback', 'file' and 'file path' keys are properly
-   * inherited from parent menu paths.
-   */
-  function testFileInheritance() {
-    $this->drupalGet('admin/config/development/file-inheritance');
-    $this->assertText('File inheritance test description', 'File inheritance works.');
   }
 
   /**
@@ -626,6 +617,21 @@ class MenuRouterTest extends WebTestBase {
     $this->drupalGet('menu-test/optional/foobar');
     $this->assertResponse(200);
     $this->assertText("Sometimes there is a placeholder: 'foobar'.");
+  }
+
+  /**
+   * Tests a menu on a router page.
+   */
+  public function testMenuOnRoute() {
+    module_enable(array('router_test'));
+    \Drupal::service('router.builder')->rebuild();
+
+    $this->drupalGet('router_test/test2');
+    $this->assertLinkByHref('menu_no_title_callback');
+    $this->assertLinkByHref('menu-title-test/case1');
+    $this->assertLinkByHref('menu-title-test/case2');
+    $this->assertLinkByHref('menu-title-test/case3');
+    $this->assertLinkByHref('menu-title-test/case4');
   }
 
 }

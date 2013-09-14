@@ -1123,7 +1123,7 @@ function theme($hook, $variables = array()) {
 
   // restore path_to_theme()
   $theme_path = $temp;
-  return $output;
+  return (string) $output;
 }
 
 /**
@@ -1476,15 +1476,16 @@ function theme_enable($theme_list) {
     }
 
     // The value is not used; the weight is ignored for themes currently.
-    $theme_config->set("enabled.$key", 0);
-    $disabled_themes->clear($key);
+    $theme_config->set("enabled.$key", 0)->save();
+    $disabled_themes->clear($key)->save();
+
+    // Refresh the theme list as config_install_default_config() needs an
+    // updated list to work.
+    list_themes(TRUE);
     // Install default configuration of the theme.
     config_install_default_config('theme', $key);
   }
-  $theme_config->save();
-  $disabled_themes->save();
 
-  list_themes(TRUE);
   Drupal::service('router.builder')->rebuild();
   menu_router_rebuild();
   drupal_theme_rebuild();
@@ -2295,19 +2296,28 @@ function theme_item_list($variables) {
 }
 
 /**
- * Returns HTML for a feed icon.
+ * Prepares variables for feed icon templates.
  *
- * @param $variables
+ * Default template: feed-icon.html.twig.
+ *
+ * @param array $variables
  *   An associative array containing:
  *   - url: An internal system path or a fully qualified external URL of the
  *     feed.
  *   - title: A descriptive title of the feed.
  */
-function theme_feed_icon($variables) {
+function template_preprocess_feed_icon(&$variables) {
   $text = t('Subscribe to !feed-title', array('!feed-title' => $variables['title']));
-  if ($image = theme('image', array('uri' => 'core/misc/feed.png', 'width' => 16, 'height' => 16, 'alt' => $text))) {
-    return l($image, $variables['url'], array('html' => TRUE, 'attributes' => array('class' => array('feed-icon'), 'title' => $text)));
-  }
+  $variables['icon'] = array(
+    '#theme' => 'image__feed_icon',
+    '#uri' => 'core/misc/feed.png',
+    '#width' => 16,
+    '#height' => 16,
+    '#alt' => $text,
+  );
+  $variables['attributes']['class'] = array('feed-icon');
+  // Stripping tags because that's what l() used to do.
+  $variables['attributes']['title'] = strip_tags($text);
 }
 
 /**
@@ -2353,6 +2363,8 @@ function theme_indentation($variables) {
  */
 function theme_container($variables) {
   $element = $variables['element'];
+  // Ensure #attributes is set.
+  $element += array('#attributes' => array());
 
   // Special handling for form elements.
   if (isset($element['#array_parents'])) {
@@ -2554,7 +2566,13 @@ function template_preprocess_html(&$variables) {
 
   $site_config = Drupal::config('system.site');
   // Construct page title.
-  if (drupal_get_title()) {
+  if (isset($variables['page']['#title'])) {
+    $head_title = array(
+      'title' => strip_tags($variables['page']['#title']),
+      'name' => String::checkPlain($site_config->get('name')),
+    );
+  }
+  elseif (drupal_get_title()) {
     $head_title = array(
       'title' => strip_tags(drupal_get_title()),
       'name' => check_plain($site_config->get('name')),
@@ -3056,6 +3074,7 @@ function drupal_common_theme() {
     ),
     'feed_icon' => array(
       'variables' => array('url' => NULL, 'title' => NULL),
+      'template' => 'feed-icon',
     ),
     'more_link' => array(
       'variables' => array('url' => NULL, 'title' => NULL)

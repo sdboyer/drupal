@@ -29,13 +29,14 @@ use Drupal\custom_block\CustomBlockInterface;
  *     "form" = {
  *       "add" = "Drupal\custom_block\CustomBlockFormController",
  *       "edit" = "Drupal\custom_block\CustomBlockFormController",
+ *       "delete" = "Drupal\custom_block\Form\CustomBlockDeleteForm",
  *       "default" = "Drupal\custom_block\CustomBlockFormController"
  *     },
  *     "translation" = "Drupal\custom_block\CustomBlockTranslationController"
  *   },
  *   base_table = "custom_block",
  *   revision_table = "custom_block_revision",
- *   route_base_path = "admin/structure/custom-blocks/manage/{bundle}",
+ *   route_base_path = "admin/structure/block/custom-blocks/manage/{bundle}",
  *   menu_base_path = "block/%custom_block",
  *   menu_edit_path = "block/%custom_block",
  *   fieldable = TRUE,
@@ -189,6 +190,14 @@ class CustomBlock extends EntityNG implements CustomBlockInterface {
   /**
    * {@inheritdoc}
    */
+  public function preSave(EntityStorageControllerInterface $storage_controller) {
+    // Before saving the custom block, set changed time.
+    $this->changed->value = REQUEST_TIME;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
     // Invalidate the block cache to update custom block-based derivatives.
     \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
@@ -233,6 +242,61 @@ class CustomBlock extends EntityNG implements CustomBlockInterface {
       $instance->delete();
     }
     parent::delete();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function baseFieldDefinitions($entity_type) {
+    $properties['id'] = array(
+      'label' => t('ID'),
+      'description' => t('The custom block ID.'),
+      'type' => 'integer_field',
+      'read-only' => TRUE,
+    );
+    $properties['uuid'] = array(
+      'label' => t('UUID'),
+      'description' => t('The custom block UUID.'),
+      'type' => 'uuid_field',
+    );
+    $properties['revision_id'] = array(
+      'label' => t('Revision ID'),
+      'description' => t('The revision ID.'),
+      'type' => 'integer_field',
+    );
+    $properties['langcode'] = array(
+      'label' => t('Language code'),
+      'description' => t('The comment language code.'),
+      'type' => 'language_field',
+    );
+    $properties['info'] = array(
+      'label' => t('Subject'),
+      'description' => t('The custom block name.'),
+      'type' => 'string_field',
+    );
+    $properties['type'] = array(
+      'label' => t('Block type'),
+      'description' => t('The block type.'),
+      'type' => 'string_field',
+    );
+    $properties['log'] = array(
+      'label' => t('Revision log message'),
+      'description' => t('The revision log message.'),
+      'type' => 'string_field',
+    );
+    $properties['changed'] = array(
+      'label' => t('Changed'),
+      'description' => t('The time that the custom block was last edited.'),
+      'type' => 'integer_field',
+    );
+    return $properties;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getChangedTime() {
+    return $this->get('changed')->value;
   }
 
 }

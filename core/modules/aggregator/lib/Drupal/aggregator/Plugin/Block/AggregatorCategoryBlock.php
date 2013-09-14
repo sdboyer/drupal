@@ -8,25 +8,24 @@
 namespace Drupal\aggregator\Plugin\Block;
 
 use Drupal\block\BlockBase;
-use Drupal\Component\Annotation\Plugin;
+use Drupal\block\Annotation\Block;
 use Drupal\Core\Annotation\Translation;
 
 /**
  * Provides an 'Aggregator category' block for the latest items in a category.
  *
- * @Plugin(
+ * @Block(
  *   id = "aggregator_category_block",
  *   admin_label = @Translation("Aggregator category"),
- *   module = "aggregator",
  *   derivative = "Drupal\aggregator\Plugin\Derivative\AggregatorCategoryBlock"
  * )
  */
 class AggregatorCategoryBlock extends BlockBase {
 
   /**
-   * Overrides \Drupal\block\BlockBase::settings().
+   * {@inheritdoc}
    */
-  public function settings() {
+  public function defaultConfiguration() {
     // By default, the block will contain 10 feed items.
     return array(
       'block_count' => 10,

@@ -46,15 +46,33 @@ class ThemeTest extends WebTestBase {
    *   - any attributes set in the template's preprocessing function
    */
   function testAttributeMerging() {
-    $output = theme('theme_test_render_element', array(
+    $theme_test_render_element = array(
       'elements' => array(
         '#attributes' => array('data-foo' => 'bar'),
       ),
       'attributes' => array(
         'id' => 'bazinga',
       ),
-    ));
-    $this->assertIdentical($output, '<div id="bazinga" data-foo="bar" data-variables-are-preprocessed></div>' . "\n");
+    );
+    $this->assertThemeOutput('theme_test_render_element', $theme_test_render_element, '<div id="bazinga" data-foo="bar" data-variables-are-preprocessed></div>' . "\n");
+  }
+
+  /**
+   * Test that theme() returns expected data types.
+   */
+  function testThemeDataTypes() {
+    // theme_test_false is an implemented theme hook so theme() should return a
+    // string, even though the theme function itself can return anything.
+    $foos = array('null' => NULL, 'false' => FALSE, 'integer' => 1, 'string' => 'foo');
+    foreach ($foos as $type => $example) {
+      $output = theme('theme_test_foo', array('foo' => $example));
+      $this->assertTrue(is_string($output), format_string('theme() returns a string for data type !type.', array('!type' => $type)));
+    }
+
+    // suggestionnotimplemented is not an implemented theme hook so theme()
+    // should return FALSE instead of a string.
+    $output = theme(array('suggestionnotimplemented'));
+    $this->assertIdentical($output, FALSE, 'theme() returns FALSE when a hook suggestion is not implemented.');
   }
 
   /**
@@ -204,7 +222,7 @@ class ThemeTest extends WebTestBase {
    * Ensures the theme registry is rebuilt when modules are disabled/enabled.
    */
   function testRegistryRebuild() {
-    $this->assertIdentical(theme('theme_test_foo', array('foo' => 'a')), 'a', 'The theme registry contains theme_test_foo.');
+    $this->assertThemeOutput('theme_test_foo', array('foo' => 'a'), 'a', 'The theme registry contains theme_test_foo.');
 
     module_disable(array('theme_test'), FALSE);
     // After enabling/disabling a module during a test, we need to rebuild the
@@ -212,7 +230,7 @@ class ThemeTest extends WebTestBase {
     // throws an exception.
     $this->rebuildContainer();
     $this->container->get('module_handler')->loadAll();
-    $this->assertIdentical(theme('theme_test_foo', array('foo' => 'b')), FALSE, 'The theme registry does not contain theme_test_foo, because the module is disabled.');
+    $this->assertThemeOutput('theme_test_foo', array('foo' => 'b'), FALSE, 'The theme registry does not contain theme_test_foo, because the module is disabled.');
 
     module_enable(array('theme_test'), FALSE);
     // After enabling/disabling a module during a test, we need to rebuild the
@@ -220,7 +238,7 @@ class ThemeTest extends WebTestBase {
     // throws an exception.
     $this->rebuildContainer();
     $this->container->get('module_handler')->loadAll();
-    $this->assertIdentical(theme('theme_test_foo', array('foo' => 'c')), 'c', 'The theme registry contains theme_test_foo again after re-enabling the module.');
+    $this->assertThemeOutput('theme_test_foo', array('foo' => 'c'), 'c', 'The theme registry contains theme_test_foo again after re-enabling the module.');
   }
 
   /**
@@ -233,7 +251,7 @@ class ThemeTest extends WebTestBase {
         '#markup' => 'Foo',
       ),
     );
-    $this->assertIdentical(theme('theme_test_render_element_children', $element), 'Foo', 'drupal_render() avoids #theme recursion loop when rendering a render element.');
+    $this->assertThemeOutput('theme_test_render_element_children', $element, 'Foo', 'drupal_render() avoids #theme recursion loop when rendering a render element.');
 
     $element = array(
       '#theme_wrappers' => array('theme_test_render_element_children'),
@@ -241,7 +259,7 @@ class ThemeTest extends WebTestBase {
         '#markup' => 'Foo',
       ),
     );
-    $this->assertIdentical(theme('theme_test_render_element_children', $element), 'Foo', 'drupal_render() avoids #theme_wrappers recursion loop when rendering a render element.');
+    $this->assertThemeOutput('theme_test_render_element_children', $element, 'Foo', 'drupal_render() avoids #theme_wrappers recursion loop when rendering a render element.');
   }
 
   /**

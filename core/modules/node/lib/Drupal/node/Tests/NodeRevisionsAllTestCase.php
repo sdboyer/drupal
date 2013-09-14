@@ -59,7 +59,7 @@ class NodeRevisionsAllTestCase extends NodeTestBase {
 
       // Create revision with a random title and body and update variables.
       $node->title = $this->randomName();
-      $node->body[$node->language()->id][0] = array(
+      $node->body = array(
         'value' => $this->randomName(32),
         'format' => filter_default_format(),
       );
@@ -98,7 +98,7 @@ class NodeRevisionsAllTestCase extends NodeTestBase {
 
     // Confirm the correct revision text appears on "view revisions" page.
     $this->drupalGet("node/" . $node->id() . "/revisions/" . $node->getRevisionId() . "/view");
-    $this->assertText($node->body[Language::LANGCODE_NOT_SPECIFIED][0]['value'], 'Correct text displays for version.');
+    $this->assertText($node->body->value, 'Correct text displays for version.');
 
     // Confirm the correct log message appears on "revisions overview" page.
     $this->drupalGet("node/" . $node->id() . "/revisions");
@@ -110,7 +110,7 @@ class NodeRevisionsAllTestCase extends NodeTestBase {
     $this->assertTrue($node->isDefaultRevision(), 'Third node revision is the current one.');
 
     // Confirm that revisions revert properly.
-    $this->drupalPost("node/" . $node->id() . "/revisions/" . $nodes[1]->getRevisionId() . "/revert", array(), t('Revert'));
+    $this->drupalPostForm("node/" . $node->id() . "/revisions/" . $nodes[1]->getRevisionId() . "/revert", array(), t('Revert'));
     $this->assertRaw(t('@type %title has been reverted back to the revision from %revision-date.',
       array(
         '@type' => 'Basic page',
@@ -119,14 +119,14 @@ class NodeRevisionsAllTestCase extends NodeTestBase {
       )),
       'Revision reverted.');
     $reverted_node = node_load($node->id(), TRUE);
-    $this->assertTrue(($nodes[1]->body[Language::LANGCODE_NOT_SPECIFIED][0]['value'] == $reverted_node->body[Language::LANGCODE_NOT_SPECIFIED][0]['value']), 'Node reverted correctly.');
+    $this->assertTrue(($nodes[1]->body->value == $reverted_node->body->value), 'Node reverted correctly.');
 
     // Confirm that this is not the current version.
     $node = node_revision_load($node->getRevisionId());
     $this->assertFalse($node->isDefaultRevision(), 'Third node revision is not the current one.');
 
     // Confirm revisions delete properly.
-    $this->drupalPost("node/" . $node->id() . "/revisions/" . $nodes[1]->getRevisionId() . "/delete", array(), t('Delete'));
+    $this->drupalPostForm("node/" . $node->id() . "/revisions/" . $nodes[1]->getRevisionId() . "/delete", array(), t('Delete'));
     $this->assertRaw(t('Revision from %revision-date of @type %title has been deleted.',
       array(
         '%revision-date' => format_date($nodes[1]->getRevisionCreationTime()),
@@ -147,7 +147,7 @@ class NodeRevisionsAllTestCase extends NodeTestBase {
         'revision_timestamp' => $old_revision_date,
       ))
       ->execute();
-    $this->drupalPost("node/" . $node->id() . "/revisions/" . $nodes[2]->getRevisionId() . "/revert", array(), t('Revert'));
+    $this->drupalPostForm("node/" . $node->id() . "/revisions/" . $nodes[2]->getRevisionId() . "/revert", array(), t('Revert'));
     $this->assertRaw(t('@type %title has been reverted back to the revision from %revision-date.', array(
       '@type' => 'Basic page',
       '%title' => $nodes[2]->getTitle(),

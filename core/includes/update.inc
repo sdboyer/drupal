@@ -72,7 +72,7 @@ function update_check_incompatibility($name, $type = 'module') {
   }
   if (!isset($file)
       || !isset($file->info['core'])
-      || $file->info['core'] != DRUPAL_CORE_COMPATIBILITY
+      || $file->info['core'] != Drupal::CORE_COMPATIBILITY
       || version_compare(phpversion(), $file->info['php']) < 0) {
     return TRUE;
   }
@@ -439,6 +439,23 @@ function update_prepare_d8_bootstrap() {
       }
     }
   }
+  // Moves install_profile from variable to settings. You can't do that in
+  // system.install because _system_rebuild_module_data() needs the profile
+  // directly. Check that it has not been set already. This is the case for
+  // Simpletest upgrade path tests.
+  if (!settings()->get('install_profile')) {
+    $old_variable = unserialize(Drupal::database()->query('SELECT value FROM {variable} WHERE name = :name', array(':name' => 'install_profile'))->fetchField());
+    $settings = array(
+      'settings' => array(
+        'install_profile' => (object) array(
+            'value' => $old_variable,
+            'required' => TRUE,
+        ),
+      )
+    );
+    drupal_rewrite_settings($settings);
+  }
+
   // Now remove the cache override.
   $settings = settings()->getAll();
   unset($settings['cache']['default']);

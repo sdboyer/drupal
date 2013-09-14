@@ -9,7 +9,6 @@ namespace Drupal\image\Plugin\field\widget;
 
 use Drupal\field\Annotation\FieldWidget;
 use Drupal\Core\Annotation\Translation;
-use Drupal\field\Plugin\Type\Widget\WidgetBase;
 use Drupal\file\Plugin\field\widget\FileWidget;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Field\FieldInterface;
@@ -26,8 +25,7 @@ use Drupal\Core\Entity\Field\FieldInterface;
  *   settings = {
  *     "progress_indicator" = "throbber",
  *     "preview_image_style" = "thumbnail",
- *   },
- *   default_value = FALSE
+ *   }
  * )
  */
 class ImageWidget extends FileWidget {
@@ -84,14 +82,20 @@ class ImageWidget extends FileWidget {
     $elements = parent::formMultipleElements($entity, $items, $langcode, $form, $form_state);
 
     $cardinality = $this->fieldDefinition->getFieldCardinality();
+    $file_upload_help = array(
+      '#theme' => 'file_upload_help',
+      '#upload_validators' => $elements[0]['#upload_validators'],
+      '#cardinality' => $cardinality,
+    );
     if ($cardinality == 1) {
       // If there's only one field, return it as delta 0.
       if (empty($elements[0]['#default_value']['fids'])) {
-        $elements[0]['#description'] = theme('file_upload_help', array('description' => $this->fieldDefinition->getFieldDescription(), 'upload_validators' => $elements[0]['#upload_validators'], 'cardinality' => $cardinality));
+        $file_upload_help['#description'] = $this->fieldDefinition->getFieldDescription();
+        $elements[0]['#description'] = drupal_render($file_upload_help);
       }
     }
     else {
-      $elements['#file_upload_description'] = theme('file_upload_help', array('upload_validators' => $elements[0]['#upload_validators'], 'cardinality' => $cardinality));
+      $elements['#file_upload_description'] = drupal_render($file_upload_help);
     }
 
     return $elements;

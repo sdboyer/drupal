@@ -22,7 +22,7 @@ function system_requirements($phase) {
   if ($phase == 'runtime') {
     $requirements['drupal'] = array(
       'title' => t('Drupal'),
-      'value' => VERSION,
+      'value' => Drupal::VERSION,
       'severity' => REQUIREMENT_INFO,
       'weight' => -10,
     );
@@ -476,7 +476,7 @@ function system_requirements($phase) {
         // Check for an incompatible version.
         $required_file = $files[$required_module];
         $required_name = $required_file->info['name'];
-        $version = str_replace(DRUPAL_CORE_COMPATIBILITY . '-', '', $required_file->info['version']);
+        $version = str_replace(Drupal::CORE_COMPATIBILITY . '-', '', $required_file->info['version']);
         $compatibility = drupal_check_incompatibility($requirement, $version);
         if ($compatibility) {
           $compatibility = rtrim(substr($compatibility, 2), ')');
@@ -2198,7 +2198,7 @@ function system_update_8057() {
         $action['aid'] = $action['callback'] . '_' . $action['aid'];
       }
       $configuration = unserialize($action['parameters']) ?: array();
-      Drupal::config('action.action.' . $action['aid'])
+      Drupal::config('system.action.' . $action['aid'])
         ->set('id', $action['aid'])
         ->set('label', $action['label'])
         ->set('status', '1')
@@ -2249,6 +2249,21 @@ function system_upgrade_8060() {
   if ($path = update_variable_get('file_public_path')) {
     drupal_rewrite_settings(array('settings' => array('file_public_path' => $path)));
   }
+}
+
+/**
+ * Add route_parameters column to the menu_links table.
+ */
+function system_update_8060() {
+  $spec = array(
+    'description' => 'Serialized array of route parameters of this menu link.',
+    'type' => 'blob',
+    'size' => 'big',
+    'not null' => FALSE,
+    'serialize' => TRUE,
+  );
+
+  db_add_field('menu_links', 'route_parameters', $spec);
 }
 
 /**

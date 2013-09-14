@@ -51,7 +51,7 @@ class ContentTranslationController implements ContentTranslationControllerInterf
     // Remove field translations.
     foreach (field_info_instances($entity->entityType(), $entity->bundle()) as $instance) {
       $field_name = $instance['field_name'];
-      $field = field_info_field($field_name);
+      $field = $instance->getField();
       if ($field['translatable']) {
         $entity->{$field_name}[$langcode] = array();
       }
@@ -155,6 +155,8 @@ class ContentTranslationController implements ContentTranslationControllerInterf
         '#weight' => -100,
         '#multilingual' => TRUE,
         'source' => array(
+          '#title' => t('Select source language'),
+          '#title_display' => 'invisible',
           '#type' => 'select',
           '#default_value' => $source_langcode,
           '#options' => array(),

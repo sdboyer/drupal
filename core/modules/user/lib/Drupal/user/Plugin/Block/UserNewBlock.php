@@ -8,24 +8,23 @@
 namespace Drupal\user\Plugin\Block;
 
 use Drupal\block\BlockBase;
-use Drupal\Component\Annotation\Plugin;
+use Drupal\block\Annotation\Block;
 use Drupal\Core\Annotation\Translation;
 
 /**
  * Provides a "Who's new" block.
  *
- * @Plugin(
+ * @Block(
  *   id = "user_new_block",
- *   admin_label = @Translation("Who's new"),
- *   module = "user"
+ *   admin_label = @Translation("Who's new")
  * )
  */
 class UserNewBlock extends BlockBase {
 
   /**
-   * Overrides \Drupal\block\BlockBase::settings().
+   * {@inheritdoc}
    */
-  public function settings() {
+  public function defaultConfiguration() {
     return array(
       'properties' => array(
         'administrative' => TRUE

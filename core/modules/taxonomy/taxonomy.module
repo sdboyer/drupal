@@ -5,12 +5,13 @@
  * Enables the organization of content into categories.
  */
 
-use Drupal\taxonomy\VocabularyInterface;
+use Drupal\Core\Entity\DatabaseStorageController;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Field\FieldDefinitionInterface;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\Field\FieldDefinitionInterface;
+use Drupal\taxonomy\VocabularyInterface;
 
 /**
  * Denotes that no term in the vocabulary has a parent.
@@ -241,12 +242,8 @@ function taxonomy_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   $items['admin/structure/taxonomy/add'] = array(
-    'title' => 'Add vocabulary',
-    'page callback' => 'taxonomy_vocabulary_add',
-    'access callback' => 'entity_page_create_access',
-    'access arguments' => array('taxonomy_vocabulary'),
-    'type' => MENU_LOCAL_ACTION,
-    'file' => 'taxonomy.admin.inc',
+    'route_name' => 'taxonomy_vocabulary_add',
+    'type' => MENU_SIBLING_LOCAL_TASK,
   );
 
   $items['taxonomy/term/%taxonomy_term'] = array(
@@ -265,14 +262,12 @@ function taxonomy_menu() {
   );
   $items['taxonomy/term/%taxonomy_term/edit'] = array(
     'title' => 'Edit',
-    'page callback' => 'entity_get_form',
-    'page arguments' => array(2, 'default', array()),
-    'access callback' => 'entity_page_access',
-    'access arguments' => array(2, 'update'),
+    'title callback' => 'entity_page_label',
+    'title arguments' => array(2),
+    'route_name' => 'taxonomy_term_edit',
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'weight' => 10,
-    'file' => 'taxonomy.admin.inc',
   );
   $items['taxonomy/term/%taxonomy_term/delete'] = array(
     'title' => 'Delete',
@@ -292,23 +287,11 @@ function taxonomy_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'taxonomy.pages.inc',
   );
-  $items['taxonomy/autocomplete/%'] = array(
-    'title' => 'Autocomplete taxonomy',
-    'page callback' => 'taxonomy_autocomplete',
-    'page arguments' => array(2),
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-    'file' => 'taxonomy.pages.inc',
-  );
 
   $items['admin/structure/taxonomy/manage/%taxonomy_vocabulary'] = array(
+    'route_name' => 'taxonomy_overview_terms',
     'title callback' => 'entity_page_label',
     'title arguments' => array(4),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('taxonomy_overview_terms', 4),
-    'access callback' => 'entity_page_access',
-    'access arguments' => array(4, 'view'),
-    'file' => 'taxonomy.admin.inc',
   );
   $items['admin/structure/taxonomy/manage/%taxonomy_vocabulary/list'] = array(
     'title' => 'List',
@@ -316,12 +299,8 @@ function taxonomy_menu() {
   );
   $items['admin/structure/taxonomy/manage/%taxonomy_vocabulary/edit'] = array(
     'title' => 'Edit',
-    'page callback' => 'entity_get_form',
-    'page arguments' => array(4),
-    'access callback' => 'entity_page_access',
-    'access arguments' => array(4, 'update'),
+    'route_name' => 'taxonomy_vocabulary_edit',
     'type' => MENU_LOCAL_TASK,
-    'file' => 'taxonomy.admin.inc',
   );
   $items['admin/structure/taxonomy/%taxonomy_vocabulary/delete'] = array(
     'title' => 'Delete',
@@ -1128,34 +1107,24 @@ function taxonomy_node_insert(EntityInterface $node) {
 function taxonomy_build_node_index($node) {
   // We maintain a denormalized table of term/node relationships, containing
   // only data for current, published nodes.
-  $status = NULL;
-  if (Drupal::config('taxonomy.settings')->get('maintain_index_table')) {
-    $status = $node->isPublished();
-    $sticky = (int) $node->isSticky();
+  if (!Drupal::config('taxonomy.settings')->get('maintain_index_table') || !(Drupal::entityManager()->getStorageController('node') instanceof DatabaseStorageController)) {
+    return;
   }
+
+  $status = $node->isPublished();
+  $sticky = (int) $node->isSticky();
   // We only maintain the taxonomy index for published nodes.
   if ($status && $node->isDefaultRevision()) {
     // Collect a unique list of all the term IDs from all node fields.
     $tid_all = array();
     foreach (field_info_instances('node', $node->getType()) as $instance) {
-      $field_name = $instance['field_name'];
-      $field = field_info_field($field_name);
-      if ($field['module'] == 'taxonomy' && $field['storage']['type'] == 'field_sql_storage') {
-        // If a field value is not set in the node object when $node->save() is
-        // called, the old value from $node->original is used.
-        if (isset($node->{$field_name})) {
-          $items = $node->{$field_name};
-        }
-        elseif (isset($node->original->{$field_name})) {
-          $items = $node->original->{$field_name};
-        }
-        else {
-          continue;
-        }
-        foreach (field_available_languages('node', $field) as $langcode) {
-          if (!empty($items[$langcode])) {
-            foreach ($items[$langcode] as $item) {
-              $tid_all[$item['target_id']] = $item['target_id'];
+      $field = $instance->getField();
+      $field_name = $field->getFieldName();
+      if ($field['module'] == 'taxonomy') {
+        foreach ($node->getTranslationLanguages() as $language) {
+          foreach ($node->getTranslation($language->id)->$field_name as $item) {
+            if (!$item->isEmpty()) {
+              $tid_all[$item->target_id] = $item->target_id;
             }
           }
         }
@@ -1226,7 +1195,7 @@ function taxonomy_taxonomy_term_delete(Term $term) {
 function taxonomy_library_info() {
   $libraries['drupal.taxonomy'] = array(
     'title' => 'Taxonomy',
-    'version' => VERSION,
+    'version' => Drupal::VERSION,
     'js' => array(
       drupal_get_path('module', 'taxonomy') . '/taxonomy.js' => array(),
     ),

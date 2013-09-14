@@ -12,7 +12,7 @@ use Drupal\Core\Entity\EntityControllerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Routing\PathBasedGeneratorInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\StringTranslation\Translator\TranslatorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -24,16 +24,9 @@ class ImageStyleListController extends ConfigEntityListController implements Ent
   /**
    * The URL generator.
    *
-   * @var \Drupal\Core\Routing\PathBasedGeneratorInterface
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
    */
   protected $urlGenerator;
-
-  /**
-   * The translation manager service.
-   *
-   * @var \Drupal\Core\StringTranslation\Translator\TranslatorInterface
-   */
-  protected $translator;
 
   /**
    * Constructs a new ImageStyleListController object.
@@ -46,15 +39,12 @@ class ImageStyleListController extends ConfigEntityListController implements Ent
    *   The image style entity storage controller class.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler to invoke hooks on.
-   * @param \Drupal\Core\Routing\PathBasedGeneratorInterface $url_generator
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The URL generator.
-   * @param \Drupal\Core\StringTranslation\Translator\TranslatorInterface $translator
-   *   The translation manager.
    */
-  public function __construct($entity_type, array $entity_info, EntityStorageControllerInterface $image_style_storage, ModuleHandlerInterface $module_handler, PathBasedGeneratorInterface $url_generator, TranslatorInterface $translator) {
+  public function __construct($entity_type, array $entity_info, EntityStorageControllerInterface $image_style_storage, ModuleHandlerInterface $module_handler, UrlGeneratorInterface $url_generator) {
     parent::__construct($entity_type, $entity_info, $image_style_storage, $module_handler);
     $this->urlGenerator = $url_generator;
-    $this->translator = $translator;
   }
 
   /**
@@ -64,7 +54,7 @@ class ImageStyleListController extends ConfigEntityListController implements Ent
     return new static(
       $entity_type,
       $entity_info,
-      $container->get('plugin.manager.entity')->getStorageController($entity_type),
+      $container->get('entity.manager')->getStorageController($entity_type),
       $container->get('module_handler'),
       $container->get('url_generator'),
       $container->get('string_translation')
@@ -75,7 +65,7 @@ class ImageStyleListController extends ConfigEntityListController implements Ent
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['label'] = $this->translator->translate('Style name');
+    $header['label'] = $this->t('Style name');
     return $header + parent::buildHeader();
   }
 
@@ -92,7 +82,7 @@ class ImageStyleListController extends ConfigEntityListController implements Ent
    */
   public function render() {
     $build = parent::render();
-    $build['#empty'] = $this->translator->translate('There are currently no styles. <a href="!url">Add a new one</a>.', array(
+    $build['#empty'] = $this->t('There are currently no styles. <a href="!url">Add a new one</a>.', array(
       '!url' => $this->urlGenerator->generateFromPath('admin/config/media/image-styles/add'),
     ));
     return $build;

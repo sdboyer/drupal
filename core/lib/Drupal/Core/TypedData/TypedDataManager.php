@@ -49,10 +49,7 @@ class TypedDataManager extends DefaultPluginManager {
     $this->alterInfo($module_handler, 'data_type_info');
     $this->setCacheBackend($cache_backend, $language_manager, 'typed_data:types');
 
-    $annotation_namespaces = array(
-      'Drupal\Core\TypedData\Annotation' => DRUPAL_ROOT . '/core/lib',
-    );
-    parent::__construct('Plugin/DataType', $namespaces, $annotation_namespaces, 'Drupal\Core\TypedData\Annotation\DataType');
+    parent::__construct('Plugin/DataType', $namespaces, 'Drupal\Core\TypedData\Annotation\DataType');
   }
 
   /**
@@ -215,9 +212,6 @@ class TypedDataManager extends DefaultPluginManager {
    *   The new property instance.
    *
    * @see \Drupal\Core\TypedData\TypedDataManager::create()
-   *
-   * @todo: Add type-hinting to $object once entities implement the
-   *   TypedDataInterface.
    */
   public function getPropertyInstance(TypedDataInterface $object, $property_name, $value = NULL) {
     $definition = $object->getRoot()->getDefinition();
@@ -380,6 +374,15 @@ class TypedDataManager extends DefaultPluginManager {
     if (!empty($definition['required']) && empty($definition['constraints']['NotNull'])) {
       $constraints[] = $validation_manager->create('NotNull', array());
     }
+
+    // If the definition does not provide a class use the class from the type
+    // definition for performing interface checks.
+    $class = isset($definition['class']) ? $definition['class'] : $type_definition['class'];
+    // Check if the class provides allowed values.
+    if (array_key_exists('Drupal\Core\TypedData\AllowedValuesInterface', class_implements($class))) {
+      $constraints[] = $validation_manager->create('AllowedValues', array());
+    }
+
     return $constraints;
   }
 }

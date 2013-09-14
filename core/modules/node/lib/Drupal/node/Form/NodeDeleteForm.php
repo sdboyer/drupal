@@ -9,9 +9,8 @@ namespace Drupal\node\Form;
 
 use Drupal\Core\Entity\EntityNGConfirmFormBase;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
-use Drupal\Core\Routing\PathBasedGeneratorInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Provides a form for deleting a node.
@@ -21,7 +20,7 @@ class NodeDeleteForm extends EntityNGConfirmFormBase {
   /**
    * The URL generator.
    *
-   * @var \Drupal\Core\Routing\PathBasedGeneratorInterface
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
    */
   protected $urlGenerator;
 
@@ -35,12 +34,12 @@ class NodeDeleteForm extends EntityNGConfirmFormBase {
   /**
    * Constructs a NodeDeleteForm object.
    *
-   * @param \Drupal\Core\Routing\PathBasedGeneratorInterface $url_generator
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The URL generator.
    * @param \Drupal\Core\Entity\EntityStorageControllerInterface $node_type_storage
    *   The node type storage.
    */
-  public function __construct(PathBasedGeneratorInterface $url_generator, EntityStorageControllerInterface $node_type_storage) {
+  public function __construct(UrlGeneratorInterface $url_generator, EntityStorageControllerInterface $node_type_storage) {
     $this->urlGenerator = $url_generator;
     $this->nodeTypeStorage = $node_type_storage;
   }
@@ -51,7 +50,7 @@ class NodeDeleteForm extends EntityNGConfirmFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('url_generator'),
-      $container->get('plugin.manager.entity')->getStorageController('node_type')
+      $container->get('entity.manager')->getStorageController('node_type')
     );
   }
 
@@ -65,9 +64,20 @@ class NodeDeleteForm extends EntityNGConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelPath() {
+  protected function actions(array $form, array &$form_state) {
+    $actions = parent::actions($form, $form_state);
+
+    // @todo Convert to getCancelRoute() after http://drupal.org/node/1987778.
     $uri = $this->entity->uri();
-    return $this->urlGenerator->generateFromPath($uri['path'], $uri['options']);
+    $actions['cancel']['#href'] = $this->urlGenerator->generateFromPath($uri['path'], $uri['options']);
+
+    return $actions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCancelRoute() {
   }
 
   /**
@@ -75,14 +85,6 @@ class NodeDeleteForm extends EntityNGConfirmFormBase {
    */
   public function getConfirmText() {
     return t('Delete');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function form(array $form, array &$form_state) {
-    // Do not attach fields to the delete form.
-    return $form;
   }
 
   /**

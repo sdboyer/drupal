@@ -45,7 +45,7 @@ class CommentFieldsTest extends CommentTestBase {
     }
 
     // Check that the 'comment_body' field is deleted.
-    $field = field_info_field('comment_body');
+    $field = field_info_field('comment', 'comment_body');
     $this->assertTrue(empty($field), 'The comment_body field was deleted');
 
     // Create a new content type.
@@ -54,7 +54,7 @@ class CommentFieldsTest extends CommentTestBase {
 
     // Check that the 'comment_body' field exists and has an instance on the
     // new comment bundle.
-    $field = field_info_field('comment_body');
+    $field = field_info_field('comment', 'comment_body');
     $this->assertTrue($field, 'The comment_body field exists');
     $instances = field_info_instances('comment');
     $this->assertTrue(isset($instances['comment_node_' . $type_name]['comment_body']), format_string('The comment_body field is present for comments on type @type', array('@type' => $type_name)));
@@ -71,19 +71,19 @@ class CommentFieldsTest extends CommentTestBase {
     // Disable the comment module.
     $edit = array();
     $edit['modules[Core][comment][enable]'] = FALSE;
-    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/modules', $edit, t('Save configuration'));
     $this->rebuildContainer();
     $this->assertFalse(module_exists('comment'), 'Comment module disabled.');
 
     // Enable core content type module (book).
     $edit = array();
     $edit['modules[Core][book][enable]'] = 'book';
-    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/modules', $edit, t('Save configuration'));
 
     // Now enable the comment module.
     $edit = array();
     $edit['modules[Core][comment][enable]'] = 'comment';
-    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/modules', $edit, t('Save configuration'));
     $this->rebuildContainer();
     $this->assertTrue(module_exists('comment'), 'Comment module enabled.');
 
@@ -107,11 +107,11 @@ class CommentFieldsTest extends CommentTestBase {
     // Disable text processing for comments.
     $this->drupalLogin($this->admin_user);
     $edit = array('instance[settings][text_processing]' => 0);
-    $this->drupalPost('admin/structure/types/manage/article/comment/fields/comment.comment_node_article.comment_body', $edit, t('Save settings'));
+    $this->drupalPostForm('admin/structure/types/manage/article/comment/fields/comment.comment_node_article.comment_body', $edit, t('Save settings'));
 
     // Post a comment without an explicit subject.
     $this->drupalLogin($this->web_user);
-    $edit = array('comment_body[und][0][value]' => $this->randomName(8));
-    $this->drupalPost('node/' . $this->node->id(), $edit, t('Save'));
+    $edit = array('comment_body[0][value]' => $this->randomName(8));
+    $this->drupalPostForm('node/' . $this->node->id(), $edit, t('Save'));
   }
 }

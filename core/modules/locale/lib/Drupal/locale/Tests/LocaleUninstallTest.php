@@ -78,14 +78,14 @@ class LocaleUninstallTest extends WebTestBase {
     // Build the JavaScript translation file for French.
     $user = $this->drupalCreateUser(array('translate interface', 'access administration pages'));
     $this->drupalLogin($user);
-    $this->drupalGet('admin/config/regional/translate/translate');
+    $this->drupalGet('admin/config/regional/translate');
     // Get any of the javascript strings to translate.
     $js_strings = $this->container->get('locale.storage')->getStrings(array('type' => 'javascript'));
     $string = reset($js_strings);
     $edit = array('string' => $string->source);
-    $this->drupalPost('admin/config/regional/translate', $edit, t('Filter'));
+    $this->drupalPostForm('admin/config/regional/translate', $edit, t('Filter'));
     $edit = array('strings[' . $string->lid . '][translations][0]' => 'french translation');
-    $this->drupalPost('admin/config/regional/translate', $edit, t('Save translations'));
+    $this->drupalPostForm('admin/config/regional/translate', $edit, t('Save translations'));
     _locale_rebuild_js('fr');
     $config = \Drupal::config('locale.settings');
     $locale_javascripts = $this->container->get('state')->get('locale.translation.javascript') ?: array();

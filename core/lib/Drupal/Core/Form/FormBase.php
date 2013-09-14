@@ -7,7 +7,9 @@
 
 namespace Drupal\Core\Form;
 
-use Drupal\Core\Controller\ControllerInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\DependencyInjection\DependencySerialization;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,7 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Provides a base class for forms.
  */
-abstract class FormBase implements FormInterface, ControllerInterface {
+abstract class FormBase extends DependencySerialization implements FormInterface, ContainerInjectionInterface {
 
   /**
    * The translation manager service.
@@ -30,6 +32,13 @@ abstract class FormBase implements FormInterface, ControllerInterface {
    * @var \Symfony\Component\HttpFoundation\Request
    */
   protected $request;
+
+  /**
+   * The URL generator.
+   *
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
+   */
+  protected $urlGenerator;
 
   /**
    * {@inheritdoc}
@@ -48,23 +57,23 @@ abstract class FormBase implements FormInterface, ControllerInterface {
   /**
    * Translates a string to the current language or to a given language.
    *
-   * @param string $string
-   *   A string containing the English string to translate.
-   * @param array $args
-   *   An associative array of replacements to make after translation. Based
-   *   on the first character of the key, the value is escaped and/or themed.
-   *   See \Drupal\Core\Utility\String::format() for details.
-   * @param array $options
-   *   An associative array of additional options, with the following elements:
-   *   - 'langcode': The language code to translate to a language other than
-   *      what is used to display the page.
-   *   - 'context': The context the source string belongs to.
-   *
-   * @return string
-   *   The translated string.
+   * See the t() documentation for details.
    */
   protected function t($string, array $args = array(), array $options = array()) {
-    return $this->getTranslationManager()->translate($string, $args, $options);
+    return $this->translationManager()->translate($string, $args, $options);
+  }
+
+  /**
+   * Generates a URL or path for a specific route based on the given parameters.
+   *
+   * @see \Drupal\Core\Routing\UrlGeneratorInterface::generateFromRoute() for
+   *   details on the arguments, usage, and possible exceptions.
+   *
+   * @return string
+   *   The generated URL for the given route.
+   */
+  public function url($route_name, $route_parameters = array(), $options = array()) {
+    return $this->urlGenerator()->generateFromRoute($route_name, $route_parameters, $options);
   }
 
   /**
@@ -73,9 +82,9 @@ abstract class FormBase implements FormInterface, ControllerInterface {
    * @return \Drupal\Core\StringTranslation\TranslationInterface
    *   The translation manager.
    */
-  protected function getTranslationManager() {
+  protected function translationManager() {
     if (!$this->translationManager) {
-      $this->translationManager = \Drupal::translation();
+      $this->translationManager = $this->container()->get('string_translation');
     }
     return $this->translationManager;
   }
@@ -102,7 +111,7 @@ abstract class FormBase implements FormInterface, ControllerInterface {
    */
   protected function getRequest() {
     if (!$this->request) {
-      $this->request = \Drupal::request();
+      $this->request = $this->container()->get('request');
     }
     return $this->request;
   }
@@ -123,8 +132,41 @@ abstract class FormBase implements FormInterface, ControllerInterface {
    * @return \Drupal\Core\Session\AccountInterface
    *   The current user.
    */
-  protected function getCurrentUser() {
+  protected function currentUser() {
     return $this->getRequest()->attributes->get('_account');
+  }
+
+  /**
+   * Gets the URL generator.
+   *
+   * @return \Drupal\Core\Routing\UrlGeneratorInterface
+   *   The URL generator.
+   */
+  protected function urlGenerator() {
+    if (!$this->urlGenerator) {
+      $this->urlGenerator = \Drupal::urlGenerator();
+    }
+    return $this->urlGenerator;
+  }
+
+  /**
+   * Sets the URL generator.
+   *
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface
+   *   The URL generator.
+   */
+  public function setUrlGenerator(UrlGeneratorInterface $url_generator) {
+    $this->urlGenerator = $url_generator;
+  }
+
+  /**
+   * Returns the service container.
+   *
+   * @return \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   */
+  protected function container() {
+    return \Drupal::getContainer();
   }
 
 }

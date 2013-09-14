@@ -7,8 +7,10 @@
 
 namespace Drupal\field\Plugin\views\field;
 
-use Drupal\Core\Language\Language;
+use Drupal\Core\Entity\DatabaseStorageController;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\Core\Language\Language;
 use Drupal\field\Plugin\Type\Formatter\FormatterPluginManager;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -111,7 +113,7 @@ class Field extends FieldPluginBase {
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     parent::init($view, $display, $options);
 
-    $this->field_info = $field = field_info_field($this->definition['field_name']);
+    $this->field_info = $field = field_info_field($this->definition['entity_type'], $this->definition['field_name']);
     $this->multiple = FALSE;
     $this->limit_values = FALSE;
 
@@ -201,7 +203,7 @@ class Field extends FieldPluginBase {
       $options += is_array($this->options['group_columns']) ? $this->options['group_columns'] : array();
 
       $fields = array();
-      $rkey = $this->definition['is revision'] ? 'FIELD_LOAD_REVISION' : 'FIELD_LOAD_CURRENT';
+      $rkey = $this->definition['is revision'] ? EntityStorageControllerInterface::FIELD_LOAD_REVISION : EntityStorageControllerInterface::FIELD_LOAD_CURRENT;
       // Go through the list and determine the actual column name from field api.
       foreach ($options as $column) {
         $name = $column;
@@ -286,7 +288,8 @@ class Field extends FieldPluginBase {
     }
 
     $this->ensureMyTable();
-    $column = _field_sql_storage_columnname($this->definition['field_name'], $this->options['click_sort_column']);
+    $field = field_info_field($this->definition['entity_type'], $this->definition['field_name']);
+    $column = DatabaseStorageController::_fieldColumnName($field, $this->options['click_sort_column']);
     if (!isset($this->aliases[$column])) {
       // Column is not in query; add a sort on it (without adding the column).
       $this->aliases[$column] = $this->tableAlias . '.' . $column;
@@ -298,7 +301,7 @@ class Field extends FieldPluginBase {
     $options = parent::defineOptions();
 
     // defineOptions runs before init/construct, so no $this->field_info
-    $field = field_info_field($this->definition['field_name']);
+    $field = field_info_field($this->definition['entity_type'], $this->definition['field_name']);
     $field_type = \Drupal::service('plugin.manager.entity.field.field_type')->getDefinition($field['type']);
     $column_names = array_keys($field['columns']);
     $default_column = '';
@@ -726,10 +729,10 @@ class Field extends FieldPluginBase {
       if ($data) {
         // Now, overwrite the original value with our aggregated value.
         // This overwrites it so there is always just one entry.
-        $processed_entity->{$this->definition['field_name']}[$langcode] = array($base_value);
+        $processed_entity->getTranslation($langcode)->{$this->definition['field_name']} = array($base_value);
       }
       else {
-        $processed_entity->{$this->definition['field_name']}[$langcode] = array();
+        $processed_entity->getTranslation($langcode)->{$this->definition['field_name']} = array();
       }
     }
 
@@ -740,7 +743,7 @@ class Field extends FieldPluginBase {
 
     // We are supposed to show only certain deltas.
     if ($this->limit_values && !empty($processed_entity->{$this->definition['field_name']})) {
-      $all_values = !empty($processed_entity->{$this->definition['field_name']}[$langcode]) ? $processed_entity->{$this->definition['field_name']}[$langcode] : array();
+      $all_values = !empty($processed_entity->getTranslation($langcode)->{$this->definition['field_name']}) ? $processed_entity->getTranslation($langcode)->{$this->definition['field_name']}->getValue() : array();
       if ($this->options['delta_reversed']) {
         $all_values = array_reverse($all_values);
       }
@@ -786,7 +789,7 @@ class Field extends FieldPluginBase {
           }
         }
       }
-      $processed_entity->{$this->definition['field_name']}[$langcode] = $new_values;
+      $processed_entity->getTranslation($langcode)->{$this->definition['field_name']} = $new_values;
     }
 
     return $processed_entity;

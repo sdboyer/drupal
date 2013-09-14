@@ -80,7 +80,7 @@ function toolbar_element_info() {
       // The id cannot be simply "toolbar" or it will clash with the simpletest
       // tests listing which produces a checkbox with attribute id="toolbar"
       'id' => 'toolbar-administration',
-      'class' => array('toolbar',),
+      'class' => array('toolbar'),
       'role' => 'navigation',
     ),
     // Metadata for the administration bar.
@@ -88,7 +88,7 @@ function toolbar_element_info() {
       '#heading' => t('Toolbar items'),
       '#attributes' => array(
         'id' => 'toolbar-bar',
-        'class' => array('toolbar-bar', 'clearfix',),
+        'class' => array('toolbar-bar', 'clearfix'),
       ),
     ),
   );
@@ -585,7 +585,7 @@ function toolbar_in_active_trail($path) {
 function toolbar_library_info() {
   $libraries['toolbar'] = array(
     'title' => 'Toolbar',
-    'version' => VERSION,
+    'version' => Drupal::VERSION,
     'js' => array(
       drupal_get_path('module', 'toolbar') . '/js/toolbar.js' => array(),
     ),
@@ -595,6 +595,7 @@ function toolbar_library_info() {
       drupal_get_path('module', 'toolbar') . '/css/toolbar.icons.css',
     ),
     'dependencies' => array(
+      array('system', 'modernizr'),
       array('system', 'jquery'),
       array('system', 'drupal'),
       array('system', 'drupalSettings'),
@@ -608,7 +609,7 @@ function toolbar_library_info() {
 
   $libraries['toolbar.menu'] = array(
     'title' => 'Toolbar nested accordion menus.',
-    'version' => VERSION,
+    'version' => Drupal::VERSION,
     'js' => array(
       drupal_get_path('module', 'toolbar') . '/js/toolbar.menu.js' => array(),
     ),
@@ -629,7 +630,7 @@ function toolbar_library_info() {
  * Returns the hash of the per-user rendered toolbar subtrees.
  */
 function _toolbar_get_subtree_hash() {
-  global $user;
+  $user = Drupal::currentUser();
   $cid = $user->id() . ':' . language(Language::TYPE_INTERFACE)->id;
   if ($cache = cache('toolbar')->get($cid)) {
     $hash = $cache->data;

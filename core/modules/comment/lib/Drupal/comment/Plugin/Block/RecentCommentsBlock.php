@@ -8,24 +8,23 @@
 namespace Drupal\comment\Plugin\Block;
 
 use Drupal\block\BlockBase;
-use Drupal\Component\Annotation\Plugin;
+use Drupal\block\Annotation\Block;
 use Drupal\Core\Annotation\Translation;
 
 /**
  * Provides a 'Recent comments' block.
  *
- * @Plugin(
+ * @Block(
  *  id = "recent_comments",
- *  admin_label = @Translation("Recent comments"),
- *  module = "comment"
+ *  admin_label = @Translation("Recent comments")
  * )
  */
 class RecentCommentsBlock extends BlockBase {
 
   /**
-   * Overrides \Drupal\block\BlockBase::settings().
+   * {@inheritdoc}
    */
-  public function settings() {
+  public function defaultConfiguration() {
     return array(
       'block_count' => 10,
     );

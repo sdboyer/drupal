@@ -165,10 +165,10 @@ class FieldInfo {
    * Collects a lightweight map of fields across bundles.
    *
    * @return
-   *   An array keyed by field name. Each value is an array with two entries:
+   *   An array keyed by entity type. Each value is an array which keys are
+   *   field names and value is an array with two entries:
    *   - type: The field type.
-   *   - bundles: The bundles in which the field appears, as an array with
-   *     entity types as keys and the array of bundle names as values.
+   *   - bundles: The bundles in which the field appears.
    */
   public function getFieldMap() {
     // Read from the "static" cache.
@@ -191,7 +191,7 @@ class FieldInfo {
     // Get active fields.
     foreach (config_get_storage_names_with_prefix('field.field.') as $config_id) {
       $field_config = $this->config->get($config_id)->get();
-      if ($field_config['active'] && $field_config['storage']['active']) {
+      if ($field_config['active']) {
         $fields[$field_config['uuid']] = $field_config;
       }
     }
@@ -203,8 +203,8 @@ class FieldInfo {
       // entity types.
       if (isset($fields[$field_uuid])) {
         $field = $fields[$field_uuid];
-        $map[$field['id']]['bundles'][$instance_config['entity_type']][] = $instance_config['bundle'];
-        $map[$field['id']]['type'] = $field['type'];
+        $map[$instance_config['entity_type']][$field['name']]['bundles'][] = $instance_config['bundle'];
+        $map[$instance_config['entity_type']][$field['name']]['type'] = $field['type'];
       }
     }
 
@@ -244,7 +244,7 @@ class FieldInfo {
     // Fill the name/ID map.
     foreach ($this->fieldsById as $field) {
       if (!$field['deleted']) {
-        $this->fieldIdsByName[$field['id']] = $field['uuid'];
+        $this->fieldIdsByName[$field->entity_type][$field->name] = $field['uuid'];
       }
     }
 
@@ -280,7 +280,7 @@ class FieldInfo {
         $this->getFields();
 
         foreach (field_read_instances() as $instance) {
-          $field = $this->getField($instance['field_name']);
+          $field = $this->getField($instance['entity_type'], $instance['field_name']);
           $instance = $this->prepareInstance($instance, $field['type']);
           $this->bundleInstances[$instance['entity_type']][$instance['bundle']][$instance['field_name']] = $instance;
         }
@@ -305,36 +305,38 @@ class FieldInfo {
    *
    * This method only retrieves active, non-deleted fields.
    *
-   * @param $field_name
+   * @param string $entity_type
+   *   The entity type.
+   * @param string $field_name
    *   The field name.
    *
    * @return
    *   The field definition, or NULL if no field was found.
    */
-  public function getField($field_name) {
+  public function getField($entity_type, $field_name) {
     // Read from the "static" cache.
-    if (isset($this->fieldIdsByName[$field_name])) {
-      $field_id = $this->fieldIdsByName[$field_name];
+    if (isset($this->fieldIdsByName[$entity_type][$field_name])) {
+      $field_id = $this->fieldIdsByName[$entity_type][$field_name];
       return $this->fieldsById[$field_id];
     }
-    if (isset($this->unknownFields[$field_name])) {
+    if (isset($this->unknownFields[$entity_type][$field_name])) {
       return;
     }
 
     // Do not check the (large) persistent cache, but read the definition.
 
     // Cache miss: read from definition.
-    if ($field = field_read_field($field_name)) {
+    if ($field = entity_load('field_entity', $entity_type . '.' . $field_name)) {
       $field = $this->prepareField($field);
 
       // Save in the "static" cache.
       $this->fieldsById[$field['uuid']] = $field;
-      $this->fieldIdsByName[$field['field_name']] = $field['uuid'];
+      $this->fieldIdsByName[$entity_type][$field_name] = $field['uuid'];
 
       return $field;
     }
     else {
-      $this->unknownFields[$field_name] = TRUE;
+      $this->unknownFields[$entity_type][$field_name] = TRUE;
     }
   }
 
@@ -369,7 +371,7 @@ class FieldInfo {
       // Store in the static cache.
       $this->fieldsById[$field['uuid']] = $field;
       if (!$field['deleted']) {
-        $this->fieldIdsByName[$field['field_name']] = $field['uuid'];
+        $this->fieldIdsByName[$field->entity_type][$field->name] = $field['uuid'];
       }
 
       return $field;
@@ -402,67 +404,78 @@ class FieldInfo {
       return array();
     }
 
-    // Read from the persistent cache.
-    if ($cached = $this->cacheBackend->get("field_info:bundle:$entity_type:$bundle")) {
-      $info = $cached->data;
+    // Read from the persistent cache. We read fields first, since
+    // unserializing the cached instance objects tries to access the field
+    // definitions.
+    if ($cached_fields = $this->cacheBackend->get("field_info:bundle:fields:$entity_type:$bundle")) {
+      $fields = $cached_fields->data;
 
       // Extract the field definitions and save them in the "static" cache.
-      foreach ($info['fields'] as $field) {
+      foreach ($fields as $field) {
         if (!isset($this->fieldsById[$field['uuid']])) {
           $this->fieldsById[$field['uuid']] = $field;
           if (!$field['deleted']) {
-            $this->fieldIdsByName[$field['field_name']] = $field['uuid'];
+            $this->fieldIdsByName[$field->entity_type][$field->name] = $field['uuid'];
           }
         }
       }
-      unset($info['fields']);
+
+      // We can now unserialize the instances.
+      $cached_instances = $this->cacheBackend->get("field_info:bundle:instances:$entity_type:$bundle");
+      $instances = $cached_instances->data;
 
       // Store the instance definitions in the "static" cache'. Empty (or
       // non-existent) bundles are stored separately, so that they do not
       // pollute the global list returned by getInstances().
-      if ($info['instances']) {
-        $this->bundleInstances[$entity_type][$bundle] = $info['instances'];
+      if ($instances) {
+        $this->bundleInstances[$entity_type][$bundle] = $instances;
       }
       else {
         $this->emptyBundles[$entity_type][$bundle] = TRUE;
       }
-      return $info['instances'];
+      return $instances;
     }
 
     // Cache miss: collect from the definitions.
+    $field_map = $this->getFieldMap();
     $instances = array();
+    $fields = array();
 
     // Do not return anything for unknown entity types.
-    if (entity_get_info($entity_type)) {
+    if (entity_get_info($entity_type) && !empty($field_map[$entity_type])) {
 
       // Collect names of fields and instances involved in the bundle, using the
       // field map. The field map is already filtered to active, non-deleted
       // fields and instances, so those are kept out of the persistent caches.
       $config_ids = array();
-      foreach ($this->getFieldMap() as $field_name => $field_data) {
-        if (isset($field_data['bundles'][$entity_type]) && in_array($bundle, $field_data['bundles'][$entity_type])) {
-          $config_ids[$field_name] = "$entity_type.$bundle.$field_name";
+      foreach ($field_map[$entity_type] as $field_name => $field_data) {
+        if (in_array($bundle, $field_data['bundles'])) {
+          $config_ids["$entity_type.$field_name"] = "$entity_type.$bundle.$field_name";
         }
       }
 
       // Load and prepare the corresponding fields and instances entities.
       if ($config_ids) {
+        // Place the fields in our global "static".
         $loaded_fields = entity_load_multiple('field_entity', array_keys($config_ids));
-        $loaded_instances = entity_load_multiple('field_instance', array_values($config_ids));
-
-        foreach ($loaded_instances as $instance) {
-          $field = $loaded_fields[$instance['field_name']];
-
-          $instance = $this->prepareInstance($instance, $field['type']);
-          $instances[$field['field_name']] = $instance;
-
-          // If the field is not in our global "static" list yet, add it.
+        foreach ($loaded_fields as $field) {
           if (!isset($this->fieldsById[$field['uuid']])) {
             $field = $this->prepareField($field);
 
             $this->fieldsById[$field['uuid']] = $field;
-            $this->fieldIdsByName[$field['field_name']] = $field['uuid'];
+            $this->fieldIdsByName[$field->entity_type][$field->name] = $field['uuid'];
           }
+
+          $fields[] = $this->fieldsById[$field['uuid']];
+        }
+
+        // Then collect the instances.
+        $loaded_instances = entity_load_multiple('field_instance', array_values($config_ids));
+        foreach ($loaded_instances as $instance) {
+          $field = $instance->getField();
+
+          $instance = $this->prepareInstance($instance, $field['type']);
+          $instances[$field['field_name']] = $instance;
         }
       }
     }
@@ -477,16 +490,10 @@ class FieldInfo {
       $this->emptyBundles[$entity_type][$bundle] = TRUE;
     }
 
-    // The persistent cache additionally contains the definitions of the fields
-    // involved in the bundle.
-    $cache = array(
-      'instances' => $instances,
-      'fields' => array()
-    );
-    foreach ($instances as $instance) {
-      $cache['fields'][] = $this->fieldsById[$instance['field_id']];
-    }
-    $this->cacheBackend->set("field_info:bundle:$entity_type:$bundle", $cache, CacheBackendInterface::CACHE_PERMANENT, array('field_info' => TRUE));
+    // Store in the persistent cache. Fields and instances are cached in
+    // separate entries because they need to be unserialized separately.
+    $this->cacheBackend->set("field_info:bundle:fields:$entity_type:$bundle", $fields, CacheBackendInterface::CACHE_PERMANENT, array('field_info' => TRUE));
+    $this->cacheBackend->set("field_info:bundle:instances:$entity_type:$bundle", $instances, CacheBackendInterface::CACHE_PERMANENT, array('field_info' => TRUE));
 
     return $instances;
   }
@@ -565,7 +572,6 @@ class FieldInfo {
   public function prepareField($field) {
     // Make sure all expected field settings are present.
     $field['settings'] += $this->fieldTypeManager->getDefaultSettings($field['type']);
-    $field['storage']['settings'] += field_info_storage_settings($field['storage']['type']);
 
     return $field;
   }

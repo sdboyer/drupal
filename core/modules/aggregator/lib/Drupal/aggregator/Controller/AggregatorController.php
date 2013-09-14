@@ -9,11 +9,11 @@ namespace Drupal\aggregator\Controller;
 
 use Drupal\aggregator\FeedInterface;
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Controller\ControllerInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Routing\PathBasedGeneratorInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 /**
  * Returns responses for aggregator module routes.
  */
-class AggregatorController implements ControllerInterface {
+class AggregatorController implements ContainerInjectionInterface {
 
   /**
    * Stores the Entity manager.
@@ -55,7 +55,7 @@ class AggregatorController implements ControllerInterface {
   /**
    * The url generator.
    *
-   * @var \Drupal\Core\Routing\PathBasedGeneratorInterface
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
    */
   protected $urlGenerator;
 
@@ -73,7 +73,7 @@ class AggregatorController implements ControllerInterface {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct(EntityManager $entity_manager, Connection $database, ConfigFactory $config_factory, ModuleHandlerInterface $module_handler, PathBasedGeneratorInterface $url_generator) {
+  public function __construct(EntityManager $entity_manager, Connection $database, ConfigFactory $config_factory, ModuleHandlerInterface $module_handler, UrlGeneratorInterface $url_generator) {
     $this->entityManager = $entity_manager;
     $this->database = $database;
     $this->configFactory = $config_factory;
@@ -86,7 +86,7 @@ class AggregatorController implements ControllerInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.entity'),
+      $container->get('entity.manager'),
       $container->get('database'),
       $container->get('config.factory'),
       $container->get('module_handler'),

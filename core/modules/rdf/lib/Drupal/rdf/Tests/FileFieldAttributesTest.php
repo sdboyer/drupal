@@ -56,7 +56,7 @@ class FileFieldAttributesTest extends FileFieldTestBase {
     $this->fieldName = strtolower($this->randomName());
 
     $type_name = 'article';
-    $this->createFileField($this->fieldName, $type_name);
+    $this->createFileField($this->fieldName, 'node', $type_name);
 
     // Set the teaser display to show this field.
     entity_get_display('node', 'article', 'teaser')
@@ -73,7 +73,7 @@ class FileFieldAttributesTest extends FileFieldTestBase {
     $nid = $this->uploadNodeFile($test_file, $this->fieldName, $type_name);
 
     $this->node = node_load($nid, TRUE);
-    $this->file = file_load($this->node->{$this->fieldName}[Language::LANGCODE_NOT_SPECIFIED][0]['target_id']);
+    $this->file = file_load($this->node->{$this->fieldName}->target_id);
 
   }
 

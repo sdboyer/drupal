@@ -1234,6 +1234,14 @@ function install_settings_form_submit($form, &$form_state) {
     );
   }
 
+  // Remember the profile which was used.
+  $settings['settings'] = array(
+    'install_profile' => (object) array(
+      'value' => $install_state['parameters']['profile'],
+      'required' => TRUE,
+    ),
+  );
+
   drupal_rewrite_settings($settings);
 
   // Add the config directories to settings.php.
@@ -1689,8 +1697,8 @@ function install_check_localization_server($uri) {
  *   Associative array containing 'core' and 'version' of the release.
  */
 function install_get_localization_release() {
-  if (strpos(VERSION, 'dev')) {
-    list($version, ) = explode('-', VERSION);
+  if (strpos(Drupal::VERSION, 'dev')) {
+    list($version, ) = explode('-', Drupal::VERSION);
     list($major, $minor) = explode('.', $version);
 
     // Calculate the major and minor release numbers to fall back to.
@@ -1704,7 +1712,7 @@ function install_get_localization_release() {
     $release = "$major.$minor";
   }
   else {
-    $release = VERSION;
+    $release = Drupal::VERSION;
   }
 
   return array(
@@ -1986,8 +1994,6 @@ function install_update_configuration_translations(&$install_state) {
  */
 function install_finished(&$install_state) {
   $profile = drupal_get_profile();
-  // Remember the profile which was used.
-  variable_set('install_profile', $profile);
 
   // Installation profiles are always loaded last.
   module_set_weight($profile, 1000);
@@ -2464,6 +2470,7 @@ function _install_configure_form($form, &$form_state, &$install_state) {
   );
   $form['update_notifications']['update_status_module'] = array(
     '#type' => 'checkboxes',
+    '#title' => t('Update notifications'),
     '#options' => array(
       1 => t('Check for updates automatically'),
       2 => t('Receive e-mail notifications'),

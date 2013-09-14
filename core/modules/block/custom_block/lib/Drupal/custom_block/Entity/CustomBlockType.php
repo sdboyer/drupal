@@ -32,6 +32,7 @@ use Drupal\custom_block\CustomBlockTypeInterface;
  *     "list" = "Drupal\custom_block\CustomBlockTypeListController"
  *   },
  *   config_prefix = "custom_block.type",
+ *   bundle_of = "custom_block",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",
@@ -81,7 +82,7 @@ class CustomBlockType extends ConfigEntityBase implements CustomBlockTypeInterfa
    */
   public function uri() {
     return array(
-      'path' => 'admin/structure/custom-blocks/manage/' . $this->id(),
+      'path' => 'admin/structure/block/custom-blocks/manage/' . $this->id(),
       'options' => array(
         'entity_type' => $this->entityType,
         'entity' => $this,

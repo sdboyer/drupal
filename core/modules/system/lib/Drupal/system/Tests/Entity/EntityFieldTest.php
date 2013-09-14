@@ -377,7 +377,7 @@ class EntityFieldTest extends EntityUnitTestBase  {
 
     $textfield_properties = $entity->field_test_text->getPropertyDefinitions();
     $this->assertEqual($textfield_properties['value']['type'], 'string', $entity_type .': String value property of the test-text field found.');
-    $this->assertEqual($textfield_properties['format']['type'], 'string', $entity_type .': String format field of the test-text field found.');
+    $this->assertEqual($textfield_properties['format']['type'], 'filter_format', $entity_type .': String format field of the test-text field found.');
     $this->assertEqual($textfield_properties['processed']['type'], 'string', $entity_type .': String processed property of the test-text field found.');
 
     // @todo: Once the user entity has definitions, continue testing getting
@@ -391,12 +391,14 @@ class EntityFieldTest extends EntityUnitTestBase  {
 
     $field = $entity->user_id;
     $this->assertIdentical($field->getRoot(), $entity, 'Entity is root object.');
+    $this->assertIdentical($field->getEntity(), $entity, 'getEntity() returns the entity.');
     $this->assertEqual($field->getPropertyPath(), 'user_id');
     $this->assertEqual($field->getName(), 'user_id');
     $this->assertIdentical($field->getParent(), $entity, 'Parent object matches.');
 
     $field_item = $field[0];
     $this->assertIdentical($field_item->getRoot(), $entity, 'Entity is root object.');
+    $this->assertIdentical($field_item->getEntity(), $entity, 'getEntity() returns the entity.');
     $this->assertEqual($field_item->getPropertyPath(), 'user_id.0');
     $this->assertEqual($field_item->getName(), '0');
     $this->assertIdentical($field_item->getParent(), $field, 'Parent object matches.');

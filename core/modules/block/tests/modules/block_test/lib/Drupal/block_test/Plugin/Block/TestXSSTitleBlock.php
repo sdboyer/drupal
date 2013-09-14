@@ -7,25 +7,24 @@
 
 namespace Drupal\block_test\Plugin\Block;
 
-use Drupal\Component\Annotation\Plugin;
+use Drupal\block\Annotation\Block;
 
 /**
  * Provides a block to test XSS in title.
  *
- * @Plugin(
+ * @Block(
  *   id = "test_xss_title",
- *   admin_label = "<script>alert('XSS subject');</script>",
- *   module = "block_test"
+ *   admin_label = "<script>alert('XSS subject');</script>"
  * )
  */
 class TestXSSTitleBlock extends TestCacheBlock {
 
   /**
-   * Overrides \Drupal\block\BlockBase::settings().
+   * {@inheritdoc}
    *
    * Sets a different caching strategy for testing purposes.
    */
-  public function settings() {
+  public function defaultConfiguration() {
     return array(
       'cache' => DRUPAL_NO_CACHE,
     );

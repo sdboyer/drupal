@@ -69,7 +69,7 @@ class NodeTranslationUITest extends ContentTranslationUITest {
    * Overrides \Drupal\content_translation\Tests\ContentTranslationUITest::getFormSubmitAction().
    */
   protected function getFormSubmitAction(EntityInterface $entity) {
-    if ($entity->status) {
+    if ($entity->isPublished()) {
       return t('Save and unpublish');
     }
     return t('Save and keep unpublished');
@@ -95,7 +95,7 @@ class NodeTranslationUITest extends ContentTranslationUITest {
         if (!empty($status_actions)) {
           $action = array_shift($status_actions);
         }
-        $this->drupalPost($path, array(), $action, array('language' => $languages[$langcode]));
+        $this->drupalPostForm($path, array(), $action, array('language' => $languages[$langcode]));
       }
       $entity = entity_load($this->entityType, $this->entityId, TRUE);
       foreach ($this->langcodes as $langcode) {
@@ -128,7 +128,7 @@ class NodeTranslationUITest extends ContentTranslationUITest {
         'date[date]' => format_date($values[$langcode]['created'], 'custom', 'Y-m-d'),
         'date[time]' => format_date($values[$langcode]['created'], 'custom', 'H:i:s'),
       );
-      $this->drupalPost($path, $edit, $this->getFormSubmitAction($entity), array('language' => $languages[$langcode]));
+      $this->drupalPostForm($path, $edit, $this->getFormSubmitAction($entity), array('language' => $languages[$langcode]));
     }
 
     $entity = entity_load($this->entityType, $this->entityId, TRUE);
@@ -169,7 +169,7 @@ class NodeTranslationUITest extends ContentTranslationUITest {
     $this->assertRaw('Not translated');
 
     // Delete the only translatable field.
-    field_info_field('field_test_et_ui_test')->delete();
+    field_info_field($this->entityType, 'field_test_et_ui_test')->delete();
 
     // Visit translation page.
     $this->drupalGet('node/' . $article->id() . '/translations');

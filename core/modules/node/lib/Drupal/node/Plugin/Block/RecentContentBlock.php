@@ -8,24 +8,23 @@
 namespace Drupal\node\Plugin\Block;
 
 use Drupal\block\BlockBase;
-use Drupal\Component\Annotation\Plugin;
+use Drupal\block\Annotation\Block;
 use Drupal\Core\Annotation\Translation;
 
 /**
  * Provides a 'Recent content' block.
  *
- * @Plugin(
+ * @Block(
  *   id = "node_recent_block",
- *   admin_label = @Translation("Recent content"),
- *   module = "node"
+ *   admin_label = @Translation("Recent content")
  * )
  */
 class RecentContentBlock extends BlockBase {
 
   /**
-   * Overrides \Drupal\block\BlockBase::settings().
+   * {@inheritdoc}
    */
-  public function settings() {
+  public function defaultConfiguration() {
     return array(
       'block_count' => 10,
     );

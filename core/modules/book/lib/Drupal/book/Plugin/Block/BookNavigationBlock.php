@@ -8,24 +8,23 @@
 namespace Drupal\book\Plugin\Block;
 
 use Drupal\block\BlockBase;
-use Drupal\Component\Annotation\Plugin;
+use Drupal\block\Annotation\Block;
 use Drupal\Core\Annotation\Translation;
 
 /**
  * Provides a 'Book navigation' block.
  *
- * @Plugin(
+ * @Block(
  *   id = "book_navigation",
- *   admin_label = @Translation("Book navigation"),
- *   module = "book"
+ *   admin_label = @Translation("Book navigation")
  * )
  */
 class BookNavigationBlock extends BlockBase {
 
   /**
-   * Overrides \Drupal\block\BlockBase::settings().
+   * {@inheritdoc}
    */
-  public function settings() {
+  public function defaultConfiguration() {
     return array(
       'cache' => DRUPAL_CACHE_PER_PAGE | DRUPAL_CACHE_PER_ROLE,
       'block_mode' => "all pages",

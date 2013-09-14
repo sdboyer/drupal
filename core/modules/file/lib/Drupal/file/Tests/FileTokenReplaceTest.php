@@ -27,15 +27,11 @@ class FileTokenReplaceTest extends FileFieldTestBase {
   function testFileTokenReplacement() {
     $token_service = \Drupal::token();
     $language_interface = language(Language::TYPE_INTERFACE);
-    $url_options = array(
-      'absolute' => TRUE,
-      'language' => $language_interface,
-    );
 
     // Create file field.
     $type_name = 'article';
     $field_name = 'field_' . strtolower($this->randomName());
-    $this->createFileField($field_name, $type_name);
+    $this->createFileField($field_name, 'node', $type_name);
 
     $test_file = $this->getTestFile('text');
     // Coping a file to test uploads with non-latin filenames.
@@ -47,7 +43,7 @@ class FileTokenReplaceTest extends FileFieldTestBase {
 
     // Load the node and the file.
     $node = node_load($nid, TRUE);
-    $file = file_load($node->{$field_name}[Language::LANGCODE_NOT_SPECIFIED][0]['target_id']);
+    $file = file_load($node->{$field_name}->target_id);
 
     // Generate and test sanitized tokens.
     $tests = array();

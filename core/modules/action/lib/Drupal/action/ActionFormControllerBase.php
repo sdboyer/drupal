@@ -46,7 +46,7 @@ abstract class ActionFormControllerBase extends EntityFormController {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.entity')->getStorageController('action')
+      $container->get('entity.manager')->getStorageController('action')
     );
   }
 
@@ -64,19 +64,18 @@ abstract class ActionFormControllerBase extends EntityFormController {
   public function form(array $form, array &$form_state) {
     $form['label'] = array(
       '#type' => 'textfield',
-      '#title' => t('Label'),
+      '#title' => $this->t('Label'),
       '#default_value' => $this->entity->label(),
       '#maxlength' => '255',
-      '#description' => t('A unique label for this advanced action. This label will be displayed in the interface of modules that integrate with actions.'),
+      '#description' => $this->t('A unique label for this advanced action. This label will be displayed in the interface of modules that integrate with actions.'),
     );
 
     $form['id'] = array(
       '#type' => 'machine_name',
-      '#title' => t('Machine name'),
       '#default_value' => $this->entity->id(),
       '#disabled' => !$this->entity->isNew(),
       '#maxlength' => 64,
-      '#description' => t('A unique name for this action. It must only contain lowercase letters, numbers and underscores.'),
+      '#description' => $this->t('A unique name for this action. It must only contain lowercase letters, numbers and underscores.'),
       '#machine_name' => array(
         'exists' => array($this, 'exists'),
       ),
@@ -148,7 +147,7 @@ abstract class ActionFormControllerBase extends EntityFormController {
    */
   public function save(array $form, array &$form_state) {
     $this->entity->save();
-    drupal_set_message(t('The action has been successfully saved.'));
+    drupal_set_message($this->t('The action has been successfully saved.'));
 
     $form_state['redirect'] = 'admin/config/system/actions';
   }
