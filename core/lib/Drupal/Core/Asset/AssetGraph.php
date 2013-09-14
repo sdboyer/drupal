@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset;
+use Gliph\Exception\InvalidVertexTypeException;
 use Gliph\Graph\DirectedAdjacencyGraph;
 
 /**
@@ -42,7 +43,7 @@ class AssetGraph extends DirectedAdjacencyGraph {
 
   public function addVertex($vertex) {
     if (!$vertex instanceof AssetInterface) {
-      throw new \InvalidArgumentException('AssetGraph requires vertices to implement AssetInterface.');
+      throw new InvalidVertexTypeException('AssetGraph requires vertices to implement AssetInterface.');
     }
 
     if (!$this->hasVertex($vertex)) {
