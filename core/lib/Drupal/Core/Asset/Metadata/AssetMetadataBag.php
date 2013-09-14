@@ -16,6 +16,7 @@ namespace Drupal\Core\Asset\Metadata;
  * values.
  *
  * TODO this is totally not specific to assets - move it somewhere more generic?
+ * TODO it's maybe not so important to rigorously control access to the defaults data
  */
 abstract class AssetMetadataBag implements \IteratorAggregate, \Countable {
 

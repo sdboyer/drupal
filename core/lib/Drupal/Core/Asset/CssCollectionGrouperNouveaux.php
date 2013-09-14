@@ -140,19 +140,21 @@ class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
    * @return bool|string
    * @throws \UnexpectedValueException
    */
-  protected function getGroupKey($asset) {
+  protected function getGroupKey(StylesheetAssetInterface $asset) {
+    $meta = $asset->getMetadata();
     // The browsers for which the CSS item needs to be loaded is part of the
     // information that determines when a new group is needed, but the order
     // of keys in the array doesn't matter, and we don't want a new group if
     // all that's different is that order.
-    ksort($asset['browsers']);
+    $browsers = $meta->get('browsers');
+    ksort($browsers);
 
     if ($asset instanceof StylesheetFileAsset) {
       // Compose a string key out of the set of relevant properties.
       // TODO - currently ignoring group, which is used in the current implementation. wishful thinking? maybe, maybe not.
       // TODO media has been pulled out - needs to be handled by the aggregator, wrapping css in media queries
       $k = $asset->isPreprocessable()
-        ? implode(':', array('file', $asset['every_page'], implode('', $asset['browsers'])))
+        ? implode(':', array('file', $meta->get('every_page'), implode('', $browsers)))
         : FALSE;
 
       return $k;
@@ -160,7 +162,7 @@ class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
     else if ($asset instanceof StylesheetStringAsset) {
       // String items are always grouped.
       // TODO use the term 'inline' here? do "string" and "inline" necessarily mean the same?
-      $k = implode(':', 'string', implode('', $asset['browsers']));
+      $k = implode(':', 'string', implode('', $browsers));
 
       return $k;
     }
