@@ -22,7 +22,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataBag;
  * The methods load() and getLastModified() are left undefined, although a
  * reusable doLoad() method is available to child classes.
  */
-abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, AssetDependencyInterface {
+abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, AssetOrderingInterface {
 
   protected $filters;
 
@@ -203,7 +203,7 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   /**
    * {@inheritdoc}
    */
-  public function getDependencies() {
+  public function getDependencyInfo() {
     return $this->dependencies;
   }
 
@@ -224,15 +224,29 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   /**
    * {@inheritdoc}
    */
-  public function getOrderingInfo() {
-    // TODO: Implement getOrderingInfo() method.
+  public function getPredecessors() {
+    // TODO: Implement getPredecessors() method.
   }
 
   /**
    * {@inheritdoc}
    */
-  public function clearOrderingInfo() {
-    // TODO: Implement clearOrderingInfo() method.
+  public function getSuccessors() {
+    // TODO: Implement getSuccessors() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearSuccessors() {
+    // TODO: Implement clearSuccessors() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearPredecessors() {
+    // TODO: Implement clearPredecessors() method.
   }
 
 }

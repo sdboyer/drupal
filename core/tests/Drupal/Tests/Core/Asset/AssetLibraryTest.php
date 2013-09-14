@@ -45,19 +45,19 @@ class AssetLibraryTest extends UnitTestCase {
     $this->assertEquals($fixture->getTitle(), $library->getTitle(), 'Title passed correctly through the constructor.');
     $this->assertEquals($fixture->getVersion(), $library->getVersion(), 'Version passed correctly through the constructor.');
     $this->assertEquals($fixture->getWebsite(), $library->getWebsite(), 'Website passed correctly through the constructor.');
-    $this->assertEquals($fixture->getDependencies(), $library->getDependencies(), 'Dependencies information passed correctly through the constructor.');
+    $this->assertEquals($fixture->getDependencyInfo(), $library->getDependencyInfo(), 'Dependencies information passed correctly through the constructor.');
   }
 
   public function testAddDependency() {
     $library = $this->getLibraryFixture();
     $library->addDependency('baz', 'bing');
-    $this->assertEquals($library->getDependencies(), array(array('foo', 'bar'), array('baz', 'bing')), 'Dependencies added to library successfully.');
+    $this->assertEquals($library->getDependencyInfo(), array(array('foo', 'bar'), array('baz', 'bing')), 'Dependencies added to library successfully.');
   }
 
   public function testClearDependencies() {
     $library = $this->getLibraryFixture();
     $library->clearDependencies();
-    $this->assertEmpty($library->getDependencies(), 'Dependencies recorded in the library were cleared correctly.');
+    $this->assertEmpty($library->getDependencyInfo(), 'Dependencies recorded in the library were cleared correctly.');
   }
 
   public function testFrozenNonwriteability() {

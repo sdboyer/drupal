@@ -7,10 +7,10 @@
 
 namespace Drupal\Core\Asset\Bag;
 
-use Drupal\Core\Asset\AssetDependencyInterface;
+use Drupal\Core\Asset\AssetOrderingInterface;
 use Drupal\Core\Asset\Bag\AssetBag;
 
-class AssetLibrary extends AssetBag implements AssetDependencyInterface {
+class AssetLibrary extends AssetBag implements AssetOrderingInterface {
 
   /**
    * The asset library's title.
@@ -149,7 +149,7 @@ class AssetLibrary extends AssetBag implements AssetDependencyInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDependencies() {
+  public function getDependencyInfo() {
     return $this->dependencies;
   }
 

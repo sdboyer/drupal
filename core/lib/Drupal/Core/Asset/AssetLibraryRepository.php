@@ -125,24 +125,24 @@ class AssetLibraryRepository implements \IteratorAggregate {
   /**
    * Retrieves the asset objects on which the passed asset depends.
    *
-   * @param AssetDependencyInterface $asset
+   * @param AssetOrderingInterface $asset
    *   The asset whose dependencies should be retrieved.
    *
    * @return array
    *   An array of AssetInterface objects if any dependencies were found;
    *   otherwise, an empty array.
    */
-  public function resolveDependencies(AssetDependencyInterface $asset) {
+  public function resolveDependencies(AssetOrderingInterface $asset) {
     $dependencies = array();
 
     if ($asset->hasDependencies()) {
-      foreach ($asset->getDependencies() as $info) {
+      foreach ($asset->getDependencyInfo() as $info) {
         try {
           $dependencies[] = $this->get($info[0], $info[1]);
         }
         // TODO should we really try/catch at a potentially high traffic place like this?
         catch (\InvalidArgumentException $e) {
-          // TODO we're relying on a method that's not in AssetDependencyInterface...
+          // TODO we're relying on a method that's not in AssetOrderingInterface...
           watchdog('assets', 'Asset @asset declared a dependency on nonexistent library @module/@name', array($asset->getSourcePath(), $info[0], $info[1]), WATCHDOG_ERROR);
         }
       }

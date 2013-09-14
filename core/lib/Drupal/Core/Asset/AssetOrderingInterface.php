@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains Drupal\Core\Asset\AssetDependencyInterface.
+ * Contains Drupal\Core\Asset\AssetOrderingInterface.
  */
 
 namespace Drupal\Core\Asset;
@@ -9,7 +9,7 @@ namespace Drupal\Core\Asset;
 /**
  * Describes an asset or asset-like object that can declare dependencies.
  */
-interface AssetDependencyInterface {
+interface AssetOrderingInterface {
 
   /**
    * Indicates whether this asset has one or more library dependencies.
@@ -24,7 +24,7 @@ interface AssetDependencyInterface {
    * @return mixed
    *   An array of dependencies if they exist,
    */
-  public function getDependencies();
+  public function getDependencyInfo();
 
   /**
    * Add a dependency on a library for this asset.
@@ -35,7 +35,6 @@ interface AssetDependencyInterface {
    *   The name of the library.
    *
    * @return void
-   *
    */
   public function addDependency($module, $name);
 
@@ -75,23 +74,38 @@ interface AssetDependencyInterface {
   public function after($asset);
 
   /**
-   * Returns ordering info, as declared by before() and after(), if any.
+   * Returns ordering info declared by after().
    *
-   * The info is returned as an iterator, where the key indicates whether the
-   * asset described in the value is before or after.
-   *
-   * TODO make this docblock clearer
-   *
-   * @return \Iterator
+   * @return array
+   *   An array of strings or AssetInterface instances that must precede this
+   *   object on final output.
    */
-  public function getOrderingInfo();
+  public function getPredecessors();
 
   /**
-   * Clears (removes) all ordering info for this asset.
+   * Returns ordering info declared by before().
+   *
+   * @return array
+   *   An array of strings or AssetInterface instances that must succeed this
+   *   object on final output.
+   */
+  public function getSuccessors();
+
+  /**
+   * Clears (removes) all ordering info declared by before() for this asset.
    *
    * This does not affect dependency data.
    *
-   * @return mixed
+   * @return void
    */
-  public function clearOrderingInfo();
+  public function clearSuccessors();
+
+  /**
+   * Clears (removes) all ordering info declared by after() for this asset.
+   *
+   * This does not affect dependency data.
+   *
+   * @return void
+   */
+  public function clearPredecessors();
 }
