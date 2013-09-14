@@ -34,7 +34,7 @@ class CssAggregateAsset extends BaseAggregateAsset implements StylesheetAssetInt
    * {@inheritdoc}
    */
   protected function ensureCorrectType(AssetInterface $asset) {
-   if (!($asset instanceof StylesheetAssetInterface || $asset instanceof self)) {
+    if (!($asset instanceof StylesheetAssetInterface || $asset instanceof self)) {
       throw new AssetTypeMismatchException('CSS aggregates can only work with CSS assets.');
     }
   }

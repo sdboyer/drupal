@@ -193,7 +193,7 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
       return FALSE;
     }
 
-    throw new \OutOfBoundsException(sprintf('This aggregate does not contain with key %s could be found.', $id));
+    throw new \OutOfBoundsException(sprintf('This aggregate does not contain an asset with id %s.', $id));
   }
 
   /**
