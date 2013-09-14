@@ -44,6 +44,7 @@ class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
    *
    * @param array $assets
    *   An asset collection.
+   *   TODO update the interface to be an AssetCollection, not an array
    *
    * @return array
    *   A sorted array of asset groups.
@@ -56,6 +57,7 @@ class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
     $processed = array();
     $last_key = FALSE;
     foreach ($tsl as $asset) {
+      // TODO fix the visitor - this will fail right now because the optimality data got depleted during traversal
       $key = $this->optimal_lookup->contains($asset) ? $this->optimal_lookup[$asset] : FALSE;
 
       if ($key !== $last_key) {
