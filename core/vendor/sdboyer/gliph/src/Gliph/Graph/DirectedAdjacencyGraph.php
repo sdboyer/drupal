@@ -7,14 +7,20 @@ use Gliph\Tarjan;
 class DirectedAdjacencyGraph extends AdjacencyGraph {
 
     public function addDirectedEdge($from, $to) {
-        $this->addVertex($from);
-        $this->addVertex($to);
+        if (!$this->hasVertex($from)) {
+            $this->addVertex(($from));
+        }
+
+        if (!$this->hasVertex($to)) {
+            $this->addVertex($to);
+        }
+
         $this->vertices[$from]->attach($to);
     }
 
     public function removeVertex($vertex) {
         if (!$this->hasVertex($vertex)) {
-            throw new \OutOfRangeException('Vertex is not in the graph, it cannot be removed.', E_WARNING);
+            throw new \OutOfBoundsException('Vertex is not in the graph, it cannot be removed.', E_WARNING);
         }
 
         $this->eachVertex(function($v, $outgoing) use ($vertex) {
