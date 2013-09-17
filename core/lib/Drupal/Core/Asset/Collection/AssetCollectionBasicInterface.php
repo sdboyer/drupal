@@ -77,4 +77,12 @@ interface AssetCollectionBasicInterface extends \Traversable {
    * @return void
    */
   public function reindex();
+
+  /**
+   * Indicates whether this collection contains any assets.
+   *
+   * @return bool
+   *   TRUE if contained assets are present, FALSE otherwise.
+   */
+  public function isEmpty();
 }

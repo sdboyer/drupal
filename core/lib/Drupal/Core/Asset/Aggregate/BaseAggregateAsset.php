@@ -422,6 +422,17 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   }
 
   /**
+   * Indicates whether this collection contains any assets.
+   *
+   * @return bool
+   *   TRUE if contained assets are present, FALSE otherwise.
+   */
+  public function isEmpty() {
+    return $this->assetStorage->count() === 0;
+  }
+
+
+  /**
    * Ensures that the asset is of the correct subtype (e.g., css vs. js).
    *
    * @param AssetInterface $asset
