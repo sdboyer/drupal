@@ -32,6 +32,9 @@ abstract class BaseAssetCollection implements AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function add(AssetInterface $asset) {
+    $this->attemptWrite();
+    $this->ensureCorrectType($asset);
+
     $this->assetStorage->attach($asset);
     $this->assetIdMap[$asset->id()] = $asset;
   }
@@ -71,21 +74,43 @@ abstract class BaseAssetCollection implements AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function remove($needle, $graceful = TRUE) {
-    // TODO: Implement remove() method.
+    $this->attemptWrite();
+
+    if ((is_string($needle) && $needle = $this->getById($needle, $graceful)) ||
+        $needle instanceof AssetInterface) {
+      unset($this->assetIdMap[$needle->id()], $this->assetStorage[$needle]);
+      return TRUE;
+    }
+
+    return FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
   public function all() {
-    // TODO: Implement all() method.
+    return $this->assetIdMap;
   }
 
   /**
    * {@inheritdoc}
    */
   public function mergeCollection(AssetCollectionInterface $collection) {
-    // TODO: Implement mergeCollection() method.
+    $this->attemptWrite();
+    // TODO subtype mismatch checking
+
+    $other_assets = $collection->all();
+
+    $intersection = array_intersect_key($this->assetIdMap, $other_assets);
+    foreach ($intersection as $id => $asset) {
+      unset($other_assets[$id]);
+    }
+
+    foreach ($other_assets as $asset) {
+      $this->add($asset);
+    }
+
+    return $this;
   }
 
   /**
