@@ -62,4 +62,11 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    * @return void
    */
   public function freeze();
+
+  /**
+   * Indicates whether or not this collection is frozen.
+   *
+   * @return bool
+   */
+  public function isFrozen();
 }

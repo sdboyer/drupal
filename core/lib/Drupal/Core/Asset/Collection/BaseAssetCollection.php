@@ -22,6 +22,8 @@ abstract class BaseAssetCollection implements AssetCollectionInterface {
 
   protected $assetIdMap = array();
 
+  protected $frozen = FALSE;
+
   public function __construct() {
     $this->assetStorage = new \SplObjectStorage();
   }
@@ -90,7 +92,23 @@ abstract class BaseAssetCollection implements AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function freeze() {
-    // TODO: Implement freeze() method.
+    $this->frozen = TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isFrozen() {
+    return $this->frozen;
+  }
+
+  /**
+   * Checks if the asset library is frozen, throws an exception if it is.
+   */
+  protected function attemptWrite() {
+    if ($this->isFrozen()) {
+      throw new \LogicException('Cannot write to a frozen AssetCollection.');
+    }
   }
 
   /**

@@ -9,6 +9,8 @@ namespace Drupal\Core\Asset\Bag;
 
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Bag\AssetBagInterface;
+use Drupal\Core\Asset\Collection\CssCollection;
+use Drupal\Core\Asset\Collection\JsCollection;
 use Drupal\Core\Asset\JavascriptAssetInterface;
 use Drupal\Core\Asset\StylesheetAssetInterface;
 
@@ -25,18 +27,14 @@ class AssetBag implements AssetBagInterface {
   protected $assets = array();
 
   /**
-   * Whether this AssetBag contains any JavaScript assets.
-   *
-   * @var bool
+   * @var \Drupal\Core\Asset\Collection\CssCollection
    */
-  protected $hasJs = FALSE;
+  protected $css;
 
   /**
-   * Whether this AssetBag contains any CSS assets.
-   *
-   * @var bool
+   * @var \Drupal\Core\Asset\Collection\JsCollection
    */
-  protected $hasCss = FALSE;
+  protected $js;
 
   /**
    * Whether this AssetBag is frozen.
@@ -44,6 +42,11 @@ class AssetBag implements AssetBagInterface {
    * @var bool
    */
   protected $frozen = FALSE;
+
+  public function __construct() {
+    $this->js = new JsCollection();
+    $this->css = new CssCollection();
+  }
 
   /**
    * {@inheritdoc}
@@ -53,13 +56,14 @@ class AssetBag implements AssetBagInterface {
       throw new \LogicException('Assets cannot be added to a frozen AssetBag.', E_ERROR);
     }
 
-    $this->assets[] = $asset;
     if ($asset instanceof JavascriptAssetInterface) {
-      $this->hasJs = TRUE;
+      $this->js->add($asset);
     }
     if ($asset instanceof StylesheetAssetInterface) {
-      $this->hasCss = TRUE;
+      $this->css->add($asset);
     }
+
+    return $this;
   }
 
   /**
@@ -70,34 +74,32 @@ class AssetBag implements AssetBagInterface {
       throw new \LogicException('Assets cannot be added to a frozen AssetBag.', E_ERROR);
     }
 
-    foreach ($bag->all() as $asset) {
-      $this->add($asset);
+    if ($bag->hasCss()) {
+      $this->css->mergeCollection($bag->getCss());
+    }
+    if ($bag->hasJs()) {
+      $this->js->mergeCollection($bag->getJs());
     }
 
     if ($freeze) {
       $bag->freeze();
     }
+
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
   public function hasCss() {
-    return $this->hasCss;
+    return !$this->css->isEmpty();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getCss() {
-    $css = array();
-    foreach ($this->assets as $asset) {
-      if ($asset instanceof StylesheetAssetInterface) {
-        $css[] = $asset;
-      }
-    }
-
-    return $css;
+    return $this->css;
   }
 
   /**
@@ -109,6 +111,8 @@ class AssetBag implements AssetBagInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * TODO js settings need a complete overhaul
    */
   public function addJsSetting($data) {
     $this->javascript['settings']['data'][] = $data;
@@ -118,21 +122,14 @@ class AssetBag implements AssetBagInterface {
    * {@inheritdoc}
    */
   public function hasJs() {
-    return $this->hasJs;
+    return !$this->js->isEmpty();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getJs() {
-    $js = array();
-    foreach ($this->assets as $asset) {
-      if ($asset instanceof JavascriptAssetInterface) {
-        $js[] = $asset;
-      }
-    }
-
-    return $js;
+    return $this->js;
   }
 
   /**

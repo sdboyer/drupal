@@ -29,7 +29,8 @@ interface AssetBagInterface {
    *
    * @param AssetInterface $asset
    *
-   * @return mixed
+   * @return AssetBagInterface
+   *   Returns the current AssetBagInterface object for method chaining.
    */
   public function add(AssetInterface $asset);
 
@@ -38,21 +39,18 @@ interface AssetBagInterface {
    *
    * @param AssetBagInterface $bag
    *
-   * @return mixed
+   * @return AssetBagInterface
+   *   Returns the current AssetBagInterface object for method chaining.
    */
   public function addAssetBag(AssetBagInterface $bag);
 
   /**
    * Adds configuration settings for eventual inclusion in drupalSettings.
    *
-   * @todo Nice-to-have: create something like JavaScriptSettingAssetInterface.
-   *
    * @param $data
    *   An associative array containing configuration settings, to be eventually
    *   merged into drupalSettings. Settings should be be keyed, typically by
    *   by module name, in order to avoid conflicts in the drupalSettings object.
-   *   Calling this twice with the same data does not change the settings sent
-   *   to the browser: this is idempotent, thanks to drupal_merge_js_settings().
    *
    * @return AssetBagInterface $this
    *   Returns the current AssetBagInterface object for method chaining.
@@ -69,7 +67,7 @@ interface AssetBagInterface {
   /**
    * Returns the CSS assets in this bag, in the order they were added.
    *
-   * @return array
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    */
   public function getCss();
 
@@ -83,16 +81,9 @@ interface AssetBagInterface {
   /**
    * Returns the JavaScript assets in this bag, in the order they were added.
    *
-   * @return array
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    */
   public function getJs();
-
-  /**
-   * Returns all assets contained in this object, in the order they were added.
-   *
-   * @return array
-   */
-  public function all();
 
   /**
    * Marks this bag as incapable of receiving new data.
