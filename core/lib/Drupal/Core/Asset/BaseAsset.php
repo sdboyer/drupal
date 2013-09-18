@@ -41,9 +41,11 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    */
   protected $metadata;
 
-  protected $dependencies;
+  protected $dependencies = array();
 
-  protected $ordering;
+  protected $successors = array();
+
+  protected $predecessors = array();
 
   public function __construct(AssetMetadataBag $metadata, $filters = array(), $sourceRoot = NULL, $sourcePath = NULL) {
     $this->filters = new FilterCollection($filters);
@@ -211,42 +213,41 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    * {@inheritdoc}
    */
   public function before($asset) {
-    // TODO: Implement before() method.
+    $this->successors[] = $asset;
   }
 
   /**
    * {@inheritdoc}
    */
   public function after($asset) {
-    // TODO: Implement after() method.
+    $this->predecessors[] = $asset;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPredecessors() {
-    // TODO: Implement getPredecessors() method.
+    return $this->predecessors;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getSuccessors() {
-    // TODO: Implement getSuccessors() method.
+    return $this->successors;
   }
 
   /**
    * {@inheritdoc}
    */
   public function clearSuccessors() {
-    // TODO: Implement clearSuccessors() method.
+    $this->successors = array();
   }
 
   /**
    * {@inheritdoc}
    */
   public function clearPredecessors() {
-    // TODO: Implement clearPredecessors() method.
+    $this->predecessors = array();
   }
-
 }
