@@ -101,8 +101,7 @@ abstract class BaseAssetCollection implements AssetCollectionInterface {
 
     $other_assets = $collection->all();
 
-    $intersection = array_intersect_key($this->assetIdMap, $other_assets);
-    foreach ($intersection as $id => $asset) {
+    foreach (array_intersect_key($this->assetIdMap, $other_assets) as $id => $asset) {
       unset($other_assets[$id]);
     }
 
