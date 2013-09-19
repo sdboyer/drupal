@@ -140,7 +140,7 @@ class AssetCollectorTest extends UnitTestCase {
    */
   public function testLockingPreventsSettingDefaults() {
     $this->collector->lock($this);
-    $this->collector->setDefaults('css', array('foo' => 'bar'));
+    $this->collector->setDefaultMetadata('css', array('foo' => 'bar'));// TODO update to bags!
   }
 
   /**
@@ -168,16 +168,16 @@ class AssetCollectorTest extends UnitTestCase {
   }
 
   public function testBuiltinDefaultAreTheSame() {
-    $this->assertEquals($this->builtinDefaults, $this->collector->getDefaults(), 'Expected set of built-in defaults reside in the collector.');
+    $this->assertEquals($this->builtinDefaults, $this->collector->getMetadataDefaults(), 'Expected set of built-in defaults reside in the collector.'); // TODO update to bags!
   }
 
   public function testChangeAndRestoreDefaults() {
     $changed_defaults = array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME);
-    $this->collector->setDefaults('css', $changed_defaults);
-    $this->assertEquals($changed_defaults + $this->builtinDefaults['css'], $this->collector->getDefaults('css'), 'Expected combination of built-in and injected defaults reside in the collector.');
+    $this->collector->setDefaultMetadata('css', $changed_defaults); // TODO update to bags!
+    $this->assertEquals($changed_defaults + $this->builtinDefaults['css'], $this->collector->getMetadataDefaults('css'), 'Expected combination of built-in and injected defaults reside in the collector.');// TODO update to bags!
 
     $this->collector->restoreDefaults();
-    $this->assertEquals($this->builtinDefaults, $this->collector->getDefaults(), 'Built-in defaults were correctly restored.');
+    $this->assertEquals($this->builtinDefaults, $this->collector->getMetadataDefaults(), 'Built-in defaults were correctly restored.'); // TODO update to bags!
 
   }
 
@@ -185,13 +185,13 @@ class AssetCollectorTest extends UnitTestCase {
    * @expectedException InvalidArgumentException
    */
   public function testGetNonexistentDefault() {
-    $this->collector->getDefaults('foo');
+    $this->collector->getMetadataDefaults('foo');// TODO update to bags!
     $this->fail('No exception thrown when an invalid key was requested.');
   }
 
   public function testDefaultPropagation() {
     // Test that defaults are correctly applied by the factory.
-    $this->collector->setDefaults('css', array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
+    $this->collector->setDefaultMetadata('css', array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
     $css1 = $this->collector->create('css', 'file', 'foo');
     $this->assertTrue($css1['every_page'], 'Correct default propagated for "every_page" property.');
     $this->assertEquals(CSS_AGGREGATE_THEME, $css1['group'], 'Correct default propagated for "group" property.');

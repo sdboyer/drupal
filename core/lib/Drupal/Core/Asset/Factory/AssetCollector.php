@@ -7,6 +7,9 @@
 namespace Drupal\Core\Asset\Factory;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Bag\AssetBagInterface;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\CssMetadataBag;
+use Drupal\Core\Asset\Metadata\JsMetadataBag;
 
 /**
  * A class that helps to create and collect assets.
@@ -44,32 +47,9 @@ class AssetCollector {
    */
   protected $lockKey;
 
-  protected $defaultAssetDefaults = array(
-    'css' => array(
-      'group' => CSS_AGGREGATE_DEFAULT,
-      'weight' => 0,
-      'every_page' => FALSE,
-      'media' => 'all',
-      'preprocess' => TRUE,
-      'browsers' => array(
-        'IE' => TRUE,
-        '!IE' => TRUE,
-      ),
-    ),
-    'js' => array(
-      'group' => JS_DEFAULT,
-      'every_page' => FALSE,
-      'weight' => 0,
-      'scope' => 'header',
-      'cache' => TRUE,
-      'preprocess' => TRUE,
-      'attributes' => array(),
-      'version' => NULL,
-      'browsers' => array(),
-    ),
-  );
+  protected $defaultCssMetadata;
 
-  protected $assetDefaults = array();
+  protected $defaultJsMetadata;
 
   protected $classMap = array(
     'css' => array(
@@ -84,14 +64,22 @@ class AssetCollector {
      ),
   );
 
-  public function __construct() {
+  public function __construct(AssetBagInterface $bag = NULL) {
     $this->restoreDefaults();
+
+    if (!is_null($bag)) {
+      $this->setBag($bag);
+    }
   }
 
   /**
-   * Adds an asset to the injected AM
+   * Adds an asset to the contained AssetBag.
    *
-   * @todo Document.
+   * It is not necessary to call this method on assets that were created via the
+   * create() method.
+   *
+   * @param AssetInterface $asset
+   *   The asset to add to the contained bag.
    */
   public function add(AssetInterface $asset) {
     if (empty($this->bag)) {
@@ -102,19 +90,32 @@ class AssetCollector {
   }
 
   /**
-   * Creates an asset and returns it.
+   * Creates an asset, stores it in the collector's bag, and returns it.
+   *
+   * TODO flesh out these docs to be equivalent to drupal_add_css/js()
    *
    * @param string $asset_type
-   *   'css' or 'js'.
+   *   A string indicating the asset type - 'css' or 'js'.
    * @param string $source_type
-   *   'file', 'external' or 'string'.
-   * @param ??? $data
+   *   A string indicating the source type - 'file', 'external' or 'string'.
+   * @param string $data
+   *   A string containing data that defines the asset. Appropriate values vary
+   *   depending on the source_type param:
+   *    - 'file': the relative path to the file, or a stream wrapper URI.
+   *    - 'external': the absolute path to the external asset.
+   *    - 'string': a string containing valid CSS or Javascript to be injected
+   *      directly onto the page.
    * @param array $options
-   *   ???
+   *   An array of metadata to explicitly set on the asset. These will override
+   *   metadata defaults that are injected onto the asset at creation time.
    * @param array $filters
-   *   ???
+   *   An array of filters to apply to the object
+   *   TODO this should, maybe, be removed entirely
    *
    * @return \Drupal\Core\Asset\AssetInterface
+   *
+   * @throws \InvalidArgumentException
+   *   Thrown if an invalid asset type or source type is passed.
    */
   public function create($asset_type, $source_type, $data, $options = array(), $filters = array()) {
     if (!isset($this->classMap[$asset_type])) {
@@ -124,9 +125,11 @@ class AssetCollector {
       throw new \InvalidArgumentException(sprintf('Only sources of type "file", "string", or "external" are allowed, "%s" requested.', $source_type));
     }
 
+    $metadata = $this->getMetadataDefaults($asset_type);
+    $metadata->replace($options);
+
     $class = $this->classMap[$asset_type][$source_type];
-    $asset = new $class($data, $options, $filters);
-    $asset->setDefaults($this->getDefaults($asset_type));
+    $asset = new $class($metadata, $data, $filters);
 
     if (!empty($this->bag)) {
       $this->add($asset);
@@ -181,30 +184,63 @@ class AssetCollector {
     return $this->locked;
   }
 
-  public function setDefaults($type, array $defaults) {
-    // TODO refactor to use AssetMetadataBag system
+  public function setDefaultMetadata($type, AssetMetadataBag $metadata) {
     if ($this->isLocked()) {
       throw new \Exception('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
     }
-    $this->assetDefaults[$type] = array_merge($this->assetDefaults[$type], $defaults);
+
+    if ($type === 'css') {
+      $this->defaultCssMetadata = $metadata;
+    }
+    elseif ($type === 'js') {
+      $this->defaultJsMetadata = $metadata;
+    }
+    else {
+      throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are supported, "%s" requested.', $type));
+    }
   }
 
-  public function getDefaults($type = NULL) {
-    if (!isset($type)) {
-      return $this->assetDefaults;
+  /**
+   * Gets a clone of the metadata bag for a given asset type.
+   *
+   * Clones are returned in order to ensure there is a unique metadata object
+   * for every asset, and that the default metadata contained in the collector
+   * cannot be modified externally.
+   *
+   * @param $type
+   *   A string, 'css' or 'js', indicating the type of metadata to retrieve.
+   *
+   * @return AssetMetadataBag
+   *
+   * @throws \InvalidArgumentException
+   *   Thrown if a type other than 'css' or 'js' is provided.
+   */
+  public function getMetadataDefaults($type) {
+    if ($type === 'css') {
+      return clone $this->defaultCssMetadata;
     }
-
-    if (!isset($this->assetDefaults[$type])) {
-      throw new \InvalidArgumentException(sprintf('The type provided, "%s", is not known.', $type));
+    elseif ($type === 'js') {
+      return clone $this->defaultJsMetadata;
     }
-
-    return $this->assetDefaults[$type];
+    else {
+      throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are supported, "%s" requested.', $type));
+    }
   }
 
+  /**
+   * Restores metadata default bags to their default state.
+   *
+   * This simply creates new instances of CssMetadataBag and JsMetadataBag, as
+   * those classes have the normal defaults as hardmapped properties.
+   *
+   * @throws \Exception
+   *   Thrown if the collector is locked when this method is called.
+   */
   public function restoreDefaults() {
     if ($this->isLocked()) {
       throw new \Exception('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
     }
-    $this->assetDefaults = $this->defaultAssetDefaults;
+    $this->defaultCssMetadata = new CssMetadataBag();
+    $this->defaultJsMetadata = new JsMetadataBag();
   }
 }
