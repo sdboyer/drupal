@@ -47,6 +47,8 @@ interface AssetBagInterface {
   /**
    * Adds configuration settings for eventual inclusion in drupalSettings.
    *
+   * TODO refactor & refine to completion
+   *
    * @param $data
    *   An associative array containing configuration settings, to be eventually
    *   merged into drupalSettings. Settings should be be keyed, typically by

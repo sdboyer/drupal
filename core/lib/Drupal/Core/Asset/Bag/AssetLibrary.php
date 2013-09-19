@@ -40,6 +40,10 @@ class AssetLibrary extends AssetBag implements AssetOrderingInterface {
    */
   protected $dependencies = array();
 
+  protected $predecessors = array();
+
+  protected $successors = array();
+
   public function __construct(array $values = array()) {
     // TODO do it right.
     $vals = array_intersect_key($values, array_flip(array('title', 'version', 'website', 'dependencies')));
@@ -151,6 +155,48 @@ class AssetLibrary extends AssetBag implements AssetOrderingInterface {
    */
   public function getDependencyInfo() {
     return $this->dependencies;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function before($asset) {
+    $this->successors[] = $asset;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function after($asset) {
+    $this->predecessors[] = $asset;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPredecessors() {
+    return $this->predecessors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSuccessors() {
+    return $this->successors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearSuccessors() {
+    $this->successors = array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearPredecessors() {
+    $this->predecessors = array();
   }
 
   /**

@@ -6,8 +6,6 @@
  */
 
 namespace Drupal\Core\Asset\Collection;
-use Assetic\Asset\AssetInterface as AsseticAssetInterface;
-use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Core\Asset\AssetInterface;
 
 /**
