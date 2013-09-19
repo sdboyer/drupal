@@ -16,7 +16,7 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * @see CssCollection
  * @see JsCollection
  */
-abstract class BaseAssetCollection implements AssetCollectionInterface {
+abstract class BaseAssetCollection implements \IteratorAggregate, AssetCollectionInterface {
 
   protected $assetStorage;
 
@@ -124,6 +124,20 @@ abstract class BaseAssetCollection implements AssetCollectionInterface {
    */
   public function isFrozen() {
     return $this->frozen;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIterator() {
+    return new \ArrayIterator($this->assetIdMap);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEmpty() {
+    return empty($this->assetIdMap);
   }
 
   /**
