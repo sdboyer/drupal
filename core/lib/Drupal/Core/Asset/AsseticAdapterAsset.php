@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset;
+
 use Assetic\Asset\AssetInterface;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
@@ -14,25 +15,25 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * properties and methods Drupal does not support.
  */
 abstract class AsseticAdapterAsset implements AssetInterface {
+
   /**
-   * @throws \InvalidArgumentException
+   * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
    */
   public function getVars() {
     throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'vars' concept.");
   }
 
   /**
-   * @throws \InvalidArgumentException
+   * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
    */
   public function setValues(array $values) {
     throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'values' concept.");
   }
 
   /**
-   * @throws \InvalidArgumentException
+   * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
    */
   public function getValues() {
     throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'values' concept.");
   }
-
 }
