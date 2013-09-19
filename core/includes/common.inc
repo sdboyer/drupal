@@ -2225,11 +2225,6 @@ function drupal_html_id($id) {
 function drupal_add_js($data = NULL, $options = NULL) {
   $javascript = &drupal_static(__FUNCTION__, array());
 
-  if (isset($data)) {
-    $options['type'] = isset($options['type']) ? $options['type'] : 'file';
-    drupal_collect_assets($data, $options, $options['type'] == 'setting' ? 'js-setting' : 'js');
-  }
-
   // Construct the options, taking the defaults into consideration.
   if (isset($options)) {
     if (!is_array($options)) {
@@ -2240,6 +2235,11 @@ function drupal_add_js($data = NULL, $options = NULL) {
     $options = array();
   }
   $options += drupal_js_defaults($data);
+
+  if (isset($data) && is_array($options)) {
+    $options['type'] = isset($options['type']) ? $options['type'] : 'file';
+    drupal_collect_assets($data, $options, $options['type'] == 'setting' ? 'js-setting' : 'js');
+  }
 
   // Preprocess can only be set if caching is enabled and no attributes are set.
   $options['preprocess'] = $options['cache'] && empty($options['attributes']) ? $options['preprocess'] : FALSE;
