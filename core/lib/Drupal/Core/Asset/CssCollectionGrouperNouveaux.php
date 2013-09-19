@@ -6,6 +6,8 @@
  */
 
 namespace Drupal\Core\Asset;
+use Drupal\Core\Asset\Aggregate\CssAggregateAsset;
+use Drupal\Core\Asset\Collection\CssCollection;
 use Gliph\Traversal\DepthFirst;
 use Gliph\Visitor\DepthFirstBasicVisitor;
 use Drupal\Core\Asset\AssetGraph;
@@ -13,7 +15,7 @@ use Drupal\Core\Asset\AssetGraph;
 /**
  * Groups CSS assets.
  */
-class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
+class CssCollectionGrouperNouveaux {
 
   /**
    * @var AssetLibraryRepository
@@ -49,19 +51,19 @@ class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
    * @return array
    *   A sorted array of asset groups.
    */
-  public function group(array $assets) {
+  public function group(CssCollection $assets) {
     $tsl = $this->getOptimalTSL($assets);
 
     // TODO replace with CssCollection
     // TODO ordering suddenly matters here...problem?
-    $processed = array();
+    $processed = new CssCollection();
     $last_key = FALSE;
     foreach ($tsl as $asset) {
       // TODO fix the visitor - this will fail right now because the optimality data got depleted during traversal
       $key = $this->optimal_lookup->contains($asset) ? $this->optimal_lookup[$asset] : FALSE;
 
       if ($key !== $last_key) {
-        $processed[] = $aggregate = new CssAggregateAsset(); // TODO implement CSSAggregateAsset
+        $processed[] = $aggregate = new CssAggregateAsset($asset->getMetadata());
       }
 
       $aggregate->add($asset);
@@ -80,7 +82,7 @@ class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
    *
    * @throws \LogicException
    */
-  protected function getOptimalTSL(array $assets) {
+  protected function getOptimalTSL(CssCollection $assets) {
     // We need to define the optimum minimal group set, given metadata
     // boundaries across which aggregates cannot be safely made.
     $this->optimal = array();
@@ -115,10 +117,6 @@ class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
 
     // First, transpose the graph in order to get an appropriate answer
     $transpose = $graph->transpose();
-    // Next, check for cycles
-    if ($cycles = $transpose->getCycles()) {
-      throw new \LogicException(sprintf('Found %d cycles in CSS asset collection.', count($cycles)));
-    }
 
     // Create a queue of start vertices to prime the traversal.
     $queue = $this->createSourceQueue($graph, $transpose);
