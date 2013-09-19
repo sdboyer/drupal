@@ -53,7 +53,7 @@ class CommentInterfaceTest extends CommentTestBase {
     $this->assertTrue($this->commentExists($comment), 'Comment found.');
 
     // Check comment display.
-    $this->drupalGet('node/' . $this->node->id() . '/' . $comment->id());
+    $this->drupalGet('node/' . $this->node->id());
     $this->assertText($subject_text, 'Individual comment subject found.');
     $this->assertText($comment_text, 'Individual comment body found.');
 
@@ -63,8 +63,12 @@ class CommentInterfaceTest extends CommentTestBase {
     $this->setCommentSubject(TRUE);
     $this->setCommentPreview(DRUPAL_OPTIONAL);
 
-    // Test changing the comment author to "Anonymous".
     $this->drupalGet('comment/' . $comment->id() . '/edit');
+    $this->assertTitle(t('Edit comment @title | Drupal', array(
+      '@title' => $comment->subject->value,
+    )));
+
+    // Test changing the comment author to "Anonymous".
     $comment = $this->postComment(NULL, $comment->comment_body->value, $comment->subject->value, array('name' => ''));
     $this->assertTrue(empty($comment->name->value) && $comment->uid->target_id == 0, 'Comment author successfully changed to anonymous.');
 

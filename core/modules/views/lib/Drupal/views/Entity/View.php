@@ -33,6 +33,9 @@ use Drupal\Core\Annotation\Translation;
  *     "label" = "label",
  *     "uuid" = "uuid",
  *     "status" = "status"
+ *   },
+ *   links = {
+ *     "edit-form" = "admin/structure/views/view/{view}"
  *   }
  * )
  */
@@ -132,19 +135,6 @@ class View extends ConfigEntityBase implements ViewStorageInterface {
     }
 
     return $this->executable;
-  }
-
-  /**
-   * Overrides Drupal\Core\Entity\EntityInterface::uri().
-   */
-  public function uri() {
-    return array(
-      'path' => 'admin/structure/views/view/' . $this->id(),
-      'options' => array(
-        'entity_type' => $this->entityType,
-        'entity' => $this,
-      ),
-    );
   }
 
   /**
@@ -291,6 +281,8 @@ class View extends ConfigEntityBase implements ViewStorageInterface {
    * {@inheritdoc}
    */
   public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    parent::postSave($storage_controller, $update);
+
     views_invalidate_cache();
   }
 
@@ -298,6 +290,8 @@ class View extends ConfigEntityBase implements ViewStorageInterface {
    * {@inheritdoc}
    */
   public static function preCreate(EntityStorageControllerInterface $storage_controller, array &$values) {
+    parent::preCreate($storage_controller, $values);
+
     // If there is no information about displays available add at least the
     // default display.
     $values += array(
@@ -317,6 +311,8 @@ class View extends ConfigEntityBase implements ViewStorageInterface {
    * {@inheritdoc}
    */
   public function postCreate(EntityStorageControllerInterface $storage_controller) {
+    parent::postCreate($storage_controller);
+
     $this->mergeDefaultDisplaysOptions();
   }
 
@@ -324,6 +320,8 @@ class View extends ConfigEntityBase implements ViewStorageInterface {
    * {@inheritdoc}
    */
   public static function postDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
+    parent::postDelete($storage_controller, $entities);
+
     $tempstore = \Drupal::service('user.tempstore')->get('views');
     foreach ($entities as $entity) {
       $tempstore->delete($entity->id());

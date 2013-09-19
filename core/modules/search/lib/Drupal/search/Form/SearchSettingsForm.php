@@ -8,17 +8,16 @@ namespace Drupal\search\Form;
 
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Config\Context\ContextInterface;
-use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\search\SearchPluginManager;
-use Drupal\system\SystemConfigFormBase;
+use Drupal\Core\Form\ConfigFormBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Configure search settings for this site.
  */
-class SearchSettingsForm extends SystemConfigFormBase {
+class SearchSettingsForm extends ConfigFormBase {
 
   /**
    * A configuration object with the current search settings.
@@ -37,7 +36,7 @@ class SearchSettingsForm extends SystemConfigFormBase {
   /**
    * The module handler.
    *
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected $moduleHandler;
 
@@ -148,7 +147,7 @@ class SearchSettingsForm extends SystemConfigFormBase {
       '#title' => t('Number of items to index per cron run'),
       '#default_value' => $this->searchSettings->get('index.cron_limit'),
       '#options' => $items,
-      '#description' => t('The maximum number of items indexed in each pass of a <a href="@cron">cron maintenance task</a>. If necessary, reduce the number of items to prevent timeouts and memory errors while indexing.', array('@cron' => $this->url('system_status')))
+      '#description' => t('The maximum number of items indexed in each pass of a <a href="@cron">cron maintenance task</a>. If necessary, reduce the number of items to prevent timeouts and memory errors while indexing.', array('@cron' => $this->url('system.status')))
     );
     // Indexing settings:
     $form['indexing_settings'] = array(

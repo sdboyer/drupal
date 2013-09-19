@@ -361,7 +361,7 @@ function _drupal_default_html_head() {
   );
   // Show Drupal and the major version number in the META GENERATOR tag.
   // Get the major version.
-  list($version, ) = explode('.', Drupal::VERSION);
+  list($version, ) = explode('.', \Drupal::VERSION);
   $elements['system_meta_generator'] = array(
     '#type' => 'html_tag',
     '#tag' => 'meta',
@@ -447,7 +447,7 @@ function drupal_get_feeds($delimiter = "\n") {
  */
 function drupal_get_query_parameters(array $query = NULL, array $exclude = array(), $parent = '') {
   if (!isset($query)) {
-    $query = Drupal::request()->query->all();
+    $query = \Drupal::request()->query->all();
   }
   return Url::filterQueryParameters($query, $exclude, $parent);
 }
@@ -487,7 +487,7 @@ function drupal_get_destination() {
     return $destination;
   }
 
-  $query = Drupal::request()->query;
+  $query = \Drupal::request()->query;
   if ($query->has('destination')) {
     $destination = array('destination' => $query->get('destination'));
   }
@@ -1110,7 +1110,7 @@ function format_interval($interval, $granularity = 2, $langcode = NULL) {
  * @see \Drupal\Component\Datetime\Date::format()
  */
 function format_date($timestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
-  return Drupal::service('date')->format($timestamp, $type, $format, $timezone, $langcode);
+  return \Drupal::service('date')->format($timestamp, $type, $format, $timezone, $langcode);
 }
 
 /**
@@ -1201,7 +1201,7 @@ function datetime_default_format_type() {
  * @see \Drupal\Core\Routing\UrlGeneratorInterface::generateFromPath().
  */
 function url($path = NULL, array $options = array()) {
-  $generator = Drupal::urlGenerator();
+  $generator = \Drupal::urlGenerator();
   try {
     $url = $generator->generateFromPath($path, $options);
   }
@@ -1345,7 +1345,7 @@ function l($text, $path, array $options = array()) {
       'path' => current_path(),
       'front_page' => drupal_is_front_page(),
       'language' => language(Language::TYPE_URL)->id,
-      'query' => Drupal::service('request')->query->all(),
+      'query' => \Drupal::service('request')->query->all(),
     );
   }
 
@@ -1371,7 +1371,7 @@ function l($text, $path, array $options = array()) {
   }
 
   // Allow other modules to modify the structure of the link.
-  Drupal::moduleHandler()->alter('link', $variables);
+  \Drupal::moduleHandler()->alter('link', $variables);
 
   // Move attributes out of options. url() doesn't need them.
   $attributes = new Attribute($variables['options']['attributes']);
@@ -1887,7 +1887,7 @@ function drupal_pre_render_styles($elements) {
   $css_assets = $elements['#items'];
 
   // Aggregate the CSS if necessary, but only during normal site operation.
-  if (!defined('MAINTENANCE_MODE') && Drupal::config('system.performance')->get('css.preprocess')) {
+  if (!defined('MAINTENANCE_MODE') && \Drupal::config('system.performance')->get('css.preprocess')) {
     $css_assets = \Drupal::service('asset.css.collection_optimizer')->optimize($css_assets);
   }
   return \Drupal::service('asset.css.collection_renderer')->render($css_assets);
@@ -1897,7 +1897,7 @@ function drupal_pre_render_styles($elements) {
  * Deletes old cached CSS files.
  */
 function drupal_clear_css_cache() {
-  Drupal::state()->delete('drupal_css_cache_files');
+  \Drupal::state()->delete('drupal_css_cache_files');
   file_scan_directory('public://css', '/.*/', array('callback' => 'drupal_delete_file_if_stale'));
 }
 
@@ -1910,7 +1910,7 @@ function drupal_clear_css_cache() {
  */
 function drupal_delete_file_if_stale($uri) {
   // Default stale file threshold is 30 days.
-  if (REQUEST_TIME - filemtime($uri) > Drupal::config('system.performance')->get('stale_file_threshold')) {
+  if (REQUEST_TIME - filemtime($uri) > \Drupal::config('system.performance')->get('stale_file_threshold')) {
     file_unmanaged_delete($uri);
   }
 }
@@ -2519,7 +2519,7 @@ function drupal_pre_render_scripts($elements) {
 
   // Aggregate the JavaScript if necessary, but only during normal site
   // operation.
-  if (!defined('MAINTENANCE_MODE') && Drupal::config('system.performance')->get('js.preprocess')) {
+  if (!defined('MAINTENANCE_MODE') && \Drupal::config('system.performance')->get('js.preprocess')) {
     $js_assets = \Drupal::service('asset.js.collection_optimizer')->optimize($js_assets);
   }
   return \Drupal::service('asset.js.collection_renderer')->render($js_assets);
@@ -3030,8 +3030,8 @@ function drupal_add_tabledrag($table_id, $action, $relationship, $group, $subgro
  * Deletes old cached JavaScript files and variables.
  */
 function drupal_clear_js_cache() {
-  Drupal::state()->delete('system.javascript_parsed');
-  Drupal::state()->delete('system.js_cache_files');
+  \Drupal::state()->delete('system.javascript_parsed');
+  \Drupal::state()->delete('system.js_cache_files');
   file_scan_directory('public://js', '/.*/', array('callback' => 'drupal_delete_file_if_stale'));
 }
 
@@ -3137,7 +3137,7 @@ function _drupal_bootstrap_code() {
   require_once __DIR__ . '/entity.inc';
 
   // Load all enabled modules
-  Drupal::moduleHandler()->loadAll();
+  \Drupal::moduleHandler()->loadAll();
 
   // Make sure all stream wrappers are registered.
   file_get_stream_wrappers();
@@ -3151,7 +3151,7 @@ function _drupal_bootstrap_code() {
   }
 
   // Set the allowed protocols once we have the config available.
-  $allowed_protocols = Drupal::config('system.filter')->get('protocols');
+  $allowed_protocols = \Drupal::config('system.filter')->get('protocols');
   if (!isset($allowed_protocols)) {
     // filter_xss_admin() is called by the installer and update.php, in which
     // case the configuration may not exist (yet). Provide a minimal default set
@@ -3211,7 +3211,7 @@ function drupal_page_set_cache(Response $response, Request $request) {
   if (drupal_page_is_cacheable()) {
 
     // Check if the current page may be compressed.
-    $page_compressed = Drupal::config('system.performance')->get('response.gzip') && extension_loaded('zlib');
+    $page_compressed = \Drupal::config('system.performance')->get('response.gzip') && extension_loaded('zlib');
 
     $cache = (object) array(
       'cid' => drupal_page_cache_get_cid($request),
@@ -3279,7 +3279,7 @@ function drupal_cron_run() {
 
   $return = FALSE;
   // Grab the defined cron queues.
-  $queues = Drupal::moduleHandler()->invokeAll('queue_info');
+  $queues = \Drupal::moduleHandler()->invokeAll('queue_info');
   drupal_alter('queue_info', $queues);
 
   // Try to acquire cron lock.
@@ -3292,12 +3292,12 @@ function drupal_cron_run() {
     // existing queue.
     foreach ($queues as $queue_name => $info) {
       if (isset($info['cron'])) {
-        Drupal::queue($queue_name)->createQueue();
+        \Drupal::queue($queue_name)->createQueue();
       }
     }
 
     // Iterate through the modules calling their cron handlers (if any):
-    foreach (Drupal::moduleHandler()->getImplementations('cron') as $module) {
+    foreach (\Drupal::moduleHandler()->getImplementations('cron') as $module) {
       // Do not let an exception thrown by one module disturb another.
       try {
         module_invoke($module, 'cron');
@@ -3308,7 +3308,7 @@ function drupal_cron_run() {
     }
 
     // Record cron time.
-    Drupal::state()->set('system.cron_last', REQUEST_TIME);
+    \Drupal::state()->set('system.cron_last', REQUEST_TIME);
     watchdog('cron', 'Cron run completed.', array(), WATCHDOG_NOTICE);
 
     // Release cron lock.
@@ -3322,7 +3322,7 @@ function drupal_cron_run() {
     if (isset($info['cron'])) {
       $callback = $info['worker callback'];
       $end = time() + (isset($info['cron']['time']) ? $info['cron']['time'] : 15);
-      $queue = Drupal::queue($queue_name);
+      $queue = \Drupal::queue($queue_name);
       while (time() < $end && ($item = $queue->claimItem())) {
         call_user_func_array($callback, array($item->data));
         $queue->deleteItem($item);
@@ -3552,7 +3552,7 @@ function drupal_pre_render_link($element) {
 
   if (isset($element['#route_name'])) {
     $element['#route_parameters'] = empty($element['#route_parameters']) ? array() : $element['#route_parameters'];
-    $element['#markup'] = Drupal::linkGenerator()->generate($element['#title'], $element['#route_name'], $element['#route_parameters'], $element['#options']);
+    $element['#markup'] = \Drupal::linkGenerator()->generate($element['#title'], $element['#route_name'], $element['#route_parameters'], $element['#options']);
   }
   else {
     $element['#markup'] = l($element['#title'], $element['#href'], $element['#options']);
@@ -3702,7 +3702,7 @@ function drupal_render_page($page) {
   }
 
   // Modules can add elements to $page as needed in hook_page_build().
-  foreach (Drupal::moduleHandler()->getImplementations('page_build') as $module) {
+  foreach (\Drupal::moduleHandler()->getImplementations('page_build') as $module) {
     $function = $module . '_page_build';
     $function($page);
   }
@@ -4120,7 +4120,7 @@ function show(&$element) {
  * @see drupal_render_cache_set()
  */
 function drupal_render_cache_get($elements) {
-  if (!Drupal::request()->isMethodSafe() || !$cid = drupal_render_cid_create($elements)) {
+  if (!\Drupal::request()->isMethodSafe() || !$cid = drupal_render_cid_create($elements)) {
     return FALSE;
   }
   $bin = isset($elements['#cache']['bin']) ? $elements['#cache']['bin'] : 'cache';
@@ -4152,7 +4152,7 @@ function drupal_render_cache_get($elements) {
  */
 function drupal_render_cache_set(&$markup, $elements) {
   // Create the cache ID for the element.
-  if (!Drupal::request()->isMethodSafe() || !$cid = drupal_render_cid_create($elements)) {
+  if (!\Drupal::request()->isMethodSafe() || !$cid = drupal_render_cid_create($elements)) {
     return FALSE;
   }
 
@@ -4392,7 +4392,7 @@ function element_info($type) {
   $cache = &$drupal_static_fast['cache'];
 
   if (!isset($cache)) {
-    $cache = Drupal::moduleHandler()->invokeAll('element_info');
+    $cache = \Drupal::moduleHandler()->invokeAll('element_info');
     foreach ($cache as $element_type => $info) {
       $cache[$element_type]['#type'] = $element_type;
     }
@@ -4641,7 +4641,7 @@ function drupal_parse_info_file($filename) {
       $parser = new Parser();
       $info[$filename] = $parser->parse(file_get_contents($filename));
       if (isset($info[$filename]['version']) && $info[$filename]['version'] === 'VERSION') {
-        $info[$filename]['version'] = Drupal::VERSION;
+        $info[$filename]['version'] = \Drupal::VERSION;
       }
     }
   }
@@ -4751,7 +4751,7 @@ function drupal_implode_tags($tags) {
  *   requests.
  */
 function drupal_flush_all_caches() {
-  $module_handler = Drupal::moduleHandler();
+  $module_handler = \Drupal::moduleHandler();
   // Flush all persistent caches.
   // This is executed based on old/previously known information, which is
   // sufficient, since new extensions cannot have any primed caches yet.
@@ -4771,7 +4771,7 @@ function drupal_flush_all_caches() {
   drupal_static_reset();
 
   // Clear all non-drupal_static() static caches.
-  Drupal::entityManager()->clearCachedDefinitions();
+  \Drupal::entityManager()->clearCachedDefinitions();
 
   // Wipe the PHP Storage caches.
   PhpStorageFactory::get('service_container')->deleteAll();
@@ -4790,9 +4790,9 @@ function drupal_flush_all_caches() {
       $files[$module] = $data->uri;
     }
   }
-  Drupal::service('kernel')->updateModules($module_handler->getModuleList(), $files);
+  \Drupal::service('kernel')->updateModules($module_handler->getModuleList(), $files);
   // New container, new module handler.
-  $module_handler = Drupal::moduleHandler();
+  $module_handler = \Drupal::moduleHandler();
 
   // Ensure that all modules that are currently supposed to be enabled are
   // actually loaded.
@@ -4812,7 +4812,7 @@ function drupal_flush_all_caches() {
   // Rebuild the menu router based on all rebuilt data.
   // Important: This rebuild must happen last, so the menu router is guaranteed
   // to be based on up to date information.
-  Drupal::service('router.builder')->rebuild();
+  \Drupal::service('router.builder')->rebuild();
   menu_router_rebuild();
 
   // Re-initialize the maintenance theme, if the current request attempted to
@@ -4893,7 +4893,7 @@ function drupal_check_incompatibility($v, $current_version) {
  */
 function archiver_get_extensions() {
   $valid_extensions = array();
-  foreach (Drupal::service('plugin.manager.archiver')->getDefinitions() as $archive) {
+  foreach (\Drupal::service('plugin.manager.archiver')->getDefinitions() as $archive) {
     foreach ($archive['extensions'] as $extension) {
       foreach (explode('.', $extension) as $part) {
         if (!in_array($part, $valid_extensions)) {
@@ -4923,7 +4923,7 @@ function archiver_get_archiver($file) {
   if (!is_file($filepath)) {
     throw new Exception(t('Archivers can only operate on local files: %file not supported', array('%file' => $file)));
   }
-  return Drupal::service('plugin.manager.archiver')->getInstance(array('filepath' => $filepath));
+  return \Drupal::service('plugin.manager.archiver')->getInstance(array('filepath' => $filepath));
 }
 
 /**
@@ -4943,7 +4943,7 @@ function archiver_get_archiver($file) {
 function drupal_get_updaters() {
   $updaters = &drupal_static(__FUNCTION__);
   if (!isset($updaters)) {
-    $updaters = Drupal::moduleHandler()->invokeAll('updater_info');
+    $updaters = \Drupal::moduleHandler()->invokeAll('updater_info');
     drupal_alter('updater_info', $updaters);
     uasort($updaters, 'drupal_sort_weight');
   }
@@ -4963,7 +4963,7 @@ function drupal_get_updaters() {
 function drupal_get_filetransfer_info() {
   $info = &drupal_static(__FUNCTION__);
   if (!isset($info)) {
-    $info = Drupal::moduleHandler()->invokeAll('filetransfer_info');
+    $info = \Drupal::moduleHandler()->invokeAll('filetransfer_info');
     drupal_alter('filetransfer_info', $info);
     uasort($info, 'drupal_sort_weight');
   }

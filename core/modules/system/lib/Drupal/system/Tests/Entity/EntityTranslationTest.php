@@ -9,7 +9,6 @@ namespace Drupal\system\Tests\Entity;
 
 use Drupal\Core\Language\Language;
 use Drupal\Core\TypedData\TranslatableInterface;
-use InvalidArgumentException;
 
 /**
  * Tests entity translation.
@@ -168,7 +167,7 @@ class EntityTranslationTest extends EntityUnitTestBase {
       $entity->getTranslation('invalid')->get($this->field_name)->value;
       $this->fail('Getting a translation for an invalid language is NULL.');
     }
-    catch (InvalidArgumentException $e) {
+    catch (\InvalidArgumentException $e) {
       $this->pass('A translation for an invalid language is NULL.');
     }
 
@@ -177,7 +176,7 @@ class EntityTranslationTest extends EntityUnitTestBase {
       $entity->getTranslation('invalid')->set($this->field_name, NULL);
       $this->fail(format_string('%entity_type: Setting a translation for an invalid language throws an exception.', array('%entity_type' => $entity_type)));
     }
-    catch (InvalidArgumentException $e) {
+    catch (\InvalidArgumentException $e) {
       $this->pass(format_string('%entity_type: Setting a translation for an invalid language throws an exception.', array('%entity_type' => $entity_type)));
     }
 
@@ -380,7 +379,7 @@ class EntityTranslationTest extends EntityUnitTestBase {
     $entity->name->value = $name;
     $name_translated = $langcode . '_' . $this->randomName();
     $translation = $entity->addTranslation($langcode);
-    $this->assertNotEqual($entity, $translation, 'The entity and the translation object differ from one another.');
+    $this->assertNotIdentical($entity, $translation, 'The entity and the translation object differ from one another.');
     $this->assertTrue($entity->hasTranslation($langcode), 'The new translation exists.');
     $this->assertEqual($translation->language()->id, $langcode, 'The translation language matches the specified one.');
     $this->assertEqual($translation->getUntranslated()->language()->id, $default_langcode, 'The original language can still be retrieved.');
@@ -404,7 +403,7 @@ class EntityTranslationTest extends EntityUnitTestBase {
     // language.
     $langcode2 = $this->langcodes[2];
     $translation = $entity->getTranslation($langcode2);
-    $value = $entity != $translation && $translation->language()->id == $langcode2 && $entity->hasTranslation($langcode2);
+    $value = $entity !== $translation && $translation->language()->id == $langcode2 && $entity->hasTranslation($langcode2);
     $this->assertTrue($value, 'A new translation object can be obtained also by specifying a valid language.');
     $this->assertEqual($entity->language()->id, $default_langcode, 'The original language has been preserved.');
     $translation->save();
@@ -478,7 +477,7 @@ class EntityTranslationTest extends EntityUnitTestBase {
     $entity->getTranslation($langcode);
     $cloned = clone $entity;
     $translation = $cloned->getTranslation($langcode);
-    $this->assertNotEqual($entity, $translation->getUntranslated(), 'A cloned entity object has no reference to the original one.');
+    $this->assertNotIdentical($entity, $translation->getUntranslated(), 'A cloned entity object has no reference to the original one.');
 
     // Check that per-language defaults are properly populated.
     $entity = $this->reloadEntity($entity);

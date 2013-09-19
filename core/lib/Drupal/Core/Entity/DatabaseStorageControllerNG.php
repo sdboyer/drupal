@@ -9,8 +9,6 @@ namespace Drupal\Core\Entity;
 
 use Drupal\Core\Language\Language;
 use Drupal\field\FieldInfo;
-use PDO;
-
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\DatabaseStorageController;
@@ -268,7 +266,7 @@ class DatabaseStorageControllerNG extends DatabaseStorageController {
       // If a revision table is available, we need all the properties of the
       // latest revision. Otherwise we fall back to the data table.
       $table = $this->revisionTable ?: $this->dataTable;
-      $query = $this->database->select($table, 'data', array('fetch' => PDO::FETCH_ASSOC))
+      $query = $this->database->select($table, 'data', array('fetch' => \PDO::FETCH_ASSOC))
         ->fields('data')
         ->condition($this->idKey, array_keys($entities))
         ->orderBy('data.' . $this->idKey);
@@ -332,9 +330,6 @@ class DatabaseStorageControllerNG extends DatabaseStorageController {
   public function save(EntityInterface $entity) {
     $transaction = $this->database->startTransaction();
     try {
-      // Ensure we are dealing with the actual entity.
-      $entity = $entity->getNGEntity();
-
       // Sync the changes made in the fields array to the internal values array.
       $entity->updateOriginalValues();
 
@@ -573,11 +568,6 @@ class DatabaseStorageControllerNG extends DatabaseStorageController {
     try {
       $entity_class = $this->entityClass;
       $entity_class::preDelete($this, $entities);
-
-      // Ensure we are dealing with the actual entities.
-      foreach ($entities as $id => $entity) {
-        $entities[$id] = $entity->getNGEntity();
-      }
 
       foreach ($entities as $entity) {
         $this->invokeHook('predelete', $entity);

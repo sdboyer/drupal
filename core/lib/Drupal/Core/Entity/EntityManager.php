@@ -329,7 +329,11 @@ class EntityManager extends PluginManagerBase {
    *   A access controller instance.
    */
   public function getAccessController($entity_type) {
-    return $this->getController($entity_type, 'access');
+    if (!isset($this->controllers['access'][$entity_type])) {
+      $controller = $this->getController($entity_type, 'access');
+      $controller->setModuleHandler($this->moduleHandler);
+    }
+    return $this->controllers['access'][$entity_type];
   }
 
   /**
@@ -370,7 +374,7 @@ class EntityManager extends PluginManagerBase {
    *   langcode. Defaults to an empty array.
    * @code
    *   $form_state['langcode'] = $langcode;
-   *   $manager = Drupal::entityManager();
+   *   $manager = \Drupal::entityManager();
    *   $form = $manager->getForm($entity, 'default', $form_state);
    * @endcode
    *
@@ -430,7 +434,7 @@ class EntityManager extends PluginManagerBase {
       $bundle = str_replace($entity_info['bundle_prefix'], '', $bundle);
     }
     return array(
-      'route_name' => 'field_ui.overview.' . $entity_type,
+      'route_name' => "field_ui.overview_$entity_type",
       'route_parameters' => array(
         'bundle' => $bundle,
       )

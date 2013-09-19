@@ -43,7 +43,7 @@ function _update_8003_field_create_field(array &$field_config) {
   );
 
   // Save in config.
-  Drupal::config('field.field.' . $field_config['id'])
+  \Drupal::config('field.field.' . $field_config['id'])
     ->setData($field_config)
     ->save();
 
@@ -88,7 +88,7 @@ function _update_8003_field_create_instance(array $field_config, array &$instanc
   );
 
   // Save in config.
-  Drupal::config('field.instance.' . $instance_config['id'])
+  \Drupal::config('field.instance.' . $instance_config['id'])
     ->setData($instance_config)
     ->save();
 }
@@ -116,7 +116,7 @@ function _update_8006_field_write_data_sql($entity_type, $bundle, $entity_id, $r
     $revision_id = $entity_id;
   }
 
-  $field_config = Drupal::config("field.field.$entity_type.$field_name");
+  $field_config = \Drupal::config("field.field.$entity_type.$field_name");
   $field = new Field($field_config);
 
   $table_name = DatabaseStorageController::_fieldTableName($field);
@@ -194,35 +194,38 @@ function field_update_8002() {
       continue;
     }
 
-    // Migrate 'widget' settings.
-    if (isset($data['widget'])) {
-      $widget_options = $data['widget'];
-      // Determine name and create initial entry in the $form_displays array.
-      $form_display_id = $record->entity_type . '.' . $record->bundle . '.default';
-      if (!isset($form_displays[$form_display_id])) {
-        $form_displays[$form_display_id] = _update_8000_entity_get_form_display($record->entity_type, $record->bundle, 'default');
-      }
-
-      // We do not need the 'module' key anymore.
-      unset($widget_options['module']);
-      $form_displays[$form_display_id]->set("content.$record->field_name", $widget_options);
-    }
-
-    // Migrate 'display' settings.
-    if (isset($data['display'])) {
-      foreach ($data['display'] as $view_mode => $display_options) {
-        // Determine name and create initial entry in the $displays array if it
-        // does not exist yet.
-        $display_id = $record->entity_type . '.' . $record->bundle . '.' . $view_mode;
-        if (!isset($displays[$display_id])) {
-          $displays[$display_id] = _update_8000_entity_get_display($record->entity_type, $record->bundle, $view_mode);
+    // Do not place deleted fields in entity displays.
+    if (empty($record->deleted)) {
+      // Migrate 'widget' settings.
+      if (isset($data['widget'])) {
+        $widget_options = $data['widget'];
+        // Determine name and create initial entry in the $form_displays array.
+        $form_display_id = $record->entity_type . '.' . $record->bundle . '.default';
+        if (!isset($form_displays[$form_display_id])) {
+          $form_displays[$form_display_id] = _update_8000_entity_get_form_display($record->entity_type, $record->bundle, 'default');
         }
 
-        // The display object does not store hidden fields.
-        if ($display_options['type'] != 'hidden') {
-          // We do not need the 'module' key anymore.
-          unset($display_options['module']);
-          $displays[$display_id]->set("content.$record->field_name", $display_options);
+        // We do not need the 'module' key anymore.
+        unset($widget_options['module']);
+        $form_displays[$form_display_id]->set("content.$record->field_name", $widget_options);
+      }
+
+      // Migrate 'display' settings.
+      if (isset($data['display'])) {
+        foreach ($data['display'] as $view_mode => $display_options) {
+          // Determine name and create initial entry in the $displays array if it
+          // does not exist yet.
+          $display_id = $record->entity_type . '.' . $record->bundle . '.' . $view_mode;
+          if (!isset($displays[$display_id])) {
+            $displays[$display_id] = _update_8000_entity_get_display($record->entity_type, $record->bundle, $view_mode);
+          }
+
+          // The display object does not store hidden fields.
+          if ($display_options['type'] != 'hidden') {
+            // We do not need the 'module' key anymore.
+            unset($display_options['module']);
+            $displays[$display_id]->set("content.$record->field_name", $display_options);
+          }
         }
       }
     }
@@ -313,7 +316,7 @@ function field_update_8002() {
 function field_update_8003() {
   $uuid = new Uuid();
 
-  $state = Drupal::state();
+  $state = \Drupal::state();
   $deleted_fields = $state->get('field.field.deleted') ?: array();
   $deleted_instances = $state->get('field.instance.deleted') ?: array();
 
@@ -348,7 +351,7 @@ function field_update_8003() {
 
     // Save in either config or state.
     if (!$record['deleted']) {
-      Drupal::config('field.field.' . $config['id'])
+      \Drupal::config('field.field.' . $config['id'])
         ->setData($config)
         ->save();
     }
@@ -403,7 +406,7 @@ function field_update_8003() {
 
     // Save in either config or state.
     if (!$record['deleted']) {
-      Drupal::config('field.instance.' . $config['id'])
+      \Drupal::config('field.instance.' . $config['id'])
         ->setData($config)
         ->save();
     }
@@ -448,7 +451,7 @@ function field_update_8004() {
 function field_update_8005() {
   $uuid = new Uuid();
 
-  $user_default_form_display = Drupal::config('entity.form_display.user.user.default');
+  $user_default_form_display = \Drupal::config('entity.form_display.user.user.default');
   $user_register_config_data = array(
     'id' => 'user.user.register',
     'uuid' => $uuid->generate(),
@@ -458,7 +461,7 @@ function field_update_8005() {
     'content' => array(),
   );
   foreach (config_get_storage_names_with_prefix('field.instance') as $config_id) {
-    $instance_config = Drupal::config($config_id);
+    $instance_config = \Drupal::config($config_id);
     if ($instance_config->get('entity_type') == 'user' && $instance_config->get('settings.user_register_form')) {
       list(, , $field_id) = explode('.', $instance_config->get('id'));
       $user_register_config_data['content'][$field_id] = $user_default_form_display->get('content.' . $field_id);
@@ -469,7 +472,7 @@ function field_update_8005() {
   }
 
   // Save the new 'register' form display.
-  Drupal::config('entity.form_display.user.user.register')
+  \Drupal::config('entity.form_display.user.user.register')
     ->setData($user_register_config_data)
     ->save();
 }
@@ -481,7 +484,7 @@ function field_update_8005() {
 function field_update_8006(&$sandbox) {
   // Get field definitions from config, and deleted fields from state system.
   $config_names = config_get_storage_names_with_prefix('field.field');
-  $deleted_fields = Drupal::state()->get('field.field.deleted') ?: array();
+  $deleted_fields = \Drupal::state()->get('field.field.deleted') ?: array();
   // Ditch UUID keys, we will iterate through deleted fields using a numeric
   // index.
   $deleted_fields = array_values($deleted_fields);
@@ -498,7 +501,7 @@ function field_update_8006(&$sandbox) {
   // Retrieve the next field definition. When the index exceeds the number of
   // 'configuration' fields, use it to iterate on deleted fields.
   if (isset($config_names[$sandbox['index']])) {
-    $field_config = Drupal::config($config_names[$sandbox['index']])->get();
+    $field_config = \Drupal::config($config_names[$sandbox['index']])->get();
   }
   else {
     $field_config = $deleted_fields[$sandbox['index'] - count($config_names)];

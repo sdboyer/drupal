@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  *   Search plugin_id to use for the search.
  * @param $keys
  *   Keywords to use for the search.
+ *
+ * @deprecated Use \Drupal\search\Controller\SearchController::searchView()
  */
 function search_view($plugin_id = NULL, $keys = '') {
   $info = FALSE;
@@ -25,7 +27,7 @@ function search_view($plugin_id = NULL, $keys = '') {
     $keys = trim($_REQUEST['keys']);
   }
 
-  $manager = Drupal::service('plugin.manager.search');
+  $manager = \Drupal::service('plugin.manager.search');
   if (!empty($plugin_id)) {
     $active_plugin_info = $manager->getActiveDefinitions();
     if (isset($active_plugin_info[$plugin_id])) {
@@ -46,7 +48,7 @@ function search_view($plugin_id = NULL, $keys = '') {
     return new RedirectResponse(url($path, array('absolute' => TRUE)));
   }
   $plugin = $manager->createInstance($plugin_id);
-  $request = Drupal::request();
+  $request = \Drupal::request();
   $plugin->setSearch($keys, $request->query->all(), $request->attributes->all());
   // Default results output is an empty string.
   $results = array('#markup' => '');

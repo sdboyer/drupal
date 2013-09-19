@@ -191,6 +191,8 @@ class CustomBlock extends EntityNG implements CustomBlockInterface {
    * {@inheritdoc}
    */
   public function preSave(EntityStorageControllerInterface $storage_controller) {
+    parent::preSave($storage_controller);
+
     // Before saving the custom block, set changed time.
     $this->changed->value = REQUEST_TIME;
   }
@@ -199,6 +201,8 @@ class CustomBlock extends EntityNG implements CustomBlockInterface {
    * {@inheritdoc}
    */
   public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    parent::postSave($storage_controller, $update);
+
     // Invalidate the block cache to update custom block-based derivatives.
     \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
   }
@@ -214,6 +218,8 @@ class CustomBlock extends EntityNG implements CustomBlockInterface {
    * {@inheritdoc}
    */
   public function preSaveRevision(EntityStorageControllerInterface $storage_controller, \stdClass $record) {
+    parent::preSaveRevision($storage_controller, $record);
+
     if ($this->isNewRevision()) {
       // When inserting either a new custom block or a new custom_block
       // revision, $entity->log must be set because {block_custom_revision}.log
@@ -266,7 +272,7 @@ class CustomBlock extends EntityNG implements CustomBlockInterface {
     );
     $properties['langcode'] = array(
       'label' => t('Language code'),
-      'description' => t('The comment language code.'),
+      'description' => t('The custom block language code.'),
       'type' => 'language_field',
     );
     $properties['info'] = array(
@@ -288,6 +294,9 @@ class CustomBlock extends EntityNG implements CustomBlockInterface {
       'label' => t('Changed'),
       'description' => t('The time that the custom block was last edited.'),
       'type' => 'integer_field',
+      'property_constraints' => array(
+        'value' => array('EntityChanged' => array()),
+      ),
     );
     return $properties;
   }

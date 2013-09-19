@@ -27,6 +27,7 @@ use Drupal\user\UserInterface;
  *     "render" = "Drupal\Core\Entity\EntityRenderController",
  *     "form" = {
  *       "default" = "Drupal\user\ProfileFormController",
+ *       "cancel" = "Drupal\user\Form\UserCancelForm",
  *       "register" = "Drupal\user\RegisterFormController"
  *     },
  *     "translation" = "Drupal\user\ProfileTranslationController"
@@ -60,6 +61,8 @@ class User extends EntityNG implements UserInterface {
    * {@inheritdoc}
    */
   static function preCreate(EntityStorageControllerInterface $storage_controller, array &$values) {
+    parent::preCreate($storage_controller, $values);
+
     if (!isset($values['created'])) {
       $values['created'] = REQUEST_TIME;
     }
@@ -71,6 +74,8 @@ class User extends EntityNG implements UserInterface {
    * {@inheritdoc}
    */
   public function preSave(EntityStorageControllerInterface $storage_controller) {
+    parent::preSave($storage_controller);
+
     // Update the user password if it has changed.
     if ($this->isNew() || ($this->pass->value && $this->pass->value != $this->original->pass->value)) {
       // Allow alternate password hashing schemes.
@@ -101,6 +106,8 @@ class User extends EntityNG implements UserInterface {
    * {@inheritdoc}
    */
   public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    parent::postSave($storage_controller, $update);
+
     if ($update) {
       // If the password has been changed, delete all open sessions for the
       // user and recreate the current one.
@@ -141,6 +148,8 @@ class User extends EntityNG implements UserInterface {
    * {@inheritdoc}
    */
   public static function postDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
+    parent::postDelete($storage_controller, $entities);
+
     $uids = array_keys($entities);
     \Drupal::service('user.data')->delete(NULL, $uids);
     $storage_controller->deleteUserRoles($uids);
