@@ -109,4 +109,12 @@ class AssetGraph extends DirectedAdjacencyGraph {
       }
     }
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function transpose() {
+    // TODO super-important - have to rewrite transpose so that it correctly inverts edge direction
+    return parent::transpose();
+  }
 }
