@@ -60,8 +60,8 @@ class AssetAssemblyTest extends UnitTestCase {
     // Dead-simple bag - contains just one css and one js assets, both local files.
     $bag = new AssetBag();
 
-    $css1 = new StylesheetFileAsset(new CssMetadataBag(), DRUPAL_ROOT . '/core/misc/vertical-tabs.css');
-    $js1 = new JavascriptFileAsset(new JsMetadataBag(), DRUPAL_ROOT . '/core/misc/ajax.js');
+    $css1 = new StylesheetFileAsset(new CssMetadataBag(), 'foo');
+    $js1 = new JavascriptFileAsset(new JsMetadataBag(), 'baz');
 
     $bag->add($css1);
     $bag->add($js1);
@@ -78,7 +78,7 @@ class AssetAssemblyTest extends UnitTestCase {
     $this->assertEquals($css_collection, $bag->getCss());
     $this->assertEquals($js_collection, $bag->getJs());
 
-    $css2 = new StylesheetFileAsset(new CssMetadataBag(), DRUPAL_ROOT . 'core/misc/dropbutton/dropbutton.base.css');
+    $css2 = new StylesheetFileAsset(new CssMetadataBag(), 'bing');
     $bag->add($css2);
     $css_collection->add($css2);
 
