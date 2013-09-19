@@ -11,13 +11,18 @@ use Drupal\Core\Asset\Bag\AssetBag;
 use Drupal\Core\Asset\Bag\AssetLibrary;
 use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\AssetLibraryReference;
+use Drupal\Core\Asset\Collection\CssCollection;
+use Drupal\Core\Asset\Collection\JsCollection;
 use Drupal\Core\Asset\JavascriptFileAsset;
 use Drupal\Core\Asset\JavascriptStringAsset;
 use Drupal\Core\Asset\JavascriptExternalAsset;
+use Drupal\Core\Asset\Metadata\CssMetadataBag;
+use Drupal\Core\Asset\Metadata\JsMetadataBag;
 use Drupal\Core\Asset\StylesheetFileAsset;
 use Drupal\Core\Asset\StylesheetStringAsset;
 use Drupal\Core\Asset\StylesheetExternalAsset;
 
+use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -31,14 +36,14 @@ class AssetAssemblyTest extends UnitTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Asset Assembly tests',
+      'name' => 'Asset assembly tests',
       'description' => 'Tests to ensure assets declared via the various possible approaches come out with the correct properties, in the proper order.',
       'group' => 'Asset',
     );
   }
 
   public function createJQueryAssetLibrary() {
-    $library = new AssetLibrary(array(new JavascriptFileAsset('core/misc/jquery.js')));
+    $library = new AssetLibrary(array(new JavascriptFileAsset(new JsMetadataBag(), 'core/misc/jquery.js')));
     return $library->setTitle('jQuery')
       ->setVersion('1.8.2')
       ->setWebsite('http://jquery.com');
@@ -55,8 +60,8 @@ class AssetAssemblyTest extends UnitTestCase {
     // Dead-simple bag - contains just one css and one js assets, both local files.
     $bag = new AssetBag();
 
-    $css1 = new StylesheetFileAsset(DRUPAL_ROOT . '/core/misc/vertical-tabs.css');
-    $js1 = new JavascriptFileAsset(DRUPAL_ROOT . '/core/misc/ajax.js');
+    $css1 = new StylesheetFileAsset(new CssMetadataBag(), DRUPAL_ROOT . '/core/misc/vertical-tabs.css');
+    $js1 = new JavascriptFileAsset(new JsMetadataBag(), DRUPAL_ROOT . '/core/misc/ajax.js');
 
     $bag->add($css1);
     $bag->add($js1);
@@ -64,31 +69,19 @@ class AssetAssemblyTest extends UnitTestCase {
     $this->assertTrue($bag->hasCss(), 'AssetBag correctly reports that it contains CSS assets.');
     $this->assertTrue($bag->hasJs(), 'AssetBag correctly reports that it contains javascript assets.');
 
-    $this->assertEquals(array($css1), $bag->getCss());
-    $this->assertEquals(array($js1), $bag->getJs());
+    $css_collection = new CssCollection();
+    $css_collection->add($css1);
 
-    $css2 = new StylesheetFileAsset(DRUPAL_ROOT . 'core/misc/dropbutton/dropbutton.base.css');
+    $js_collection = new JsCollection();
+    $js_collection->add($js1);
+
+    $this->assertEquals($css_collection, $bag->getCss());
+    $this->assertEquals($js_collection, $bag->getJs());
+
+    $css2 = new StylesheetFileAsset(new CssMetadataBag(), DRUPAL_ROOT . 'core/misc/dropbutton/dropbutton.base.css');
     $bag->add($css2);
+    $css_collection->add($css2);
 
-    $this->assertEquals(array($css1, $css2), $bag->getCss());
-
-    $this->assertEquals(array($css1, $js1, $css2), $bag->all());
-  }
-
-  public function testSortingAndDependencyResolution() {
-    $bag = new AssetBag();
-
-    $alm = new AssetLibraryRepository();
-    $alm->add('system', 'jquery', $this->createJQueryAssetLibrary());
-    $dep = new AssetLibraryReference('jquery', $alm);
-
-    $css1 = new StylesheetFileAsset(DRUPAL_ROOT . '/core/misc/vertical-tabs.css');
-    $js1 = new JavascriptFileAsset(DRUPAL_ROOT . '/core/misc/ajax.js');
-    // $js1->addDependency($dep);
-
-    $bag->add($css1);
-    $bag->add($js1);
-
-    $this->assertEquals(array(new JavascriptFileAsset('core/misc/jquery.js'), $js1), $bag->getJs());
+    $this->assertEquals($css_collection, $bag->getCss());
   }
 }

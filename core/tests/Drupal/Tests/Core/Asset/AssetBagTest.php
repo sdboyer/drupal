@@ -7,28 +7,56 @@
 
 namespace Drupal\Tests\Core\Asset;
 
+use Drupal\Core\Asset\Bag\AssetBag;
+use Drupal\Core\Asset\Collection\CssCollection;
+use Drupal\Core\Asset\Collection\JsCollection;
+use Drupal\Core\Asset\JavascriptFileAsset;
+use Drupal\Core\Asset\Metadata\CssMetadataBag;
+use Drupal\Core\Asset\Metadata\JsMetadataBag;
+use Drupal\Core\Asset\StylesheetFileAsset;
 use Drupal\Tests\UnitTestCase;
 
 
 /**
- * TODO all of it
  * @group Asset
  */
 class AssetBagTest extends UnitTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => '', // TODO give me a name
-      'description' => '', // TODO give me a description
-      'group' => '', // TODO give me the same group as above
+      'name' => 'Asset bag unit tests',
+      'description' => 'Unit tests on AssetBag',
+      'group' => 'Asset',
     );
   }
 
-  public function setUp() {
-    parent::setUp();
-  }
+  public function testAddValidAsset() {
+    // Dead-simple bag - contains just one css and one js assets, both local files.
+    $bag = new AssetBag();
 
-  public function testStub() {
-    // TODO anything. without this, phpunit blows up.
+    $css1 = $this->getMock('Drupal\\Core\\Asset\\StylesheetFileAsset', array(), array(), '', FALSE);
+    $js1 = $this->getMock('Drupal\\Core\\Asset\\JavascriptFileAsset', array(), array(), '', FALSE);
+
+    $bag->add($css1);
+    $bag->add($js1);
+
+    $this->assertTrue($bag->hasCss(), 'AssetBag correctly reports that it contains CSS assets.');
+    $this->assertTrue($bag->hasJs(), 'AssetBag correctly reports that it contains javascript assets.');
+
+    $css_collection = new CssCollection();
+    $css_collection->add($css1);
+
+    $js_collection = new JsCollection();
+    $js_collection->add($js1);
+
+    $this->assertEquals($css_collection, $bag->getCss());
+    $this->assertEquals($js_collection, $bag->getJs());
+
+    $css2 = $this->getMock('Drupal\\Core\\Asset\\StylesheetFileAsset', array(), array(), '', FALSE);
+
+    $bag->add($css2);
+    $css_collection->add($css2);
+
+    $this->assertEquals($css_collection, $bag->getCss());
   }
 }

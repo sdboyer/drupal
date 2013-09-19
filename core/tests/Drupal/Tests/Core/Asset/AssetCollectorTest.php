@@ -20,12 +20,12 @@ if (!defined('JS_DEFAULT')) {
 
 use Drupal\Core\Asset\Bag\AssetBag;
 use Drupal\Core\Asset\Factory\AssetCollector;
+use Drupal\Core\Asset\Metadata\CssMetadataBag;
+use Drupal\Core\Asset\Metadata\JsMetadataBag;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests for the asset collector.
- *
- * TODO DOCS, DOCS, DOCS DOCS DOCS
+ * Unit tests for AssetCollector.
  *
  * @group Asset
  */
@@ -35,32 +35,6 @@ class AssetCollectorTest extends UnitTestCase {
    * @var \Drupal\Core\Asset\Factory\AssetCollector
    */
   protected $collector;
-
-  protected $builtinDefaults = array(
-    'css' => array(
-      'group' => CSS_AGGREGATE_DEFAULT,
-      'weight' => 0,
-      'every_page' => FALSE,
-      'media' => 'all',
-      'preprocess' => TRUE,
-      'browsers' => array(
-        'IE' => TRUE,
-        '!IE' => TRUE,
-      ),
-    ),
-    'js' => array(
-      'group' => JS_DEFAULT,
-      'every_page' => FALSE,
-      'weight' => 0,
-      'scope' => 'header',
-      'cache' => TRUE,
-      'preprocess' => TRUE,
-      'attributes' => array(),
-      'version' => NULL,
-      'browsers' => array(),
-    ),
-  );
-
 
   public static function getInfo() {
     return array(
@@ -79,11 +53,21 @@ class AssetCollectorTest extends UnitTestCase {
    * Tests that the collector injects provided metadata to created assets.
    */
   public function testMetadataInjection() {
-    // Test a single value first
     $asset = $this->collector->create('css', 'file', 'foo', array('group' => CSS_AGGREGATE_THEME));
-    $this->assertEquals(CSS_AGGREGATE_THEME, $asset['group'], 'Collector injected user-passed parameters into the created asset.');
+    $meta = $asset->getMetadata();
+    $this->assertEquals(CSS_AGGREGATE_THEME, $meta->get('group'), 'Collector injected user-passed parameters into the created asset.');
+    $this->assertFalse($meta->isDefault('group'));
+  }
 
-    // TODO is it worth testing multiple params? what about weird ones, like weight?
+  public function testDefaultPropagation() {
+    // Test that defaults are correctly applied by the factory.
+    $meta = new CssMetadataBag(array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
+    $this->collector->setDefaultMetadata('css', $meta);
+    $css1 = $this->collector->create('css', 'file', 'foo');
+
+    $asset_meta = $css1->getMetadata();
+    $this->assertTrue($asset_meta->get('every_page'));
+    $this->assertEquals(CSS_AGGREGATE_THEME, $asset_meta->get('group'));
   }
 
   /**
@@ -101,8 +85,18 @@ class AssetCollectorTest extends UnitTestCase {
     $bag = new AssetBag();
     $this->collector->setBag($bag);
 
-    $asset2 = $this->collector->create('css', 'file', 'bar');
-    $this->assertContains($asset2, $bag->getCss(), 'Created asset was implicitly added to bag.');
+    $asset = $this->collector->create('css', 'file', 'bar');
+    $this->assertContains($asset, $bag->getCss(), 'Created asset was implicitly added to bag.');
+  }
+
+  public function testAddAssetExplicitly() {
+    $bag = new AssetBag();
+    $this->collector->setBag($bag);
+
+    $asset = $this->getMock('Drupal\\Core\\Asset\\StylesheetFileAsset', array(), array(), '', FALSE);
+    $this->collector->add($asset);
+
+    $this->assertContains($asset, $bag->getCss());
   }
 
   /**
@@ -140,7 +134,7 @@ class AssetCollectorTest extends UnitTestCase {
    */
   public function testLockingPreventsSettingDefaults() {
     $this->collector->lock($this);
-    $this->collector->setDefaultMetadata('css', array('foo' => 'bar'));// TODO update to bags!
+    $this->collector->setDefaultMetadata('css', new CssMetadataBag());
   }
 
   /**
@@ -168,36 +162,40 @@ class AssetCollectorTest extends UnitTestCase {
   }
 
   public function testBuiltinDefaultAreTheSame() {
-    $this->assertEquals($this->builtinDefaults, $this->collector->getMetadataDefaults(), 'Expected set of built-in defaults reside in the collector.'); // TODO update to bags!
+    $this->assertEquals(new CssMetadataBag(), $this->collector->getMetadataDefaults('css'));
+    $this->assertEquals(new JsMetadataBag(), $this->collector->getMetadataDefaults('js'));
   }
 
   public function testChangeAndRestoreDefaults() {
-    $changed_defaults = array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME);
-    $this->collector->setDefaultMetadata('css', $changed_defaults); // TODO update to bags!
-    $this->assertEquals($changed_defaults + $this->builtinDefaults['css'], $this->collector->getMetadataDefaults('css'), 'Expected combination of built-in and injected defaults reside in the collector.');// TODO update to bags!
+    $changed_css = new CssMetadataBag(array('foo' => 'bar', 'every_page' => TRUE));
+    $this->collector->setDefaultMetadata('css', $changed_css);
+
+    $this->assertEquals($changed_css, $this->collector->getMetadataDefaults('css'));
+    $this->assertNotSame($changed_css, $this->collector->getMetadataDefaults('css'), 'Metadata is cloned on retrieval from collector.');
 
     $this->collector->restoreDefaults();
-    $this->assertEquals($this->builtinDefaults, $this->collector->getMetadataDefaults(), 'Built-in defaults were correctly restored.'); // TODO update to bags!
+    $this->assertEquals(new CssMetadataBag(), $this->collector->getMetadataDefaults('css'));
 
+    // Do another check to ensure that both metadata bags are correctly reset
+    $changed_js = new JsMetadataBag(array('scope' => 'footer', 'fizzbuzz' => 'llama'));
+    $this->collector->setDefaultMetadata('css', $changed_css);
+    $this->collector->setDefaultMetadata('js', $changed_js);
+
+    $this->assertEquals($changed_css, $this->collector->getMetadataDefaults('css'));
+    $this->assertEquals($changed_js, $this->collector->getMetadataDefaults('js'));
+
+    $this->collector->restoreDefaults();
+    $this->assertEquals(new CssMetadataBag(), $this->collector->getMetadataDefaults('css'));
+    $this->assertEquals(new JsMetadataBag(), $this->collector->getMetadataDefaults('js'));
   }
 
   /**
    * @expectedException InvalidArgumentException
    */
   public function testGetNonexistentDefault() {
-    $this->collector->getMetadataDefaults('foo');// TODO update to bags!
-    $this->fail('No exception thrown when an invalid key was requested.');
+    $this->collector->getMetadataDefaults('foo');
   }
 
-  public function testDefaultPropagation() {
-    // Test that defaults are correctly applied by the factory.
-    $this->collector->setDefaultMetadata('css', array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
-    $css1 = $this->collector->create('css', 'file', 'foo');
-    $this->assertTrue($css1['every_page'], 'Correct default propagated for "every_page" property.');
-    $this->assertEquals(CSS_AGGREGATE_THEME, $css1['group'], 'Correct default propagated for "group" property.');
-
-    // TODO bother testing js? it seems logically redundant
-  }
 
   public function testCreateStylesheetFileAsset() {
     $css_file1 = $this->collector->create('css', 'file', 'foo');
