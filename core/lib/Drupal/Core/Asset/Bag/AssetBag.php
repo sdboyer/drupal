@@ -8,6 +8,7 @@
 namespace Drupal\Core\Asset\Bag;
 
 use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Bag\AssetBagInterface;
 use Drupal\Core\Asset\Collection\CssCollection;
 use Drupal\Core\Asset\Collection\JsCollection;
@@ -144,6 +145,23 @@ class AssetBag implements AssetBagInterface {
    */
   public function isFrozen() {
     return $this->frozen;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function resolveDependencies(AssetLibraryRepository $repository) {
+    foreach ($this->css as $asset) {
+      foreach ($repository->resolveDependencies($asset) as $dep) {
+        $this->add($dep);
+      }
+    }
+
+    foreach ($this->js as $asset) {
+      foreach ($repository->resolveDependencies($asset) as $dep) {
+        $this->add($dep);
+      }
+    }
   }
 
 }

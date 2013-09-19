@@ -8,6 +8,7 @@
 namespace Drupal\Core\Asset\Bag;
 
 use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\AssetLibraryRepository;
 
 /**
  * Defines a common interface for asset bags.
@@ -100,4 +101,14 @@ interface AssetBagInterface {
    * @return bool
    */
   public function isFrozen();
+
+  /**
+   * Resolves all contained asset dependencies and add them into this bag.
+   *
+   * @param AssetLibraryRepository $repository
+   *   The AssetLibraryRepository against which to resolve asset dependencies.
+   *
+   * @return void
+   */
+  public function resolveDependencies(AssetLibraryRepository $repository);
 }

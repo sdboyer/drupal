@@ -96,10 +96,6 @@ class CssCollectionGrouperNouveaux implements AssetCollectionGrouperInterface {
     foreach ($assets as $asset) {
       $graph->addVertex($asset);
 
-      foreach ($this->repository->resolveDependencies($asset) as $dependency) {
-        $graph->addDirectedEdge($asset, $dependency);
-      }
-
       $k = $this->getGroupKey($asset);
 
       if ($k === FALSE) {
