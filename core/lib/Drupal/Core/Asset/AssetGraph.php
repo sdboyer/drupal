@@ -40,7 +40,28 @@ class AssetGraph extends DirectedAdjacencyGraph {
   protected $before = array();
   protected $after = array();
   protected $verticesById = array();
+  protected $process;
 
+  /**
+   * Creates a new AssetGraph object.
+   *
+   * AssetGraphs are a specialization of DirectedAdjacencyGraph that is tailored
+   * to handling the sequencing information carried by AssetOrderingInterface
+   * instances.
+   *
+   * @param bool $process
+   *   Whether or not to automatically process sequencing as vertices are added.
+   *   This should be left as TRUE in most every user-facing case; its primary
+   *   audience is for the creation of a graph transpose.
+   */
+  public function __construct($process = TRUE) {
+    parent::__construct();
+    $this->process = $process;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function addVertex($vertex) {
     if (!$vertex instanceof AssetInterface) {
       throw new InvalidVertexTypeException('AssetGraph requires vertices to implement AssetInterface.');
@@ -49,7 +70,10 @@ class AssetGraph extends DirectedAdjacencyGraph {
     if (!$this->hasVertex($vertex)) {
       $this->vertices[$vertex] = new \SplObjectStorage();
       $this->verticesById[$vertex->id()] = $vertex;
-      $this->processNewVertex($vertex);
+
+      if ($this->process) {
+        $this->processNewVertex($vertex);
+      }
     }
   }
 
@@ -83,7 +107,7 @@ class AssetGraph extends DirectedAdjacencyGraph {
         $predecessor = is_string($predecessor) ? $predecessor : $predecessor->id();
 
         if (isset($this->verticesById[$predecessor])) {
-          $this->addDirectedEdge($this->verticesById[$predecessor], $vertex);
+          $this->addDirectedEdge($vertex, $this->verticesById[$predecessor]);
         }
         else {
           if (!isset($this->before[$predecessor])) {
@@ -98,7 +122,7 @@ class AssetGraph extends DirectedAdjacencyGraph {
         $successor = is_string($successor) ? $successor : $successor->id();
 
         if (isset($this->verticesById[$successor])) {
-          $this->addDirectedEdge($vertex, $this->verticesById[$successor]);
+          $this->addDirectedEdge($this->verticesById[$successor], $vertex);
         }
         else {
           if (!isset($this->before[$successor])) {
@@ -111,10 +135,28 @@ class AssetGraph extends DirectedAdjacencyGraph {
   }
 
   /**
+   * Remove a vertex from the graph. Unsupported in AssetGraph.
+   *
+   * Vertex removals are unsupported because it would necessitate permanent
+   * bookkeeping on sequencing data. With forty or fifty assets, each having
+   * only a few dependencies, there would be a fair bit of pointless iterating.
+   *
+   * @throws \LogicException
+   *   This exception will always be thrown.
+   */
+  public function removeVertex($vertex) {
+    throw new \LogicException('AssetGraph does not support vertex removals.');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function transpose() {
-    // TODO super-important - have to rewrite transpose so that it correctly inverts edge direction
-    return parent::transpose();
+    $graph = new self(FALSE);
+    $this->eachEdge(function($edge) use (&$graph) {
+        $graph->addDirectedEdge($edge[1], $edge[0]);
+    });
+
+    return $graph;
   }
 }
