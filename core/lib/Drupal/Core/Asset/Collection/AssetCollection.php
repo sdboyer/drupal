@@ -36,8 +36,10 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
   public function add(AssetInterface $asset) {
     $this->attemptWrite();
 
-    $this->assetStorage->attach($asset);
-    $this->assetIdMap[$asset->id()] = $asset;
+    if (!$this->contains($asset)) {
+      $this->assetStorage->attach($asset);
+      $this->assetIdMap[$asset->id()] = $asset;
+    }
   }
 
   /**
@@ -96,18 +98,17 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
   /**
    * {@inheritdoc}
    */
-  public function mergeCollection(AssetCollectionInterface $collection) {
+  public function mergeCollection(AssetCollectionInterface $collection, $freeze = TRUE) {
     $this->attemptWrite();
-    // TODO subtype mismatch checking
 
-    $other_assets = $collection->all();
-
-    foreach (array_intersect_key($this->assetIdMap, $other_assets) as $id => $asset) {
-      unset($other_assets[$id]);
+    foreach ($collection as $asset) {
+      if (!$this->contains($asset)) {
+        $this->add($asset);
+      }
     }
 
-    foreach ($other_assets as $asset) {
-      $this->add($asset);
+    if ($freeze) {
+      $collection->freeze();
     }
 
     return $this;
@@ -159,15 +160,12 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function resolveLibraries(AssetLibraryRepository $repository) {
-    foreach ($this->css as $asset) {
+    foreach ($this->assetStorage as $asset) {
       foreach ($repository->resolveDependencies($asset) as $dep) {
         $this->add($dep);
-      }
-    }
-
-    foreach ($this->js as $asset) {
-      foreach ($repository->resolveDependencies($asset) as $dep) {
-        $this->add($dep);
+        if ($dep->getAssetType() == $asset->getAssetType()) {
+          $asset->after($dep);
+        }
       }
     }
   }

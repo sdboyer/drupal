@@ -12,6 +12,8 @@ use Drupal\Core\Asset\AssetLibraryRepository;
 /**
  * Describes an asset collection.
  *
+ * TODO we need a few more methods here to deal with asset type disambiguation and library resolution
+ *
  * @see \Drupal\Core\Asset\Collection\AssetCollectionBasicInterface
  */
 interface AssetCollectionInterface extends AssetCollectionBasicInterface {
@@ -46,9 +48,12 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    * @param AssetCollectionInterface $collection
    *   The collection to merge.
    *
+   * @param bool $freeze
+   *   Whether to freeze the merged collection after merging. Defaults to TRUE.
+   *
    * @return void
    */
-  public function mergeCollection(AssetCollectionInterface $collection);
+  public function mergeCollection(AssetCollectionInterface $collection, $freeze = TRUE);
 
   /**
    * Freeze this asset collection, preventing asset additions or removals.
