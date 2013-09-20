@@ -118,6 +118,9 @@ class AssetCollector {
    *   Thrown if an invalid asset type or source type is passed.
    */
   public function create($asset_type, $source_type, $data, $options = array(), $filters = array()) {
+    // TODO this normalization points to a deeper modeling problem.
+    $source_type = $source_type == 'inline' ? 'string' : $source_type;
+
     if (!isset($this->classMap[$asset_type])) {
       throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are allowed, "%s" requested.', $asset_type));
     }
