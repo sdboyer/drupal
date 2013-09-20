@@ -95,6 +95,13 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
     return $this->id;
   }
 
+   /**
+   * {@inheritdoc}
+   */
+  public function getAssetType() {
+    return $this->metadata->getType();
+  }
+
   /**
    * Calculates and stores an id for this aggregate from the contained assets.
    *

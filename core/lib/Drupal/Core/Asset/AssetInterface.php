@@ -49,4 +49,11 @@ interface AssetInterface extends AsseticAssetInterface {
    *   The asset id.
    */
   public function id();
+
+  /**
+   * Returns a string identifying the type of asset - i.e., 'css' or 'js'.
+   *
+   * @return string
+   */
+  public function getAssetType();
 }

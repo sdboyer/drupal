@@ -13,7 +13,7 @@ use Drupal\Core\Asset\StylesheetAssetInterface;
 /**
  * A collection of CSS assets.
  */
-class CssCollection extends BaseAssetCollection {
+class CssCollection extends AssetCollection {
 
   /**
    * {@inheritdoc}

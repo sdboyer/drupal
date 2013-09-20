@@ -7,7 +7,7 @@
 
 namespace Drupal\Core\Asset;
 
-use Drupal\Core\Asset\Bag\AssetLibrary;
+use Drupal\Core\Asset\Collection\AssetLibrary;
 use Drupal\Core\Asset\Factory\AssetLibraryCollector;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 
@@ -80,7 +80,7 @@ class AssetLibraryRepository implements \IteratorAggregate {
    * @param string $name
    *   The library name.
    *
-   * @return \Drupal\Core\Asset\Bag\AssetLibrary
+   * @return \Drupal\Core\Asset\Collection\AssetLibrary
    *   The requested library.
    *
    * @throws \InvalidArgumentException If there is no library by that name

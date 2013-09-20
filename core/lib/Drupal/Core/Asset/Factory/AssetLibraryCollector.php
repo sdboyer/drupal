@@ -9,7 +9,7 @@ namespace Drupal\Core\Asset\Factory;
 use Drupal\Component\Utility\Crypt;
 use \Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Factory\AssetCollector;
-use Drupal\Core\Asset\Bag\AssetLibrary;
+use Drupal\Core\Asset\Collection\AssetLibrary;
 use Drupal\Core\Asset\Metadata\JsMetadataBag;
 
 class AssetLibraryCollector {

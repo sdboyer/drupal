@@ -13,7 +13,7 @@ use Drupal\Core\Asset\JavascriptAssetInterface;
 /**
  * A collection of JS assets.
  */
-class JsCollection extends BaseAssetCollection {
+class JsCollection extends AssetCollection {
   // TODO implement handling for js "settings"
   /**
    * {@inheritdoc}

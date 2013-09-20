@@ -8,7 +8,7 @@
 namespace Drupal\Tests\Core\Asset;
 
 use Drupal\Core\Asset\Bag\AssetBag;
-use Drupal\Core\Asset\Bag\AssetLibrary;
+use Drupal\Core\Asset\Collection\AssetLibrary;
 use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\AssetLibraryReference;
 use Drupal\Core\Asset\Collection\CssCollection;

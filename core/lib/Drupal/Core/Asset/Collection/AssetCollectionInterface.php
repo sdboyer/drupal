@@ -7,6 +7,7 @@
 
 namespace Drupal\Core\Asset\Collection;
 use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\AssetLibraryRepository;
 
 /**
  * Describes an asset collection.
@@ -67,4 +68,32 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    * @return bool
    */
   public function isFrozen();
+
+  /**
+   * Returns all contained CSS assets in a traversable form.
+   *
+   * @return \Traversable
+   */
+  public function getCss();
+
+  /**
+   * Returns all contained JS assets in a traversable form.
+   *
+   * @return \Traversable
+   */
+  public function getJs();
+
+  /**
+   * Resolves all contained asset references and adds them to this collection.
+   *
+   * "References" refers to library ids. This includes both libraries added
+   * directly to this collection, as well as those libraries included indirectly
+   * via a contained asset's declared dependencies.
+   *
+   * @param AssetLibraryRepository $repository
+   *   The AssetLibraryRepository against which to resolve dependencies.
+   *
+   * @return void
+   */
+  public function resolveLibraries(AssetLibraryRepository $repository);
 }

@@ -52,16 +52,9 @@ class AssetCollector {
   protected $defaultJsMetadata;
 
   protected $classMap = array(
-    'css' => array(
-      'file' => 'Drupal\\Core\\Asset\\StylesheetFileAsset',
-      'external' => 'Drupal\\Core\\Asset\\StylesheetExternalAsset',
-      'string' => 'Drupal\\Core\\Asset\\StylesheetStringAsset',
-    ),
-    'js' => array(
-      'file' => 'Drupal\\Core\\Asset\\JavascriptFileAsset',
-      'external' => 'Drupal\\Core\\Asset\\JavascriptExternalAsset',
-      'string' => 'Drupal\\Core\\Asset\\JavascriptStringAsset',
-     ),
+    'file' => 'Drupal\\Core\\Asset\\JavascriptFileAsset',
+    'external' => 'Drupal\\Core\\Asset\\JavascriptExternalAsset',
+    'string' => 'Drupal\\Core\\Asset\\JavascriptStringAsset',
   );
 
   public function __construct(AssetBagInterface $bag = NULL) {
@@ -121,10 +114,10 @@ class AssetCollector {
     // TODO this normalization points to a deeper modeling problem.
     $source_type = $source_type == 'inline' ? 'string' : $source_type;
 
-    if (!isset($this->classMap[$asset_type])) {
+    if (!in_array($asset_type, array('css', 'js'))) {
       throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are allowed, "%s" requested.', $asset_type));
     }
-    if (!isset($this->classMap[$asset_type][$source_type])) {
+    if (!isset($this->classMap[$source_type])) {
       throw new \InvalidArgumentException(sprintf('Only sources of type "file", "string", or "external" are allowed, "%s" requested.', $source_type));
     }
 
@@ -133,7 +126,7 @@ class AssetCollector {
       $metadata->replace($options);
     }
 
-    $class = $this->classMap[$asset_type][$source_type];
+    $class = $this->classMap[$source_type];
     $asset = new $class($metadata, $data, $filters);
 
     if (!empty($this->bag)) {

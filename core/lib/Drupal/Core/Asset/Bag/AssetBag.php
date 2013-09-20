@@ -57,7 +57,7 @@ class AssetBag implements AssetBagInterface {
       throw new \LogicException('Assets cannot be added to a frozen AssetBag.', E_ERROR);
     }
 
-    if ($asset instanceof JavascriptAssetInterface) {
+    if ($asset->getType) {
       $this->js->add($asset);
     }
     if ($asset instanceof StylesheetAssetInterface) {

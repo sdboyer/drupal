@@ -5,12 +5,12 @@
  * Contains \Drupal\Core\Asset\AssetLibrary.
  */
 
-namespace Drupal\Core\Asset\Bag;
+namespace Drupal\Core\Asset\Collection;
 
 use Drupal\Core\Asset\AssetOrderingInterface;
-use Drupal\Core\Asset\Bag\AssetBag;
+use Drupal\Core\Asset\Collection\AssetCollection;
 
-class AssetLibrary extends AssetBag implements AssetOrderingInterface {
+class AssetLibrary extends AssetCollection implements AssetOrderingInterface {
 
   /**
    * The asset library's title.
