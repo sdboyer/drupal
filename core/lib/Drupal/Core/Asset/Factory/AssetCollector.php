@@ -129,7 +129,9 @@ class AssetCollector {
     }
 
     $metadata = $this->getMetadataDefaults($asset_type);
-    $metadata->replace($options);
+    if (!empty($options)) {
+      $metadata->replace($options);
+    }
 
     $class = $this->classMap[$asset_type][$source_type];
     $asset = new $class($metadata, $data, $filters);

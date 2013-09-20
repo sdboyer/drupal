@@ -39,8 +39,7 @@ class AssetLibraryCollector {
   public function buildLibrary($name, $values) {
     $library = $this->createLibrary($name, $values);
 
-    $collector = new AssetCollector();
-    $collector->setBag($library);
+    $collector = new AssetCollector($library);
     $collector->setDefaultMetadata('js', new JsMetadataBag(array('group' => JS_LIBRARY)));
     $collector->lock($this->getPrivateKey()); // TODO is locking here a bad idea?
 

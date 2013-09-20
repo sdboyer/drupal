@@ -12,7 +12,7 @@ use Drupal\Core\Asset\Factory\AssetLibraryCollector;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 
 /**
- * @todo Transform this into a 'lazy' library - serialize & load as needed.
+ * TODO the flow here is completely wrong. the state contained here needs proper management, beyond a single request.
  */
 class AssetLibraryRepository implements \IteratorAggregate {
 
@@ -46,6 +46,7 @@ class AssetLibraryRepository implements \IteratorAggregate {
     }
     $this->initialized = TRUE;
 
+    // TODO inject or factory-ize the collector class that's used somehow - can't unit test it as-is.
     $library_collector = new AssetLibraryCollector($this);
     foreach ($this->moduleHandler->getImplementations('library_info') as $module) {
       $library_collector->setModule($module);
@@ -54,18 +55,16 @@ class AssetLibraryRepository implements \IteratorAggregate {
         // Normalize - apparently hook_library_info is allowed to be sloppy.
         $info += array('dependencies' => array(), 'js' => array(), 'css' => array());
 
-        // @todo This works sorta sanely because of the array_intersect_key() hack in AssetLibrary::construct()
+        // TODO This works sorta sanely only because of the array_intersect_key() hack in AssetLibrary::construct()
         $asset_collector = $library_collector->buildLibrary($name, $info);
         foreach (array('js', 'css') as $type) {
-          if (!empty($info[$type])) {
-            foreach ($info[$type] as $data => $options) {
-              if (is_scalar($options)) {
-                $data = $options;
-                $options = array();
-              }
-              // @todo good enough for now to assume these are all file assets
-              $asset_collector->create($type, 'file', $data, $options);
+          foreach ($info[$type] as $data => $options) {
+            if (is_scalar($options)) {
+              $data = $options;
+              $options = array();
             }
+            // TODO stop assuming these are all files.
+            $asset_collector->create($type, 'file', $data, $options);
           }
         }
       }
@@ -89,14 +88,14 @@ class AssetLibraryRepository implements \IteratorAggregate {
   public function get($module, $name) {
     $this->initialize();
     if (!isset($this->libraries[$module][$name])) {
-      throw new \InvalidArgumentException(sprintf('There is no library identified by "%s/%s" in the manager.', $module, $name));
+      throw new \InvalidArgumentException(sprintf('There is no library identified by "%s/%s" in the repository.', $module, $name));
     }
 
     return $this->libraries[$module][$name];
   }
 
   /**
-   * Checks if the current library manager has a certain library.
+   * Checks if the current library repository has a certain library.
    *
    * @param string $module
    *   The module owner that declared the library.
@@ -158,7 +157,7 @@ class AssetLibraryRepository implements \IteratorAggregate {
    */
   public function getNames() {
     $this->initialize();
-    return array_keys($this->libraries);
+    return array_keys($this->flatten());
   }
 
   /**
@@ -170,8 +169,10 @@ class AssetLibraryRepository implements \IteratorAggregate {
     $this->flattened = NULL;
   }
 
-  public function getIterator() {
-    $this->initialize();
+  /**
+   * Flattens contained library data into a more accessible form.
+   */
+  protected function flatten() {
     if (is_null($this->flattened)) {
       $this->flattened = array();
       foreach ($this->libraries as $module => $set) {
@@ -181,7 +182,12 @@ class AssetLibraryRepository implements \IteratorAggregate {
       }
     }
 
-    return new \ArrayIterator($this->flattened);
+    return $this->flattened;
+  }
+
+  public function getIterator() {
+    $this->initialize();
+    return new \ArrayIterator($this->flatten());
   }
 
 }
