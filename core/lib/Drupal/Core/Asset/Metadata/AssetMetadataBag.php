@@ -38,6 +38,14 @@ abstract class AssetMetadataBag implements \IteratorAggregate, \Countable {
     $this->default = array_replace_recursive($this->default, $default);
   }
 
+  /**
+   * Indicates the type of asset for which this metadata is intended.
+   *
+   * @return string
+   *   A string indicating type - 'js' or 'css' are the expected values.
+   */
+  abstract public function getType();
+
   public function all() {
     return array_replace_recursive($this->default, $this->explicit);
   }
@@ -52,9 +60,12 @@ abstract class AssetMetadataBag implements \IteratorAggregate, \Countable {
   }
 
   /**
-   * Reverts the a back to its default, if one exists.
+   * Reverts the associated with the passed key back to its default.
+   *
+   * If no default is set, the value for that key simply disappears.
    *
    * @param $key
+   *   The key identifying the value to revert.
    *
    * @return void
    */

@@ -27,4 +27,11 @@ class JsMetadataBag extends AssetMetadataBag {
   public function __construct(array $default = array()) {
     $this->default = array_replace_recursive($this->default, $default);
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getType() {
+    return 'js';
+  }
 }
