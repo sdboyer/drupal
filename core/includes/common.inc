@@ -1684,13 +1684,13 @@ function drupal_add_css($data = NULL, $options = NULL) {
 }
 
 function drupal_collect_assets($data, $options, $type = '') {
-  $bag = &drupal_static('global_asset_bag', FALSE);
+  $collection = &drupal_static('global_asset_bag', FALSE);
   $collector = &drupal_static('global_asset_collector', FALSE);
 
-  $bag = ($bag instanceof \Drupal\Core\Asset\Bag\AssetBag) ? $bag : new \Drupal\Core\Asset\Bag\AssetBag();
+  $collection = ($collection instanceof \Drupal\Core\Asset\Collection\AssetCollection) ? $collection : new \Drupal\Core\Asset\Collection\AssetCollection();
   if (!$collector instanceof \Drupal\Core\Asset\Factory\AssetCollector) {
     $collector = new \Drupal\Core\Asset\Factory\AssetCollector();
-    $collector->setCollection($bag);
+    $collector->setCollection($collection);
   }
 
   if ($data instanceof \Drupal\Core\Asset\AssetInterface) {
