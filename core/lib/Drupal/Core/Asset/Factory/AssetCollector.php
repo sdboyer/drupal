@@ -6,7 +6,7 @@
 
 namespace Drupal\Core\Asset\Factory;
 use Drupal\Core\Asset\AssetInterface;
-use Drupal\Core\Asset\Bag\AssetBagInterface;
+use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Core\Asset\Metadata\CssMetadataBag;
 use Drupal\Core\Asset\Metadata\JsMetadataBag;
@@ -21,16 +21,17 @@ use Drupal\Core\Asset\Metadata\JsMetadataBag;
 class AssetCollector {
 
   /**
-   * The bag used to store any assets that are added.
+   * The collection used to store any assets that are added.
    *
-   * @var \Drupal\Core\Asset\Bag\AssetBagInterface
+   * @var \Drupal\Core\Asset\Collection\AssetCollectionInterface
    */
-  protected $bag;
+  protected $collection;
 
   /**
    * Flag indicating whether or not the object is locked.
    *
-   * Locking prevents modifying the underlying defaults or the current bag.
+   * Locking prevents modifying the underlying defaults or swapping in/out the
+   * contained collection.
    *
    * @var bool
    */
@@ -52,23 +53,16 @@ class AssetCollector {
   protected $defaultJsMetadata;
 
   protected $classMap = array(
-    'css' => array(
-      'file' => 'Drupal\\Core\\Asset\\StylesheetFileAsset',
-      'external' => 'Drupal\\Core\\Asset\\StylesheetExternalAsset',
-      'string' => 'Drupal\\Core\\Asset\\StylesheetStringAsset',
-    ),
-    'js' => array(
-      'file' => 'Drupal\\Core\\Asset\\JavascriptFileAsset',
-      'external' => 'Drupal\\Core\\Asset\\JavascriptExternalAsset',
-      'string' => 'Drupal\\Core\\Asset\\JavascriptStringAsset',
-     ),
+    'file' => 'Drupal\\Core\\Asset\\FileAsset',
+    'external' => 'Drupal\\Core\\Asset\\ExternalAsset',
+    'string' => 'Drupal\\Core\\Asset\\StringAsset',
   );
 
-  public function __construct(AssetBagInterface $bag = NULL) {
+  public function __construct(AssetCollectionInterface $collection = NULL) {
     $this->restoreDefaults();
 
-    if (!is_null($bag)) {
-      $this->setBag($bag);
+    if (!is_null($collection)) {
+      $this->setCollection($collection);
     }
   }
 
@@ -79,18 +73,18 @@ class AssetCollector {
    * create() method.
    *
    * @param AssetInterface $asset
-   *   The asset to add to the contained bag.
+   *   The asset to add to the contained collection.
    */
   public function add(AssetInterface $asset) {
-    if (empty($this->bag)) {
-      throw new \Exception('No bag is currently attached to this collector.');
+    if (empty($this->collection)) {
+      throw new \Exception('No collection is currently attached to this collector.');
     }
-    $this->bag->add($asset);
+    $this->collection->add($asset);
     return $this;
   }
 
   /**
-   * Creates an asset, stores it in the collector's bag, and returns it.
+   * Creates an asset, stores it in the collector's collection, and returns it.
    *
    * TODO flesh out these docs to be equivalent to drupal_add_css/js()
    *
@@ -121,10 +115,10 @@ class AssetCollector {
     // TODO this normalization points to a deeper modeling problem.
     $source_type = $source_type == 'inline' ? 'string' : $source_type;
 
-    if (!isset($this->classMap[$asset_type])) {
+    if (!in_array($asset_type, array('css', 'js'))) {
       throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are allowed, "%s" requested.', $asset_type));
     }
-    if (!isset($this->classMap[$asset_type][$source_type])) {
+    if (!isset($this->classMap[$source_type])) {
       throw new \InvalidArgumentException(sprintf('Only sources of type "file", "string", or "external" are allowed, "%s" requested.', $source_type));
     }
 
@@ -133,28 +127,28 @@ class AssetCollector {
       $metadata->replace($options);
     }
 
-    $class = $this->classMap[$asset_type][$source_type];
+    $class = $this->classMap[$source_type];
     $asset = new $class($metadata, $data, $filters);
 
-    if (!empty($this->bag)) {
+    if (!empty($this->collection)) {
       $this->add($asset);
     }
 
     return $asset;
   }
 
-  public function setBag(AssetBagInterface $bag) {
+  public function setCollection(AssetCollectionInterface $collection) {
     if ($this->isLocked()) {
-      throw new \Exception('The collector instance is locked. A new bag cannot be attached to a locked collector.');
+      throw new \Exception('The collector instance is locked. A new collection cannot be attached to a locked collector.');
     }
-    $this->bag = $bag;
+    $this->collection = $collection;
   }
 
-  public function clearBag() {
+  public function clearCollection() {
     if ($this->isLocked()) {
-      throw new \Exception('The collector instance is locked. Bags cannot be cleared on a locked collector.');
+      throw new \Exception('The collector instance is locked. Collections cannot be cleared on a locked collector.');
     }
-    $this->bag = NULL;
+    $this->collection = NULL;
   }
 
   public function createJavascriptSetting() {

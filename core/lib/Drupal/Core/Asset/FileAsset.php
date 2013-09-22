@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\BaseFileAsset.
+ * Contains \Drupal\Core\Asset\FileAsset.
  */
 
 namespace Drupal\Core\Asset;
@@ -12,7 +12,7 @@ use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\BaseAsset;
 use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 
-abstract class BaseFileAsset extends BaseAsset {
+class FileAsset extends BaseAsset {
 
   protected $source;
 

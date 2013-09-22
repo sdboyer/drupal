@@ -136,7 +136,7 @@ class CssCollectionGrouperNouveaux {
    * @return bool|string
    * @throws \UnexpectedValueException
    */
-  protected function getGroupKey(StylesheetAssetInterface $asset) {
+  protected function getGroupKey(AssetInterface $asset) {
     $meta = $asset->getMetadata();
     // The browsers for which the CSS item needs to be loaded is part of the
     // information that determines when a new group is needed, but the order
@@ -145,7 +145,7 @@ class CssCollectionGrouperNouveaux {
     $browsers = $meta->get('browsers');
     ksort($browsers);
 
-    if ($asset instanceof StylesheetFileAsset) {
+    if ($asset instanceof FileAsset) {
       // Compose a string key out of the set of relevant properties.
       // TODO - currently ignoring group, which is used in the current implementation. wishful thinking? maybe, maybe not.
       // TODO media has been pulled out - needs to be handled by the aggregator, wrapping css in media queries
@@ -155,14 +155,14 @@ class CssCollectionGrouperNouveaux {
 
       return $k;
     }
-    else if ($asset instanceof StylesheetStringAsset) {
+    else if ($asset instanceof StringAsset) {
       // String items are always grouped.
       // TODO use the term 'inline' here? do "string" and "inline" necessarily mean the same?
       $k = implode(':', 'string', implode('', $browsers));
 
       return $k;
     }
-    else if ($asset instanceof StylesheetExternalAsset) {
+    else if ($asset instanceof ExternalAsset) {
       // Never group external assets.
       $k = FALSE;
 

@@ -2,12 +2,14 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\Collection\BaseAssetCollection.
+ * Contains \Drupal\Core\Asset\Collection\AssetCollection.
  */
 
 namespace Drupal\Core\Asset\Collection;
 use Drupal\Core\Asset\Aggregate\AssetAggregateInterface;
 use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\AssetLibraryRepository;
+use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 /**
@@ -16,7 +18,7 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * @see CssCollection
  * @see JsCollection
  */
-abstract class BaseAssetCollection implements \IteratorAggregate, AssetCollectionInterface {
+class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
 
   protected $assetStorage;
 
@@ -33,10 +35,11 @@ abstract class BaseAssetCollection implements \IteratorAggregate, AssetCollectio
    */
   public function add(AssetInterface $asset) {
     $this->attemptWrite();
-    $this->ensureCorrectType($asset);
 
-    $this->assetStorage->attach($asset);
-    $this->assetIdMap[$asset->id()] = $asset;
+    if (!$this->contains($asset)) {
+      $this->assetStorage->attach($asset);
+      $this->assetIdMap[$asset->id()] = $asset;
+    }
   }
 
   /**
@@ -95,18 +98,17 @@ abstract class BaseAssetCollection implements \IteratorAggregate, AssetCollectio
   /**
    * {@inheritdoc}
    */
-  public function mergeCollection(AssetCollectionInterface $collection) {
+  public function mergeCollection(AssetCollectionInterface $collection, $freeze = TRUE) {
     $this->attemptWrite();
-    // TODO subtype mismatch checking
 
-    $other_assets = $collection->all();
-
-    foreach (array_intersect_key($this->assetIdMap, $other_assets) as $id => $asset) {
-      unset($other_assets[$id]);
+    foreach ($collection as $asset) {
+      if (!$this->contains($asset)) {
+        $this->add($asset);
+      }
     }
 
-    foreach ($other_assets as $asset) {
-      $this->add($asset);
+    if ($freeze) {
+      $collection->freeze();
     }
 
     return $this;
@@ -141,6 +143,45 @@ abstract class BaseAssetCollection implements \IteratorAggregate, AssetCollectio
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getCss() {
+    // TODO evaluate potential performance impact if this is done a lot...
+    $collection = new self();
+    foreach (new AssetSubtypeFilterIterator($this->getIterator(), 'css') as $asset) {
+      $collection->add($asset);
+    }
+
+    return $collection;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getJs() {
+    $collection = new self();
+    foreach (new AssetSubtypeFilterIterator($this->getIterator(), 'js') as $asset) {
+      $collection->add($asset);
+    }
+
+    return $collection;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function resolveLibraries(AssetLibraryRepository $repository) {
+    foreach ($this->assetStorage as $asset) {
+      foreach ($repository->resolveDependencies($asset) as $dep) {
+        $this->add($dep);
+        if ($dep->getAssetType() == $asset->getAssetType()) {
+          $asset->after($dep);
+        }
+      }
+    }
+  }
+
+  /**
    * Checks if the asset library is frozen, throws an exception if it is.
    */
   protected function attemptWrite() {
@@ -148,13 +189,4 @@ abstract class BaseAssetCollection implements \IteratorAggregate, AssetCollectio
       throw new \LogicException('Cannot write to a frozen AssetCollection.');
     }
   }
-
-  /**
-   * Ensures that the asset is of the correct subtype (e.g., css vs. js).
-   *
-   * @param AssetInterface $asset
-   *
-   * @throws \Drupal\Core\Asset\Exception\AssetTypeMismatchException
-   */
-  abstract protected function ensureCorrectType(AssetInterface $asset);
 }

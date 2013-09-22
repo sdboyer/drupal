@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\BaseFileAsset.
+ * Contains \Drupal\Core\Asset\ExternalAsset.
  */
 
 namespace Drupal\Core\Asset;
@@ -13,7 +13,7 @@ use Drupal\Core\Asset\BaseAsset;
 use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
-abstract class BaseExternalAsset extends BaseAsset {
+class ExternalAsset extends BaseAsset {
 
   protected $sourceUrl;
 

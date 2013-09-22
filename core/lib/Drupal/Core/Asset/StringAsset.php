@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\BaseInlineAsset.
+ * Contains \Drupal\Core\Asset\StringAsset.
  */
 
 namespace Drupal\Core\Asset;
@@ -11,7 +11,7 @@ use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\BaseAsset;
 use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 
-abstract class BaseStringAsset extends BaseAsset {
+class StringAsset extends BaseAsset {
 
   protected $lastModified;
 

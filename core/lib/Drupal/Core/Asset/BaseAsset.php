@@ -70,6 +70,13 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   /**
    * {@inheritdoc}
    */
+  public function getAssetType() {
+    return $this->metadata->getType();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function ensureFilter(FilterInterface $filter) {
     $this->filters->ensure($filter);
   }
