@@ -51,6 +51,10 @@ abstract class AssetMetadataBag implements \IteratorAggregate, \Countable {
       array_key_exists($key, $this->default);
   }
 
+  public function set($key, $value) {
+    $this->explicit[$key] = $value;
+  }
+
   /**
    * Reverts the a back to its default, if one exists.
    *
