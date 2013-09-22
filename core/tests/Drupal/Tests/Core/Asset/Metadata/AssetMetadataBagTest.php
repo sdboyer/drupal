@@ -5,7 +5,7 @@
  * Contains \Drupal\Tests\Core\Asset\AssetMetadataBagTest.
  */
 
-namespace Drupal\Tests\Core\Asset;
+namespace Drupal\Tests\Core\Asset\Metadata;
 
 use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Tests\UnitTestCase;
