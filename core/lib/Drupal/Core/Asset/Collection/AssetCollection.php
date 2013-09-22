@@ -146,14 +146,25 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function getCss() {
-    return new AssetSubtypeFilterIterator($this->getIterator(), 'css');
+    // TODO evaluate potential performance impact if this is done a lot...
+    $collection = new self();
+    foreach (new AssetSubtypeFilterIterator($this->getIterator(), 'css') as $asset) {
+      $collection->add($asset);
+    }
+
+    return $collection;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getJs() {
-    return new AssetSubtypeFilterIterator($this->getIterator(), 'js');
+    $collection = new self();
+    foreach (new AssetSubtypeFilterIterator($this->getIterator(), 'js') as $asset) {
+      $collection->add($asset);
+    }
+
+    return $collection;
   }
 
   /**

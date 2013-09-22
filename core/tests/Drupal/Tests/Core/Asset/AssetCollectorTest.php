@@ -18,7 +18,7 @@ if (!defined('JS_DEFAULT')) {
   define('JS_DEFAULT', 0);
 }
 
-use Drupal\Core\Asset\Bag\AssetBag;
+use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Factory\AssetCollector;
 use Drupal\Core\Asset\Metadata\CssMetadataBag;
 use Drupal\Core\Asset\Metadata\JsMetadataBag;
@@ -29,7 +29,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group Asset
  */
-class AssetCollectorTest extends UnitTestCase {
+class AssetCollectorTest extends AssetUnitTest {
 
   /**
    * @var \Drupal\Core\Asset\Factory\AssetCollector
@@ -82,30 +82,30 @@ class AssetCollectorTest extends UnitTestCase {
    * TODO separate test for an explicit add() call.
    */
   public function testAssetsImplicitlyArriveInInjectedBag() {
-    $bag = new AssetBag();
-    $this->collector->setBag($bag);
+    $collection = new AssetCollection();
+    $this->collector->setCollection($collection);
 
     $asset = $this->collector->create('css', 'file', 'bar');
-    $this->assertContains($asset, $bag->getCss(), 'Created asset was implicitly added to bag.');
+    $this->assertContains($asset, $collection->getCss(), 'Created asset was implicitly added to bag.');
   }
 
   public function testAddAssetExplicitly() {
-    $bag = new AssetBag();
-    $this->collector->setBag($bag);
+    $collection = new AssetCollection();
+    $this->collector->setCollection($collection);
 
-    $asset = $this->getMock('Drupal\\Core\\Asset\\StylesheetFileAsset', array(), array(), '', FALSE);
-    $this->collector->add($asset);
+    $mock = $this->createMockAsset('css');
+    $this->collector->add($mock);
 
-    $this->assertContains($asset, $bag->getCss());
+    $this->assertContains($mock, $collection);
   }
 
   /**
    * @expectedException Exception
    */
   public function testClearBag() {
-    $bag = new AssetBag();
-    $this->collector->setBag($bag);
-    $this->collector->clearBag();
+    $collection = new AssetCollection();
+    $this->collector->setCollection($collection);
+    $this->collector->clearCollection();
 
     $this->collector->add($this->collector->create('css', 'file', 'bar'));
   }
@@ -150,7 +150,7 @@ class AssetCollectorTest extends UnitTestCase {
    */
   public function testLockingPreventsClearingBag() {
     $this->collector->lock($this);
-    $this->collector->clearBag();
+    $this->collector->clearCollection();
   }
 
   /**
@@ -158,7 +158,7 @@ class AssetCollectorTest extends UnitTestCase {
    */
   public function testLockingPreventsSettingBag() {
     $this->collector->lock($this);
-    $this->collector->setBag(new AssetBag());
+    $this->collector->setCollection(new AssetCollection());
   }
 
   public function testBuiltinDefaultAreTheSame() {
@@ -197,33 +197,39 @@ class AssetCollectorTest extends UnitTestCase {
   }
 
 
-  public function testCreateStylesheetFileAsset() {
-    $css_file1 = $this->collector->create('css', 'file', 'foo');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetFileAsset', $css_file1, 'Collector correctly created a StylesheetFileAsset instance.');
+  public function testCreateCssFileAsset() {
+    $css_file = $this->collector->create('css', 'file', 'foo');
+    $this->assertInstanceOf('\Drupal\Core\Asset\FileAsset', $css_file);
+    $this->assertEquals('css', $css_file->getAssetType());
   }
 
   public function testCreateStylesheetExternalAsset() {
-    $css_external1 = $this->collector->create('css', 'external', 'http://foo.bar/path/to/asset.css');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetExternalAsset', $css_external1, 'Collector correctly created a StylesheetExternalAsset instance.');
+    $css_external = $this->collector->create('css', 'external', 'http://foo.bar/path/to/asset.css');
+    $this->assertInstanceOf('\Drupal\Core\Asset\ExternalAsset', $css_external);
+    $this->assertEquals('css', $css_external->getAssetType());
   }
 
   public function testCreateStylesheetStringAsset() {
-    $css_string1 = $this->collector->create('css', 'string', 'foo');
-    $this->assertInstanceOf('\Drupal\Core\Asset\StylesheetStringAsset', $css_string1, 'Collector correctly created a StylesheetStringAsset instance .');
+    $css_string = $this->collector->create('css', 'string', 'foo');
+    $this->assertInstanceOf('\Drupal\Core\Asset\StringAsset', $css_string);
+    $this->assertEquals('css', $css_string->getAssetType());
   }
 
   public function testCreateJavascriptFileAsset() {
-    $js_file1 = $this->collector->create('js', 'file', 'foo');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptFileAsset', $js_file1, 'Collector correctly created a JavascriptFileAsset instance .');
+    $js_file = $this->collector->create('js', 'file', 'foo');
+    $this->assertInstanceOf('\Drupal\Core\Asset\FileAsset', $js_file);
+    $this->assertEquals('js', $js_file->getAssetType());
   }
 
   public function testCreateJavascriptExternalAsset() {
-    $js_external1 = $this->collector->create('js', 'external', 'http://foo.bar/path/to/asset.js');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptExternalAsset', $js_external1, 'Collector correctly created a JavascriptExternalAsset instance .');
+    $js_external = $this->collector->create('js', 'external', 'http://foo.bar/path/to/asset.js');
+    $this->assertInstanceOf('\Drupal\Core\Asset\ExternalAsset', $js_external);
+    $this->assertEquals('js', $js_external->getAssetType());
   }
 
   public function testCreateJavascriptStringAsset() {
-    $js_string1 = $this->collector->create('js', 'string', 'foo');
-    $this->assertInstanceOf('\Drupal\Core\Asset\JavascriptStringAsset', $js_string1, 'Collector correctly created a JavascriptStringAsset instance .');
+    $js_string = $this->collector->create('js', 'string', 'foo');
+    $this->assertInstanceOf('\Drupal\Core\Asset\StringAsset', $js_string);
+    $this->assertEquals('js', $js_string->getAssetType());
   }
 }

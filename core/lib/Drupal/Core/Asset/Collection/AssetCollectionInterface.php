@@ -21,8 +21,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
   /**
    * Returns all assets contained in this collection.
    *
-   * @return array
-   *   An array of AssetInterface instances.
+   * @return AssetInterface[]
    */
   public function all();
 
@@ -49,7 +48,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *   The collection to merge.
    *
    * @param bool $freeze
-   *   Whether to freeze the merged collection after merging. Defaults to TRUE.
+   *   Whether to freeze the provided collection after merging. Defaults to TRUE.
    *
    * @return void
    */

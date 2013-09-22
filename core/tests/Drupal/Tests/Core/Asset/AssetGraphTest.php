@@ -15,7 +15,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group Asset
  */
-class AssetGraphTest extends UnitTestCase {
+class AssetGraphTest extends AssetUnitTest {
 
   /**
    * @var AssetGraph
