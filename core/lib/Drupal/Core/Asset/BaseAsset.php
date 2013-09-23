@@ -75,6 +75,10 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    * {@inheritdoc}
    */
   public function addDependency($module, $name) {
+    if (!(is_string($module) && is_string($name))) {
+      throw new \InvalidArgumentException('Dependencies must be expressed as 2-tuple with the first element being owner/module, and the second being name.');
+    }
+
     $this->dependencies[] = array($module, $name);
   }
 
@@ -96,6 +100,10 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    * {@inheritdoc}
    */
   public function before($asset) {
+    if (!($asset instanceof AssetInterface || is_string($asset))) {
+      throw new \InvalidArgumentException('Ordering information must be declared using either an asset string id or the full AssetInterface object.');
+    }
+
     $this->successors[] = $asset;
   }
 
@@ -103,6 +111,10 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    * {@inheritdoc}
    */
   public function after($asset) {
+    if (!($asset instanceof AssetInterface || is_string($asset))) {
+      throw new \InvalidArgumentException('Ordering information must be declared using either an asset string id or the full AssetInterface object.');
+    }
+
     $this->predecessors[] = $asset;
   }
 

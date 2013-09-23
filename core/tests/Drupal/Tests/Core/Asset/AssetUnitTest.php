@@ -13,7 +13,7 @@ use Drupal\Tests\UnitTestCase;
  */
 abstract class AssetUnitTest extends UnitTestCase {
 
-  public function createMockAsset($type) {
+  public function createMockFileAsset($type) {
     $asset = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
     $asset->expects($this->any())
       ->method('getAssetType')

@@ -33,8 +33,8 @@ class AssetCollectionTest extends AssetUnitTest {
     // Dead-simple collection - contains just one css and one js asset, both local files.
     $collection = new AssetCollection();
 
-    $css1 = $this->createMockAsset('css');
-    $js1 = $this->createMockAsset('js');
+    $css1 = $this->createMockFileAsset('css');
+    $js1 = $this->createMockFileAsset('js');
 
     $collection->add($css1);
     $collection->add($js1);
@@ -53,7 +53,7 @@ class AssetCollectionTest extends AssetUnitTest {
 
     $this->assertEquals(array($js1), $js_result);
 
-    $css2 = $this->createMockAsset('css');
+    $css2 = $this->createMockFileAsset('css');
 
     $collection->add($css2);
 

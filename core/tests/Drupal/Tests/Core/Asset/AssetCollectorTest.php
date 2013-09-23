@@ -93,7 +93,7 @@ class AssetCollectorTest extends AssetUnitTest {
     $collection = new AssetCollection();
     $this->collector->setCollection($collection);
 
-    $mock = $this->createMockAsset('css');
+    $mock = $this->createMockFileAsset('css');
     $this->collector->add($mock);
 
     $this->assertContains($mock, $collection);
