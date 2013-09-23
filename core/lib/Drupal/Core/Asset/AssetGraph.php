@@ -7,7 +7,7 @@
 
 namespace Drupal\Core\Asset;
 use Gliph\Exception\InvalidVertexTypeException;
-use Gliph\Graph\DirectedAdjacencyGraph;
+use Gliph\Graph\DirectedAdjacencyList;
 
 /**
  * An extension of the DirectedAdjacencyGraph concept designed specifically for
@@ -35,7 +35,7 @@ use Gliph\Graph\DirectedAdjacencyGraph;
  *
  * TODO add stuff that tracks data about unresolved successors/predecessors
  */
-class AssetGraph extends DirectedAdjacencyGraph {
+class AssetGraph extends DirectedAdjacencyList {
 
   protected $before = array();
   protected $after = array();

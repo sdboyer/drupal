@@ -2,16 +2,16 @@
 
 namespace Gliph\Graph;
 
-class DirectedAdjacencyGraphTest extends AdjacencyGraphTest {
+class DirectedAdjacencyListTest extends AdjacencyListBase {
 
     /**
-     * @var DirectedAdjacencyGraph
+     * @var DirectedAdjacencyList
      */
     protected $g;
 
     public function setUp() {
         parent::setUp();
-        $this->g = new DirectedAdjacencyGraph();
+        $this->g = new DirectedAdjacencyList();
     }
 
 
@@ -83,5 +83,12 @@ class DirectedAdjacencyGraphTest extends AdjacencyGraphTest {
 
         $this->doCheckVertexCount(3, $transpose);
         $this->doCheckVerticesEqual(array($this->v['b'], $this->v['a'], $this->v['c']), $transpose);
+    }
+
+    /**
+     * @expectedException Gliph\Exception\NonexistentVertexException
+     */
+    public function testRemoveNonexistentVertex() {
+        $this->g->removeVertex($this->v['a']);
     }
 }

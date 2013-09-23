@@ -3,20 +3,21 @@
 namespace Gliph\Traversal;
 
 
-use Gliph\Graph\DirectedAdjacencyGraph;
+use Gliph\Exception\NonexistentVertexException;
+use Gliph\Graph\DirectedAdjacencyList;
 use Gliph\TestVertex;
 use Gliph\Visitor\DepthFirstNoOpVisitor;
 
 class DepthFirstTest extends \PHPUnit_Framework_TestCase {
 
     /**
-     * @var DirectedAdjacencyGraph
+     * @var DirectedAdjacencyList
      */
     protected $g;
     protected $v;
 
     public function setUp() {
-        $this->g = new DirectedAdjacencyGraph();
+        $this->g = new DirectedAdjacencyList();
         $this->v = array(
             'a' => new TestVertex('a'),
             'b' => new TestVertex('b'),
@@ -24,13 +25,13 @@ class DepthFirstTest extends \PHPUnit_Framework_TestCase {
             'd' => new TestVertex('d'),
             'e' => new TestVertex('e'),
             'f' => new TestVertex('f'),
-            'g' => new TestVertex('g'),
         );
+        extract($this->v);
 
-        $this->g->addDirectedEdge($this->v['a'], $this->v['b']);
-        $this->g->addDirectedEdge($this->v['b'], $this->v['c']);
-        $this->g->addDirectedEdge($this->v['a'], $this->v['c']);
-        $this->g->addDirectedEdge($this->v['b'], $this->v['d']);
+        $this->g->addDirectedEdge($a, $b);
+        $this->g->addDirectedEdge($b, $c);
+        $this->g->addDirectedEdge($a, $c);
+        $this->g->addDirectedEdge($b, $d);
     }
 
     public function testBasicAcyclicDepthFirstTraversal() {
@@ -45,7 +46,9 @@ class DepthFirstTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testDirectCycleDepthFirstTraversal() {
-        $this->g->addDirectedEdge($this->v['d'], $this->v['b']);
+        extract($this->v);
+
+        $this->g->addDirectedEdge($d, $b);
 
         $visitor = $this->getMock('Gliph\\Visitor\\DepthFirstNoOpVisitor');
         $visitor->expects($this->exactly(1))->method('onBackEdge');
@@ -54,35 +57,57 @@ class DepthFirstTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testIndirectCycleDepthFirstTraversal() {
-        $this->g->addDirectedEdge($this->v['d'], $this->v['a']);
+        extract($this->v);
+
+        $this->g->addDirectedEdge($d, $a);
 
         $visitor = $this->getMock('Gliph\\Visitor\\DepthFirstNoOpVisitor');
         $visitor->expects($this->exactly(1))->method('onBackEdge');
 
-        DepthFirst::traverse($this->g, $visitor, $this->v['a']);
+        DepthFirst::traverse($this->g, $visitor, $a);
     }
 
     /**
      * @covers Gliph\Traversal\DepthFirst::traverse
-     * @expectedException RuntimeException
+     * @expectedException Gliph\Exception\RuntimeException
      */
     public function testExceptionOnEmptyTraversalQueue() {
+        extract($this->v);
+
         // Create a cycle that ensures there are no source vertices
-        $this->g->addDirectedEdge($this->v['d'], $this->v['a']);
+        $this->g->addDirectedEdge($d, $a);
         DepthFirst::traverse($this->g, new DepthFirstNoOpVisitor());
     }
 
     /**
      * @covers Gliph\Traversal\DepthFirst::traverse
-     * @expectedException UnexpectedValueException
-     *
-     * This relies on the graph class to internally throw an exception
-     * when in attempt is made to visit a vertex that is not in the graph.
      */
     public function testProvideQueueAsStartPoint() {
+        extract($this->v);
+
         $queue = new \SplQueue();
-        $queue->push($this->v['a']);
-        $queue->push($this->v['e']);
+        $queue->push($a);
+        $queue->push($e);
+
+        $this->g->addVertex($a);
+        $this->g->addVertex($e);
+
         DepthFirst::traverse($this->g, new DepthFirstNoOpVisitor(), $queue);
+    }
+
+    /**
+     * Cheats a bit - tests both the toposort visitor and the toposort method.
+     * But they're tightly coupled in code, anyway.
+     *
+     * @expectedException Gliph\Exception\RuntimeException
+     *   Thrown by the visitor after adding a cycle to the graph.
+     */
+    public function testToposort() {
+        extract($this->v);
+
+        $this->assertEquals(array($c, $d, $b, $a), DepthFirst::toposort($this->g, $a));
+
+        $this->g->addDirectedEdge($d, $a);
+        DepthFirst::toposort($this->g, $a);
     }
 }

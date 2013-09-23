@@ -2,7 +2,7 @@
 
 namespace Gliph\Visitor;
 
-use Gliph\Graph\DirectedAdjacencyGraph;
+use Gliph\Graph\DirectedAdjacencyList;
 use Gliph\TestVertex;
 use Gliph\Traversal\DepthFirst;
 
@@ -16,7 +16,7 @@ class DepthFirstBasicVisitorTest extends \PHPUnit_Framework_TestCase {
     protected $vis;
 
     /**
-     * @var DirectedAdjacencyGraph
+     * @var DirectedAdjacencyList
      */
     protected $g;
 
@@ -28,10 +28,9 @@ class DepthFirstBasicVisitorTest extends \PHPUnit_Framework_TestCase {
             'd' => new TestVertex('d'),
             'e' => new TestVertex('e'),
             'f' => new TestVertex('f'),
-            'g' => new TestVertex('g'),
         );
 
-        $this->g = new DirectedAdjacencyGraph();
+        $this->g = new DirectedAdjacencyList();
         $this->vis = new DepthFirstBasicVisitor();
 
         $this->g->addDirectedEdge($this->v['a'], $this->v['b']);
@@ -64,7 +63,7 @@ class DepthFirstBasicVisitorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException RuntimeException
+     * @expectedException Gliph\Exception\RuntimeException
      * @covers Gliph\Visitor\DepthFirstBasicVisitor::onBackEdge
      * @covers Gliph\Visitor\DepthFirstBasicVisitor::onInitializeVertex
      */
@@ -74,7 +73,7 @@ class DepthFirstBasicVisitorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException OutOfRangeException
+     * @expectedException Gliph\Exception\OutOfRangeException
      * @covers
      */
     public function testReachableExceptionOnUnknownVertex() {

@@ -2,8 +2,13 @@
 
 namespace Gliph\Graph;
 
-class UndirectedAdjacencyGraph extends AdjacencyGraph {
+use Gliph\Exception\NonexistentVertexException;
 
+class UndirectedAdjacencyList extends AdjacencyList implements UndirectedGraph {
+
+    /**
+     * {@inheritdoc}
+     */
     public function addEdge($from, $to) {
         if (!$this->hasVertex($from)) {
             $this->addVertex(($from));
@@ -17,9 +22,12 @@ class UndirectedAdjacencyGraph extends AdjacencyGraph {
         $this->vertices[$to]->attach($from);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function removeVertex($vertex) {
         if (!$this->hasVertex($vertex)) {
-            throw new \OutOfBoundsException('Vertex is not in the graph, it cannot be removed.', E_WARNING);
+            throw new NonexistentVertexException('Vertex is not in the graph, it cannot be removed.', E_WARNING);
         }
 
         foreach ($this->vertices[$vertex] as $adjacent) {
@@ -28,11 +36,17 @@ class UndirectedAdjacencyGraph extends AdjacencyGraph {
         unset($this->vertices[$vertex]);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function removeEdge($from, $to) {
         $this->vertices[$from]->detach($to);
         $this->vertices[$to]->detach($from);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function eachEdge($callback) {
         $edges = array();
         $complete = new \SplObjectStorage();
