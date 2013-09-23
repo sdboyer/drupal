@@ -136,14 +136,7 @@ class AssetLibraryRepository implements \IteratorAggregate {
 
     if ($asset->hasDependencies()) {
       foreach ($asset->getDependencyInfo() as $info) {
-        try {
-          $dependencies[] = $this->get($info[0], $info[1]);
-        }
-        // TODO should we really try/catch at a potentially high traffic place like this?
-        catch (\InvalidArgumentException $e) {
-          // TODO we're relying on a method that's not in AssetOrderingInterface...
-          watchdog('assets', 'Asset @asset declared a dependency on nonexistent library @module/@name', array($asset->getSourcePath(), $info[0], $info[1]), WATCHDOG_ERROR);
-        }
+        $dependencies[] = $this->get($info[0], $info[1]);
       }
     }
 
