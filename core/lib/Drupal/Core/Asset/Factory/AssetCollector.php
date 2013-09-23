@@ -183,10 +183,12 @@ class AssetCollector {
     return $this->locked;
   }
 
-  public function setDefaultMetadata($type, AssetMetadataBag $metadata) {
+  public function setDefaultMetadata(AssetMetadataBag $metadata) {
     if ($this->isLocked()) {
       throw new \Exception('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
     }
+
+    $type = $metadata->getType();
 
     if ($type === 'css') {
       $this->defaultCssMetadata = $metadata;

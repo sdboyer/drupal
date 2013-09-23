@@ -62,7 +62,7 @@ class AssetCollectorTest extends AssetUnitTest {
   public function testDefaultPropagation() {
     // Test that defaults are correctly applied by the factory.
     $meta = new CssMetadataBag(array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
-    $this->collector->setDefaultMetadata('css', $meta);
+    $this->collector->setDefaultMetadata($meta);
     $css1 = $this->collector->create('css', 'file', 'foo');
 
     $asset_meta = $css1->getMetadata();
@@ -168,7 +168,7 @@ class AssetCollectorTest extends AssetUnitTest {
 
   public function testChangeAndRestoreDefaults() {
     $changed_css = new CssMetadataBag(array('foo' => 'bar', 'every_page' => TRUE));
-    $this->collector->setDefaultMetadata('css', $changed_css);
+    $this->collector->setDefaultMetadata($changed_css);
 
     $this->assertEquals($changed_css, $this->collector->getMetadataDefaults('css'));
     $this->assertNotSame($changed_css, $this->collector->getMetadataDefaults('css'), 'Metadata is cloned on retrieval from collector.');
@@ -178,8 +178,8 @@ class AssetCollectorTest extends AssetUnitTest {
 
     // Do another check to ensure that both metadata bags are correctly reset
     $changed_js = new JsMetadataBag(array('scope' => 'footer', 'fizzbuzz' => 'llama'));
-    $this->collector->setDefaultMetadata('css', $changed_css);
-    $this->collector->setDefaultMetadata('js', $changed_js);
+    $this->collector->setDefaultMetadata($changed_css);
+    $this->collector->setDefaultMetadata($changed_js);
 
     $this->assertEquals($changed_css, $this->collector->getMetadataDefaults('css'));
     $this->assertEquals($changed_js, $this->collector->getMetadataDefaults('js'));
@@ -187,6 +187,18 @@ class AssetCollectorTest extends AssetUnitTest {
     $this->collector->restoreDefaults();
     $this->assertEquals(new CssMetadataBag(), $this->collector->getMetadataDefaults('css'));
     $this->assertEquals(new JsMetadataBag(), $this->collector->getMetadataDefaults('js'));
+  }
+
+  /**
+   * @expectedException \InvalidArgumentException
+   */
+  public function testMetadataTypeMustBeCorrect() {
+    $mock = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $mock->expects($this->once())
+      ->method('getType')
+      ->will($this->returnValue('foo'));
+
+    $this->collector->setDefaultMetadata($mock);
   }
 
   /**
