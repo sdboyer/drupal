@@ -132,6 +132,21 @@ class AssetCollectorTest extends AssetUnitTest {
   /**
    * @expectedException Exception
    */
+  public function testUnlockFailsIfNotLocked() {
+    $this->collector->unlock('foo');
+  }
+
+  /**
+   * @expectedException Exception
+   */
+  public function testLockFailsIfLocked() {
+    $this->collector->lock('foo');
+    $this->collector->lock('error');
+  }
+
+  /**
+   * @expectedException Exception
+   */
   public function testLockingPreventsSettingDefaults() {
     $this->collector->lock($this);
     $this->collector->setDefaultMetadata(new CssMetadataBag());
@@ -243,5 +258,29 @@ class AssetCollectorTest extends AssetUnitTest {
     $js_string = $this->collector->create('js', 'string', 'foo');
     $this->assertInstanceOf('\Drupal\Core\Asset\StringAsset', $js_string);
     $this->assertEquals('js', $js_string->getAssetType());
+  }
+
+  public function testLastCssAutoAfter() {
+    $css1 = $this->collector->create('css', 'file', 'foo.css');
+    $css2 = $this->collector->create('css', 'file', 'foo2.css');
+    $this->assertEquals(array($css1), $css2->getPredecessors());
+
+    $this->collector->clearLastCss();
+    $css3 = $this->collector->create('css', 'file', 'foo3.css');
+    $this->assertEmpty($css3->getPredecessors());
+  }
+
+  /**
+   * @expectedException \InvalidArgumentException
+   */
+  public function testExceptionOnInvalidSourceType() {
+    $this->collector->create('foo', 'bar', 'baz');
+  }
+
+  /**
+   * @expectedException \InvalidArgumentException
+   */
+  public function testExceptionOnInvalidAssetType() {
+    $this->collector->create('css', 'bar', 'qux');
   }
 }

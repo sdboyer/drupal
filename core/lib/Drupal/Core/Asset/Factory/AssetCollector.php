@@ -52,6 +52,8 @@ class AssetCollector {
 
   protected $defaultJsMetadata;
 
+  protected $lastCss;
+
   protected $classMap = array(
     'file' => 'Drupal\\Core\\Asset\\FileAsset',
     'external' => 'Drupal\\Core\\Asset\\ExternalAsset',
@@ -100,18 +102,25 @@ class AssetCollector {
    *    - 'string': a string containing valid CSS or Javascript to be injected
    *      directly onto the page.
    * @param array $options
-   *   An array of metadata to explicitly set on the asset. These will override
-   *   metadata defaults that are injected onto the asset at creation time.
+   *   (optional) An array of metadata to explicitly set on the asset. These
+   *   will override metadata defaults that are injected onto the asset at
+   *   creation time.
    * @param array $filters
-   *   An array of filters to apply to the object
+   *   (optional) An array of filters to apply to the object
    *   TODO this should, maybe, be removed entirely
+   * @param bool $keep_last
+   *   (optional) Whether or not to retain the created asset for automated
+   *   ordering purposes. Only applies to CSS. Note that passing FALSE will not
+   *   prevent a CSS asset that is being created from automatically being
+   *   after() the existing lastCss asset, if one exists. For that,
+   *   @see clearLastCss().
    *
    * @return \Drupal\Core\Asset\AssetInterface
    *
    * @throws \InvalidArgumentException
    *   Thrown if an invalid asset type or source type is passed.
    */
-  public function create($asset_type, $source_type, $data, $options = array(), $filters = array()) {
+  public function create($asset_type, $source_type, $data, $options = array(), $filters = array(), $keep_last = TRUE) {
     // TODO this normalization points to a deeper modeling problem.
     $source_type = $source_type == 'inline' ? 'string' : $source_type;
 
@@ -134,7 +143,36 @@ class AssetCollector {
       $this->add($asset);
     }
 
+    if ($asset_type == 'css' && !empty($this->lastCss)) {
+      $asset->after($this->lastCss);
+    }
+
+    if ($keep_last) {
+      $this->lastCss = $asset;
+    }
+
     return $asset;
+  }
+
+  /**
+   * Clears the asset stored in lastCss.
+   *
+   * Ordinarily, using the create() factory to generate a CSS asset object will
+   * automatically set up an ordering relationship between that asset and the
+   * previous CSS asset that was created. This is intended to facilitate the
+   * rigid ordering that authors likely expect for CSS assets declared together
+   * in a contiguous series.
+   *
+   * This method clears the last stored CSS asset. It should be called when the
+   * end of such a contiguous series is reached, or by the asset creator
+   * themselves if they want to avoid the creation of the ordering relationship.
+   *
+   * @return AssetCollector
+   *   The current AssetCollector instance, for easy chaining.
+   */
+  public function clearLastCss() {
+    unset($this->lastCss);
+    return $this;
   }
 
   public function setCollection(AssetCollectionInterface $collection) {
@@ -149,10 +187,6 @@ class AssetCollector {
       throw new \Exception('The collector instance is locked. Collections cannot be cleared on a locked collector.');
     }
     $this->collection = NULL;
-  }
-
-  public function createJavascriptSetting() {
-    // TODO figure out settings
   }
 
   public function lock($key) {
