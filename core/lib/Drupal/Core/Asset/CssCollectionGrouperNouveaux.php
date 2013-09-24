@@ -7,7 +7,7 @@
 
 namespace Drupal\Core\Asset;
 use Drupal\Core\Asset\Aggregate\CssAggregateAsset;
-use Drupal\Core\Asset\Collection\CssCollection;
+use Drupal\Core\Asset\Collection\AssetCollection;
 use Gliph\Traversal\DepthFirst;
 use Gliph\Visitor\DepthFirstBasicVisitor;
 use Drupal\Core\Asset\AssetGraph;
@@ -46,24 +46,23 @@ class CssCollectionGrouperNouveaux {
    *
    * @param array $assets
    *   An asset collection.
-   *   TODO update the interface to be an AssetCollection, not an array
    *
    * @return array
    *   A sorted array of asset groups.
    */
-  public function group(CssCollection $assets) {
+  public function group(AssetCollection $assets) {
     $tsl = $this->getOptimalTSL($assets);
 
-    // TODO replace with CssCollection
     // TODO ordering suddenly matters here...problem?
-    $processed = new CssCollection();
+    $processed = new AssetCollection();
     $last_key = FALSE;
     foreach ($tsl as $asset) {
       // TODO fix the visitor - this will fail right now because the optimality data got depleted during traversal
       $key = $this->optimal_lookup->contains($asset) ? $this->optimal_lookup[$asset] : FALSE;
 
       if ($key !== $last_key) {
-        $processed[] = $aggregate = new CssAggregateAsset($asset->getMetadata());
+        $aggregate = new CssAggregateAsset($asset->getMetadata());
+        $processed->add($aggregate);
       }
 
       $aggregate->add($asset);
@@ -82,7 +81,7 @@ class CssCollectionGrouperNouveaux {
    *
    * @throws \LogicException
    */
-  protected function getOptimalTSL(CssCollection $assets) {
+  protected function getOptimalTSL(AssetCollection $assets) {
     // We need to define the optimum minimal group set, given metadata
     // boundaries across which aggregates cannot be safely made.
     $this->optimal = array();
@@ -95,7 +94,7 @@ class CssCollectionGrouperNouveaux {
     // sequencing information.
     $graph = new AssetGraph();
 
-    foreach ($assets as $asset) {
+    foreach ($assets->getCss() as $asset) {
       $graph->addVertex($asset);
 
       $k = $this->getGroupKey($asset);
