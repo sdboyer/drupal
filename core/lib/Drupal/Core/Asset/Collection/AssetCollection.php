@@ -17,6 +17,8 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  *
  * @see CssCollection
  * @see JsCollection
+ *
+ * TODO allow direct adding of libraries
  */
 class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
 
@@ -46,6 +48,7 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function contains(AssetInterface $asset) {
+    // TODO decide whether to do this by id or object instance
     return $this->assetStorage->contains($asset);
   }
 
@@ -77,12 +80,27 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function remove($needle, $graceful = TRUE) {
+    // TODO fix horrible complexity of conditionals, exceptions, and returns.
     $this->attemptWrite();
 
-    if ((is_string($needle) && $needle = $this->getById($needle, $graceful)) ||
-        $needle instanceof AssetInterface) {
+    // Validate and normalize type to AssetInterface
+    if (is_string($needle)) {
+      if (!$needle = $this->getById($needle, $graceful)) {
+        // Asset couldn't be found but we're in graceful mode - return FALSE.
+        return FALSE;
+      }
+    }
+    else if (!$needle instanceof AssetInterface) {
+      throw new \InvalidArgumentException('Invalid type provided to AssetCollection::remove(); must provide either a string asset id or AssetInterface instance.');
+    }
+
+    // Check for membership
+    if ($this->contains($needle)) {
       unset($this->assetIdMap[$needle->id()], $this->assetStorage[$needle]);
       return TRUE;
+    }
+    else if (!$graceful) {
+      throw new \OutOfBoundsException(sprintf('This collection does not contain an asset with id %s.', $needle->id()));
     }
 
     return FALSE;
@@ -171,6 +189,8 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function resolveLibraries(AssetLibraryRepository $repository) {
+    $this->attemptWrite();
+
     foreach ($this->assetStorage as $asset) {
       foreach ($repository->resolveDependencies($asset) as $dep) {
         $this->add($dep);
