@@ -73,7 +73,7 @@ class AssetCollectorTest extends AssetUnitTest {
   /**
    * @expectedException Exception
    */
-  public function testExceptionOnAddingAssetWithoutBagPresent() {
+  public function testExceptionOnAddingAssetWithoutCollectionPresent() {
     $asset = $this->collector->create('css', 'string', 'foo');
     $this->collector->add($asset);
   }
@@ -81,12 +81,12 @@ class AssetCollectorTest extends AssetUnitTest {
   /**
    * TODO separate test for an explicit add() call.
    */
-  public function testAssetsImplicitlyArriveInInjectedBag() {
+  public function testAssetsImplicitlyArriveInInjectedCollection() {
     $collection = new AssetCollection();
     $this->collector->setCollection($collection);
 
     $asset = $this->collector->create('css', 'file', 'bar');
-    $this->assertContains($asset, $collection->getCss(), 'Created asset was implicitly added to bag.');
+    $this->assertContains($asset, $collection->getCss(), 'Created asset was implicitly added to collection.');
   }
 
   public function testAddAssetExplicitly() {
@@ -134,7 +134,7 @@ class AssetCollectorTest extends AssetUnitTest {
    */
   public function testLockingPreventsSettingDefaults() {
     $this->collector->lock($this);
-    $this->collector->setDefaultMetadata('css', new CssMetadataBag());
+    $this->collector->setDefaultMetadata(new CssMetadataBag());
   }
 
   /**
@@ -148,7 +148,7 @@ class AssetCollectorTest extends AssetUnitTest {
   /**
    * @expectedException Exception
    */
-  public function testLockingPreventsClearingBag() {
+  public function testLockingPreventsClearingCollection() {
     $this->collector->lock($this);
     $this->collector->clearCollection();
   }
@@ -156,7 +156,7 @@ class AssetCollectorTest extends AssetUnitTest {
   /**
    * @expectedException Exception
    */
-  public function testLockingPreventsSettingBag() {
+  public function testLockingPreventsSettingCollection() {
     $this->collector->lock($this);
     $this->collector->setCollection(new AssetCollection());
   }
