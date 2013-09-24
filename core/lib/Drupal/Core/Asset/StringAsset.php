@@ -16,7 +16,7 @@ class StringAsset extends BaseAsset {
   protected $lastModified;
 
   public function __construct(AssetMetadataBag $metadata, $content, $filters = array()) {
-    $this->content = $content;
+    $this->setContent($content);
     $this->lastModified = REQUEST_TIME; // TODO this is terrible
 
     parent::__construct($metadata, $filters);
@@ -27,7 +27,7 @@ class StringAsset extends BaseAsset {
    */
   public function id() {
     // TODO hashing current content means this id is essentially useless.
-    return md5($this->content);
+    return md5($this->getContent());
   }
 
   public function setLastModified($last_modified) {
@@ -39,6 +39,6 @@ class StringAsset extends BaseAsset {
   }
 
   public function load(FilterInterface $additionalFilter = NULL) {
-    $this->doLoad($this->content, $additionalFilter);
+    $this->doLoad($this->getContent(), $additionalFilter);
   }
 }

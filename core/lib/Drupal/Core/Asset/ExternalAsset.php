@@ -18,10 +18,7 @@ class ExternalAsset extends BaseAsset {
   protected $sourceUrl;
 
   public function __construct(AssetMetadataBag $metadata, $sourceUrl, $filters = array()) {
-    if (0 === strpos($sourceUrl, '//')) {
-      $sourceUrl = 'http:' . $sourceUrl;
-    }
-    elseif (FALSE === strpos($sourceUrl, '://')) {
+    if (FALSE === strpos($sourceUrl, '://')) {
       throw new \InvalidArgumentException(sprintf('"%s" is not a valid URL.', $sourceUrl));
     }
 
