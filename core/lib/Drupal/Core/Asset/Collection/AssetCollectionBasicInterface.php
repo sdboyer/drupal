@@ -70,15 +70,6 @@ interface AssetCollectionBasicInterface extends \Traversable {
   public function getById($id, $graceful = TRUE);
 
   /**
-   * Reindexes the ids of all assets contained in the aggregate.
-   *
-   * TODO this is necessary because AssetInterface::id() doesn't guarantee stable output. Fix that, and this can go away
-   *
-   * @return void
-   */
-  public function reindex();
-
-  /**
    * Indicates whether this collection contains any assets.
    *
    * @return bool

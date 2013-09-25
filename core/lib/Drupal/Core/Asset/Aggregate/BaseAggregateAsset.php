@@ -95,7 +95,7 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
     return $this->id;
   }
 
-   /**
+  /**
    * {@inheritdoc}
    */
   public function getAssetType() {
@@ -159,25 +159,6 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
     }
 
     return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function reindex() {
-    $map = array();
-    foreach ($this->assetIdMap as $asset) {
-      $map[$asset->id()] = $asset;
-    }
-    $this->assetIdMap = $map;
-
-    // Recalculate the id, too.
-    $this->calculateId();
-
-    // Recursively reindex contained aggregates.
-    foreach ($this->nestedStorage as $aggregate) {
-      $aggregate->reindex();
-    }
   }
 
   /**

@@ -65,16 +65,6 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
 
     throw new \OutOfBoundsException(sprintf('This collection does not contain an asset with id %s.', $id));
   }
-   /**
-   * {@inheritdoc}
-   */
-  public function reindex() {
-    $map = array();
-    foreach ($this->assetIdMap as $asset) {
-      $map[$asset->id()] = $asset;
-    }
-    $this->assetIdMap = $map;
-  }
 
   /**
    * {@inheritdoc}
