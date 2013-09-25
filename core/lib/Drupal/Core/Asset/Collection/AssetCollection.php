@@ -6,11 +6,9 @@
  */
 
 namespace Drupal\Core\Asset\Collection;
-use Drupal\Core\Asset\Aggregate\AssetAggregateInterface;
+use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\AssetInterface;
-use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
-use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 /**
  * A container for assets.
@@ -173,22 +171,6 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
     }
 
     return $collection;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function resolveLibraries(AssetLibraryRepository $repository) {
-    $this->attemptWrite();
-
-    foreach ($this->assetStorage as $asset) {
-      foreach ($repository->resolveDependencies($asset) as $dep) {
-        $this->add($dep);
-        if ($dep->getAssetType() == $asset->getAssetType()) {
-          $asset->after($dep);
-        }
-      }
-    }
   }
 
   /**

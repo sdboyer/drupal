@@ -164,7 +164,6 @@ class AssetCollectionTest extends AssetUnitTest {
       'add' => $stub,
       'remove' => $stub,
       'mergeCollection' => $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetCollection'),
-      'resolveLibraries' => $this->getMock('\\Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE),
     );
 
     $this->collection->freeze();
