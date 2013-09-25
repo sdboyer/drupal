@@ -4,16 +4,16 @@
  * Contains Drupal\Tests\Core\Asset\AssetLibraryTest.
  */
 
-namespace Drupal\Tests\Core\Asset;
+namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetLibrary;
-use Drupal\Tests\UnitTestCase;
+use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
  *
  * @group Asset
  */
-class AssetLibraryTest extends UnitTestCase {
+class AssetLibraryTest extends AssetUnitTest {
 
   public static function getInfo() {
     return array(

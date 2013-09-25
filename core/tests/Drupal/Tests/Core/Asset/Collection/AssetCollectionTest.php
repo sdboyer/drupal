@@ -5,11 +5,10 @@
  */
 
 
-namespace Drupal\Tests\Core\Asset;
+namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetCollection;
-use Drupal\Core\Asset\Collection\CssCollection;
-use Drupal\Core\Asset\Collection\JsCollection;
+use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
  * @group Asset

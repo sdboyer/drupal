@@ -4,7 +4,7 @@
  * Contains Drupal\Tests\Core\Asset\AssetCollectorTest.
  */
 
-namespace Drupal\Tests\Core\Asset;
+namespace Drupal\Tests\Core\Asset\Factory;
 
 if (!defined('CSS_AGGREGATE_THEME')) {
   define('CSS_AGGREGATE_THEME', 100);
@@ -22,6 +22,7 @@ use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Factory\AssetCollector;
 use Drupal\Core\Asset\Metadata\CssMetadataBag;
 use Drupal\Core\Asset\Metadata\JsMetadataBag;
+use Drupal\Tests\Core\Asset\AssetUnitTest;
 use Drupal\Tests\UnitTestCase;
 
 /**
