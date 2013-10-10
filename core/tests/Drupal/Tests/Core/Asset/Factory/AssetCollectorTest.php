@@ -72,7 +72,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \RuntimeException
    */
   public function testExceptionOnAddingAssetWithoutCollectionPresent() {
     $asset = $this->collector->create('css', 'string', 'foo');
@@ -101,7 +101,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \RuntimeException
    */
   public function testClearBag() {
     $collection = new AssetCollection();

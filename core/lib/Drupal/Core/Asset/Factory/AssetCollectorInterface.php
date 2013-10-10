@@ -29,10 +29,13 @@ interface AssetCollectorInterface {
    * Adds an asset to the contained collection.
    *
    * It is not necessary to call this method on assets that were created via the
-   * create() method.
+   * create() method; that is done implicitly.
    *
    * @param AssetInterface $asset
    *   The asset to add to the contained collection.
+   *
+   * @throws \RuntimeException
+   *   Thrown if the collector has no contained collection.
    */
   public function add(AssetInterface $asset);
 

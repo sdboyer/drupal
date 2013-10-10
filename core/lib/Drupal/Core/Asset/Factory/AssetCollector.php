@@ -41,7 +41,7 @@ class AssetCollector implements AssetCollectorInterface {
   /**
    * The key with which the lock was set.
    *
-   * This exact value (===) must be provided in order to unlock the instance.
+   * An identical value (===) must be provided to unlock the collector.
    *
    * There are no type restrictions.
    *
@@ -49,12 +49,37 @@ class AssetCollector implements AssetCollectorInterface {
    */
   protected $lockKey;
 
+  /**
+   * The default metadata bag that will be cloned and injected into all CSS
+   * assets that are created.
+   *
+   * @var CssMetadataBag
+   */
   protected $defaultCssMetadata;
 
+  /**
+   * The default metadata bag that will be cloned and injected into all JS
+   * assets that are created.
+   *
+   * @var JsMetadataBag
+   */
   protected $defaultJsMetadata;
 
+  /**
+   * The last CSS asset created by this collector, if any.
+   *
+   * This is used to conveniently create sequencing relationships between CSS
+   * assets as they pass through the collector.
+   *
+   * @var AssetInterface
+   */
   protected $lastCss;
 
+  /**
+   * A map of asset source type string ids to their fully qualified classes.
+   *
+   * @var array
+   */
   protected $classMap = array(
     'file' => 'Drupal\\Core\\Asset\\FileAsset',
     'external' => 'Drupal\\Core\\Asset\\ExternalAsset',
@@ -74,7 +99,7 @@ class AssetCollector implements AssetCollectorInterface {
    */
   public function add(AssetInterface $asset) {
     if (empty($this->collection)) {
-      throw new \Exception('No collection is currently attached to this collector.');
+      throw new \RuntimeException('No collection is currently attached to this collector.');
     }
     $this->collection->add($asset);
     return $this;
@@ -184,6 +209,9 @@ class AssetCollector implements AssetCollectorInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \InvalidArgumentException
+   *   Thrown if an invalid metadata type is provided (i.e., not 'css' or 'js').
    */
   public function setDefaultMetadata(AssetMetadataBag $metadata) {
     if ($this->isLocked()) {
