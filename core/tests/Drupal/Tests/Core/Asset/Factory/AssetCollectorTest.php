@@ -123,7 +123,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
    */
   public function testUnlockFailsWithoutCorrectSecret() {
     $this->collector->lock('foo');
@@ -131,14 +131,14 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
    */
   public function testUnlockFailsIfNotLocked() {
     $this->collector->unlock('foo');
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
    */
   public function testLockFailsIfLocked() {
     $this->collector->lock('foo');
@@ -146,7 +146,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
    */
   public function testLockingPreventsSettingDefaults() {
     $this->collector->lock($this);
@@ -154,7 +154,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
    */
   public function testLockingPreventsRestoringDefaults() {
     $this->collector->lock($this);
@@ -162,7 +162,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
    */
   public function testLockingPreventsClearingCollection() {
     $this->collector->lock($this);
@@ -170,7 +170,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException Exception
+   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
    */
   public function testLockingPreventsSettingCollection() {
     $this->collector->lock($this);
@@ -218,7 +218,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException InvalidArgumentException
+   * @expectedException \InvalidArgumentException
    */
   public function testGetNonexistentDefault() {
     $this->collector->getMetadataDefaults('foo');
