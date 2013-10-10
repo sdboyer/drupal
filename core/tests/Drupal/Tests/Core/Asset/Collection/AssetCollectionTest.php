@@ -23,7 +23,7 @@ class AssetCollectionTest extends AssetUnitTest {
   public static function getInfo() {
     return array(
       'name' => 'Asset collection tests',
-      'description' => 'Unit tests on AssetBag',
+      'description' => 'Unit tests on AssetCollection',
       'group' => 'Asset',
     );
   }
