@@ -173,6 +173,13 @@ class AssetCollector implements AssetCollectorInterface {
   /**
    * {@inheritdoc}
    */
+  public function hasCollection() {
+    return $this->collection instanceof AssetCollectionInterface;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function lock($key) {
     if ($this->isLocked()) {
       throw new LockedObjectException('Collector is already locked.', E_WARNING);

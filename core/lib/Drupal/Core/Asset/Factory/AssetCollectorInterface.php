@@ -121,6 +121,13 @@ interface AssetCollectorInterface {
   public function clearCollection();
 
   /**
+   * Indicates whether or not this collector currently contains a collection.
+   *
+   * @return bool
+   */
+  public function hasCollection();
+
+  /**
    * Locks this collector, using the provided key.
    *
    * The collector can only be unlocked by providing the same key. Key

@@ -100,15 +100,17 @@ class AssetCollectorTest extends AssetUnitTest {
     $this->assertContains($mock, $collection);
   }
 
-  /**
-   * @expectedException \RuntimeException
-   */
-  public function testClearBag() {
+  public function testSetCollection() {
+    $collection = new AssetCollection();
+    $this->collector->setCollection($collection);
+    $this->assertTrue($this->collector->hasCollection());
+  }
+
+  public function testClearCollection() {
     $collection = new AssetCollection();
     $this->collector->setCollection($collection);
     $this->collector->clearCollection();
-
-    $this->collector->add($this->collector->create('css', 'file', 'bar'));
+    $this->assertFalse($this->collector->hasCollection());
   }
 
   public function testLock() {
