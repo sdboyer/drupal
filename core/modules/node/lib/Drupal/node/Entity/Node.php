@@ -7,10 +7,8 @@
 
 namespace Drupal\node\Entity;
 
-use Drupal\Core\Entity\EntityNG;
+use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
-use Drupal\Core\Entity\Annotation\EntityType;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
@@ -36,10 +34,12 @@ use Drupal\node\NodeInterface;
  *   },
  *   base_table = "node",
  *   data_table = "node_field_data",
- *   revision_table = "node_field_revision",
+ *   revision_table = "node_revision",
+ *   revision_data_table = "node_field_revision",
  *   uri_callback = "node_uri",
  *   fieldable = TRUE,
  *   translatable = TRUE,
+ *   render_cache = FALSE,
  *   entity_keys = {
  *     "id" = "nid",
  *     "revision" = "vid",
@@ -59,7 +59,7 @@ use Drupal\node\NodeInterface;
  *   }
  * )
  */
-class Node extends EntityNG implements NodeInterface {
+class Node extends ContentEntityBase implements NodeInterface {
 
   /**
    * Implements Drupal\Core\Entity\EntityInterface::id().
@@ -387,11 +387,6 @@ class Node extends EntityNG implements NodeInterface {
         'value' => array('EntityChanged' => array()),
       ),
     );
-    $properties['comment'] = array(
-      'label' => t('Comment'),
-      'description' => t('Whether comments are allowed on this node: 0 = no, 1 = closed (read only), 2 = open (read/write).'),
-      'type' => 'integer_field',
-    );
     $properties['promote'] = array(
       'label' => t('Promote'),
       'description' => t('A boolean indicating whether the node should be displayed on the front page.'),
@@ -400,16 +395,6 @@ class Node extends EntityNG implements NodeInterface {
     $properties['sticky'] = array(
       'label' => t('Sticky'),
       'description' => t('A boolean indicating whether the node should be displayed at the top of lists in which it appears.'),
-      'type' => 'boolean_field',
-    );
-    $properties['tnid'] = array(
-      'label' => t('Translation set ID'),
-      'description' => t('The translation set id for this node, which equals the node id of the source post in each set.'),
-      'type' => 'integer_field',
-    );
-    $properties['translate'] = array(
-      'label' => t('Translate'),
-      'description' => t('A boolean indicating whether this translation page needs to be updated.'),
       'type' => 'boolean_field',
     );
     $properties['revision_timestamp'] = array(

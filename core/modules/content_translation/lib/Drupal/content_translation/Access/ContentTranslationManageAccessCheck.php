@@ -46,10 +46,10 @@ class ContentTranslationManageAccessCheck implements StaticAccessCheckInterface 
    * {@inheritdoc}
    */
   public function access(Route $route, Request $request) {
-    if ($entity = $request->attributes->get('entity')) {
+    $entity_type = $request->attributes->get('_entity_type');
+    if ($entity = $request->attributes->get($entity_type)) {
       $route_requirements = $route->getRequirements();
       $operation = $route_requirements['_access_content_translation_manage'];
-      $entity_type = $entity->entityType();
       $controller_class = $this->entityManager->getControllerClass($entity_type, 'translation');
       $controller = new $controller_class($entity_type, $entity->entityInfo());
 
@@ -57,26 +57,28 @@ class ContentTranslationManageAccessCheck implements StaticAccessCheckInterface 
       $translations = $entity->getTranslationLanguages();
       $languages = language_list();
 
-      if ($operation == 'create') {
-        $source = language_load($request->attributes->get('source'));
-        $target = language_load($request->attributes->get('target'));
-        $source = !empty($source) ? $source : $entity->language();
-        $target = !empty($target) ? $target : language(Language::TYPE_CONTENT);
-        return ($source->id != $target->id
-          && isset($languages[$source->id])
-          && isset($languages[$target->id])
-          && !isset($translations[$target->id])
-          && $controller->getTranslationAccess($entity, $operation))
-          ? static::ALLOW : static::DENY;
-      }
-      elseif ($operation == 'update') {
-        $language = language_load($request->attributes->get('language'));
-        $language = !empty($language) ? $language : language(Language::TYPE_CONTENT);
-        return isset($languages[$language->id])
-          && $language->id != $entity->getUntranslated()->language()->id
-          && isset($translations[$language->id])
-          && $controller->getTranslationAccess($entity, $operation)
-          ? static::ALLOW : static::DENY;
+      switch ($operation) {
+        case 'create':
+          $source = language_load($request->attributes->get('source'));
+          $target = language_load($request->attributes->get('target'));
+          $source = !empty($source) ? $source : $entity->language();
+          $target = !empty($target) ? $target : language(Language::TYPE_CONTENT);
+          return ($source->id != $target->id
+            && isset($languages[$source->id])
+            && isset($languages[$target->id])
+            && !isset($translations[$target->id])
+            && $controller->getTranslationAccess($entity, $operation))
+            ? static::ALLOW : static::DENY;
+
+        case 'update':
+        case 'delete':
+          $language = language_load($request->attributes->get('language'));
+          $language = !empty($language) ? $language : language(Language::TYPE_CONTENT);
+          return isset($languages[$language->id])
+            && $language->id != $entity->getUntranslated()->language()->id
+            && isset($translations[$language->id])
+            && $controller->getTranslationAccess($entity, $operation)
+            ? static::ALLOW : static::DENY;
       }
     }
     return static::DENY;

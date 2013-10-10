@@ -2,6 +2,7 @@
 
 use Drupal\Component\Utility\Crypt;
 
+use Drupal\Component\Utility\Settings;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\CoreServiceProvider;
@@ -181,6 +182,8 @@ function install_state_defaults() {
     // Whether or not this installation is interactive. By default this will
     // be set to FALSE if settings are passed in to install_drupal().
     'interactive' => TRUE,
+    // The mode for directories that are created during install.
+    'mode' => NULL,
     // An array of parameters for the installation, pre-populated by the URL
     // or by the settings passed in to install_drupal(). This is primarily
     // used to store 'profile' (the name of the chosen installation profile)
@@ -291,9 +294,6 @@ function install_begin_request(&$install_state) {
   // A request object from the HTTPFoundation to tell us about the request.
   $request = Request::createFromGlobals();
 
-  // This must go after drupal_bootstrap(), which unsets globals!
-  global $conf;
-
   // If we have a language selected and it is not yet saved in the system
   // (eg. pre-database data screens we are unable to persistently store
   // the default language), we should set language_default so the proper
@@ -375,7 +375,8 @@ function install_begin_request(&$install_state) {
 
     $container->register('config.storage', 'Drupal\Core\Config\InstallStorage');
     $container->register('config.context.factory', 'Drupal\Core\Config\Context\ConfigContextFactory')
-      ->addArgument(new Reference('event_dispatcher'));
+      ->addArgument(new Reference('event_dispatcher'))
+      ->addArgument(new Reference('uuid'));
 
     $container->register('config.context', 'Drupal\Core\Config\Context\ContextInterface')
       ->setFactoryService(new Reference('config.context.factory'))
@@ -422,22 +423,46 @@ function install_begin_request(&$install_state) {
       ))
       ->addMethodCall('setUserAgent', array('Drupal (+http://drupal.org/)'));
 
+    $container->register('settings', 'Drupal\Component\Utility\Settings')
+      ->setFactoryClass('Drupal\Component\Utility\Settings')
+      ->setFactoryMethod('getSingleton');
+    $container->register('keyvalue', 'Drupal\Core\KeyValueStore\KeyValueFactory')
+      ->addArgument(new Reference('service_container'))
+      ->addArgument(new Reference('settings'));
     // Register the expirable key value store used by form cache.
     $container
       ->register('keyvalue.expirable', 'Drupal\Core\KeyValueStore\KeyValueExpirableFactory')
-      ->addArgument(new Reference('service_container'));
+      ->addArgument(new Reference('service_container'))
+      ->addArgument(new Reference('settings'));
+    $container->register('keyvalue.memory', 'Drupal\Core\KeyValueStore\KeyValueMemoryFactory');
     $container
       ->register('keyvalue.expirable.null', 'Drupal\Core\KeyValueStore\KeyValueNullExpirableFactory');
-    $conf['keyvalue_expirable_default'] = 'keyvalue.expirable.null';
+    $settings = Settings::getSingleton()->getAll();
+    $settings['settings_old'] = $settings;
+    $settings['keyvalue_expirable_default'] = 'keyvalue.expirable.null';
+    // Override the default keyvalue storage to use memory as the database is
+    // not available.
+    $settings['keyvalue_default'] = 'keyvalue.memory';
+    new Settings($settings);
+
+    $container->register('state', 'Drupal\Core\KeyValueStore\KeyValueStoreInterface')
+      ->setFactoryService(new Reference('keyvalue'))
+      ->setFactoryMethod('get')
+      ->addArgument('state');
 
     // Register Twig template engine for use during install.
     CoreServiceProvider::registerTwig($container);
 
     $container->register('url_generator', 'Drupal\Core\Routing\NullGenerator');
 
+    // Register UUID.
+    CoreServiceProvider::registerUuid($container);
+
     // Register the CSS and JavaScript asset collection renderers.
-    $container->register('asset.css.collection_renderer', 'Drupal\Core\Asset\CssCollectionRenderer');
-    $container->register('asset.js.collection_renderer', 'Drupal\Core\Asset\JsCollectionRenderer');
+    $container->register('asset.css.collection_renderer', 'Drupal\Core\Asset\CssCollectionRenderer')
+      ->addArgument(new Reference('state'));
+    $container->register('asset.js.collection_renderer', 'Drupal\Core\Asset\JsCollectionRenderer')
+      ->addArgument(new Reference('state'));
 
   }
   // Set the request in the kernel to the new created Request above
@@ -545,7 +570,7 @@ function install_run_tasks(&$install_state) {
       $install_state['tasks_performed'][] = $task_name;
       $install_state['installation_finished'] = empty($tasks_to_perform);
       if ($install_state['database_tables_exist'] && ($task['run'] == INSTALL_TASK_RUN_IF_NOT_COMPLETED || $install_state['installation_finished'])) {
-        variable_set('install_task', $install_state['installation_finished'] ? 'done' : $task_name);
+        \Drupal::state()->set('install_task', $install_state['installation_finished'] ? 'done' : $task_name);
       }
     }
     // Stop when there are no tasks left. In the case of an interactive
@@ -618,7 +643,7 @@ function install_run_task($task, &$install_state) {
   elseif ($task['type'] == 'batch') {
     // Start a new batch based on the task function, if one is not running
     // already.
-    $current_batch = variable_get('install_current_batch');
+    $current_batch = \Drupal::state()->get('install_current_batch');
     if (!$install_state['interactive'] || !$current_batch) {
       $batch = $function($install_state);
       if (empty($batch)) {
@@ -631,7 +656,7 @@ function install_run_task($task, &$install_state) {
       // task is currently running. Otherwise, we need to make sure the batch
       // will complete in one page request.
       if ($install_state['interactive']) {
-        variable_set('install_current_batch', $function);
+        \Drupal::state()->set('install_current_batch', $function);
       }
       else {
         $batch =& batch_get();
@@ -667,7 +692,7 @@ function install_run_task($task, &$install_state) {
       // longer requesting a batch ID.
       if ($output === FALSE) {
         // Return nothing so the next task will run in the same request.
-        variable_del('install_current_batch');
+        \Drupal::state()->delete('install_current_batch');
         return;
       }
       else {
@@ -799,7 +824,7 @@ function install_tasks($install_state) {
     $profile = $install_state['parameters']['profile'];
     $profile_install_file = dirname($install_state['profiles'][$profile]->uri) . '/' . $profile . '.install';
     if (file_exists($profile_install_file)) {
-      include_once $profile_install_file;
+      include_once DRUPAL_ROOT . '/' . $profile_install_file;
     }
     $function = $install_state['parameters']['profile'] . '_install_tasks';
     if (function_exists($function)) {
@@ -834,7 +859,7 @@ function install_tasks($install_state) {
     $profile = $install_state['parameters']['profile'];
     $profile_file = $install_state['profiles'][$profile]->uri;
     if (file_exists($profile_file)) {
-      include_once $profile_file;
+      include_once DRUPAL_ROOT . '/' .  $profile_file;
       $function = $install_state['parameters']['profile'] . '_install_tasks_alter';
       if (function_exists($function)) {
         $function($tasks, $install_state);
@@ -995,10 +1020,10 @@ function install_base_system(&$install_state) {
 
   // Enable the user module so that sessions can be recorded during the
   // upcoming bootstrap step.
-  module_enable(array('user'), FALSE);
+  \Drupal::moduleHandler()->install(array('user'), FALSE);
 
   // Save the list of other modules to install for the upcoming tasks.
-  // variable_set() can be used now that system.module is installed.
+  // State can be set to the database now that system.module is installed.
   $modules = $install_state['profile_info']['dependencies'];
 
   // The installation profile is also a module, which needs to be installed
@@ -1018,9 +1043,7 @@ function install_base_system(&$install_state) {
  */
 function install_verify_completed_task() {
   try {
-    if ($result = db_query("SELECT value FROM {variable} WHERE name = :name", array('name' => 'install_task'))) {
-      $task = unserialize($result->fetchField());
-    }
+    $task = \Drupal::state()->get('install_task');
   }
   // Do not trigger an error if the database query fails, since the database
   // might not be set up yet.
@@ -1106,6 +1129,7 @@ function install_settings_form($form, &$form_state, &$install_state) {
   $form['actions']['save'] = array(
     '#type' => 'submit',
     '#value' => t('Save and continue'),
+    '#button_type' => 'primary',
     '#limit_validation_errors' => array(
       array('driver'),
       array(isset($form_state['input']['driver']) ? $form_state['input']['driver'] : current($drivers_keys)),
@@ -1201,7 +1225,7 @@ function install_database_errors($database, $settings_file) {
  * @see install_settings_form_validate()
  */
 function install_settings_form_submit($form, &$form_state) {
-  global $install_state;
+  global $install_state, $conf;
 
   // Update global settings array and save.
   $settings = array();
@@ -1245,7 +1269,12 @@ function install_settings_form_submit($form, &$form_state) {
   drupal_rewrite_settings($settings);
 
   // Add the config directories to settings.php.
-  drupal_install_config_directories();
+  drupal_install_config_directories($install_state['mode']);
+
+  // The container is about to be rebuilt so we need to unset the keyvalue
+  // storage override that the installer is using.
+  $settings = Settings::getSingleton()->getAll();
+  new Settings($settings['settings_old']);
 
   // Indicate that the settings file has been verified, and check the database
   // for the last completed task, now that we have a valid connection. This
@@ -1406,6 +1435,7 @@ function install_select_profile_form($form, &$form_state, $install_state) {
   $form['actions']['submit'] =  array(
     '#type' => 'submit',
     '#value' => t('Save and continue'),
+    '#button_type' => 'primary',
   );
   return $form;
 }
@@ -1439,7 +1469,7 @@ function install_find_translations() {
 /**
  * Build a file translation service for installation.
  *
- * @return Drupal\Core\StringTranslation\Translator\FileTranslation
+ * @return \Drupal\Core\StringTranslation\Translator\FileTranslation
  *   File translation service for the installer.
  */
 function install_file_translation_service() {
@@ -1602,6 +1632,7 @@ function install_select_language_form($form, &$form_state, $files = array()) {
   $form['actions']['submit'] =  array(
     '#type' => 'submit',
     '#value' => t('Save and continue'),
+    '#button_type' => 'primary',
   );
   return $form;
 }
@@ -1751,7 +1782,7 @@ function install_load_profile(&$install_state) {
   $profile = $install_state['parameters']['profile'];
   $profile_file = $install_state['profiles'][$profile]->uri;
   if (file_exists($profile_file)) {
-    include_once $profile_file;
+    include_once DRUPAL_ROOT . '/' . $profile_file;
     $install_state['profile_info'] = install_profile_info($install_state['parameters']['profile'], $install_state['parameters']['langcode']);
   }
   else {
@@ -2011,7 +2042,7 @@ function install_finished(&$install_state) {
   // in it.
   $request = Request::createFromGlobals();
   $generator = \Drupal::urlGenerator();
-  $generator->setBasePath(str_replace('/core', '', $request->getBasePath()) . '/');
+  $generator->setBasePath(preg_replace('#/core$#', '', $request->getBasePath()) . '/' );
   $generator->setScriptPath('');
   $url = $generator->generateFromPath('');
   $output .= '<p>' . (isset($messages['error']) ? t('Review the messages above before visiting <a href="@url">your new site</a>.', array('@url' => $url)) : t('<a href="@url">Visit your new site</a>.', array('@url' => $url))) . '</p>';
@@ -2037,7 +2068,7 @@ function _install_module_batch($module, $module_name, &$context) {
   // loaded by drupal_bootstrap in subsequent batch requests, and other
   // modules possibly depending on it can safely perform their installation
   // steps.
-  module_enable(array($module), FALSE);
+  \Drupal::moduleHandler()->install(array($module), FALSE);
   $context['results'][] = $module;
   $context['message'] = t('Installed %module module.', array('%module' => $module_name));
 }
@@ -2066,9 +2097,9 @@ function install_check_translations($install_state) {
   $online = FALSE;
 
   // First attempt to create or make writable the files directory.
-  file_prepare_directory($files_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+  file_prepare_directory($files_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, $install_state['mode']);
   // Then, attempt to create or make writable the translations directory.
-  file_prepare_directory($translations_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+  file_prepare_directory($translations_directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS, $install_state['mode']);
 
   // Get values so the requirements errors can be specific.
   if (drupal_verify_install_file($translations_directory, FILE_EXIST|FILE_WRITABLE, 'dir')) {
@@ -2492,6 +2523,7 @@ function _install_configure_form($form, &$form_state, &$install_state) {
     '#type' => 'submit',
     '#value' => t('Save and continue'),
     '#weight' => 15,
+    '#button_type' => 'primary',
   );
 
   return $form;
@@ -2514,8 +2546,6 @@ function install_configure_form_validate($form, &$form_state) {
  * @see install_configure_form_validate()
  */
 function install_configure_form_submit($form, &$form_state) {
-  global $user;
-
   \Drupal::config('system.site')
     ->set('name', $form_state['values']['site_name'])
     ->set('mail', $form_state['values']['site_mail'])
@@ -2529,7 +2559,7 @@ function install_configure_form_submit($form, &$form_state) {
 
   // Enable update.module if this option was selected.
   if ($form_state['values']['update_status_module'][1]) {
-    module_enable(array('file', 'update'), FALSE);
+    \Drupal::moduleHandler()->install(array('file', 'update'), FALSE);
 
     // Add the site maintenance account's email address to the list of
     // addresses to be notified when updates are available, if selected.
@@ -2552,5 +2582,5 @@ function install_configure_form_submit($form, &$form_state) {
   user_login_finalize($account);
 
   // Record when this install ran.
-  variable_set('install_time', $_SERVER['REQUEST_TIME']);
+  \Drupal::state()->set('install_time', $_SERVER['REQUEST_TIME']);
 }

@@ -49,8 +49,8 @@ abstract class LegacyConfigFieldItem extends ConfigFieldItemBase implements Prep
     // Make sure the array received by the legacy callback includes computed
     // properties.
     $item = $this->getValue(TRUE);
-    // The previous hook was never called on an empty item, but EntityNG always
-    // creates a FieldItem element for an empty field.
+    // The previous hook was never called on an empty item, but
+    // ContentEntityBase always creates a FieldItem element for an empty field.
     return empty($item) || $callback($item, $this->getFieldDefinition()->getFieldType());
   }
 
@@ -86,7 +86,7 @@ abstract class LegacyConfigFieldItem extends ConfigFieldItemBase implements Prep
    *
    * @see \Drupal\Core\Entity\DatabaseStorageController::invokeFieldItemPrepareCache()
    */
-  public function prepareCache() {
+  public function getCacheData() {
     if ($callback = $this->getLegacyCallback('load')) {
       $entity = $this->getEntity();
       $entity_id = $entity->id();
@@ -105,7 +105,9 @@ abstract class LegacyConfigFieldItem extends ConfigFieldItemBase implements Prep
       );
       call_user_func_array($callback, $args);
       $this->setValue($items[$entity_id][0]);
+      return $items[$entity_id][0];
     }
+    return $this->getValue();
   }
 
   /**

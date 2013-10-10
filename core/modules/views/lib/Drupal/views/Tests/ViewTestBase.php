@@ -38,7 +38,7 @@ abstract class ViewTestBase extends WebTestBase {
     foreach (ViewExecutable::getPluginTypes() as $plugin_type) {
       $this->container->get("plugin.manager.views.$plugin_type")->clearCachedDefinitions();
     }
-    ViewTestData::importTestViews(get_class($this), array('views_test_config'));
+    ViewTestData::createTestViews(get_class($this), array('views_test_config'));
   }
 
   /**
@@ -52,7 +52,7 @@ abstract class ViewTestBase extends WebTestBase {
     \Drupal::state()->set('views_test_data_schema', $this->schemaDefinition());
     \Drupal::state()->set('views_test_data_views_data', $this->viewsData());
 
-    module_enable(array('views_test_data'));
+    \Drupal::moduleHandler()->install(array('views_test_data'));
     $this->resetAll();
     $this->rebuildContainer();
     $this->container->get('module_handler')->reload();

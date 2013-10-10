@@ -51,7 +51,7 @@ use Drupal\file\Plugin\field\field_type\FileItem;
  *   },
  *   default_widget = "image_image",
  *   default_formatter = "image",
- *   list_class = "\Drupal\file\Plugin\field\field_type\FileField"
+ *   list_class = "\Drupal\file\Plugin\field\field_type\FileFieldItemList"
  * )
  */
 class ImageItem extends FileItem {
@@ -293,7 +293,7 @@ class ImageItem extends FileItem {
     // Determine the dimensions if necessary.
     if (empty($width) || empty($height)) {
       $image = \Drupal::service('image.factory')->get($this->entity->getFileUri());
-      if ($image->getExtension()) {
+      if ($image->isSupported()) {
         $this->width = $image->getWidth();
         $this->height =$image->getHeight();
       }
@@ -316,6 +316,14 @@ class ImageItem extends FileItem {
     else {
       form_set_value($element, '', $form_state);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isDisplayed() {
+    // Image items do not have per-item visibility settings.
+    return TRUE;
   }
 
 }

@@ -138,8 +138,16 @@ function system_themes_page() {
   uasort($theme_groups['enabled'], 'system_sort_themes');
   drupal_alter('system_themes_page', $theme_groups);
 
-  $admin_form = drupal_get_form('system_themes_admin_form', $admin_theme_options);
-  return theme('system_themes_page', array('theme_groups' => $theme_groups, 'theme_group_titles' => $theme_group_titles)) . drupal_render($admin_form);
+  $build = array(
+    '#sorted' => TRUE,
+  );
+  $build['system_themes_page'] = array(
+    '#theme' => 'system_themes_page',
+    '#theme_groups' => $theme_groups,
+    '#theme_group_titles' => $theme_group_titles,
+  );
+  $build['admin_form'] = drupal_get_form('system_themes_admin_form', $admin_theme_options);
+  return $build;
 }
 
 /**
@@ -365,7 +373,11 @@ function theme_admin_page($variables) {
   $container = array();
 
   foreach ($blocks as $block) {
-    if ($block_output = theme('admin_block', array('block' => $block))) {
+    $admin_block = array(
+      '#theme' => 'admin_block',
+      '#block' => $block,
+    );
+    if ($block_output = drupal_render($admin_block)) {
       if (empty($block['position'])) {
         // perform automatic striping.
         $block['position'] = ++$stripe % 2 ? 'left' : 'right';
@@ -377,8 +389,9 @@ function theme_admin_page($variables) {
     }
   }
 
+  $system_compact_link = array('#theme' => 'system_compact_link');
   $output = '<div class="admin clearfix">';
-  $output .= theme('system_compact_link');
+  $output .= drupal_render($system_compact_link);
 
   foreach ($container as $id => $data) {
     $output .= '<div class="' . $id . ' clearfix">';
@@ -411,13 +424,21 @@ function theme_system_admin_index($variables) {
 
     // Output links.
     if (count($items)) {
+      $admin_block_content = array(
+        '#theme' => 'admin_block_content',
+        '#content' => $items,
+      );
       $block = array();
       $block['title'] = $module;
-      $block['content'] = theme('admin_block_content', array('content' => $items));
+      $block['content'] = drupal_render($admin_block_content);
       $block['description'] = t($description);
       $block['show'] = TRUE;
 
-      if ($block_output = theme('admin_block', array('block' => $block))) {
+      $admin_block = array(
+        '#theme' => 'admin_block',
+        '#block' => $block,
+      );
+      if ($block_output = drupal_render($admin_block)) {
         if (!isset($block['position'])) {
           // Perform automatic striping.
           $block['position'] = $position;
@@ -428,8 +449,9 @@ function theme_system_admin_index($variables) {
     }
   }
 
+  $system_compact_link = array('#theme' => 'system_compact_link');
   $output = '<div class="admin clearfix">';
-  $output .= theme('system_compact_link');
+  $output .= drupal_render($system_compact_link);
   foreach ($container as $id => $data) {
     $output .= '<div class="' . $id . ' clearfix">';
     $output .= $data;
@@ -577,7 +599,12 @@ function theme_system_modules_details($variables) {
     $rows[] = $row;
   }
 
-  return theme('table', array('header' => $form['#header'], 'rows' => $rows));
+  $table = array(
+    '#theme' => 'table',
+    '#header' => $form['#header'],
+    '#rows' => $rows,
+  );
+  return drupal_render($table);
 }
 
 /**
@@ -619,11 +646,11 @@ function theme_system_modules_uninstall($variables) {
   // Display table.
   $rows = array();
   foreach (element_children($form['modules']) as $module) {
-    if (!empty($form['modules'][$module]['#dependents'])) {
-      $disabled_message = format_plural(count($form['modules'][$module]['#dependents']),
+    if (!empty($form['modules'][$module]['#required_by'])) {
+      $disabled_message = format_plural(count($form['modules'][$module]['#required_by']),
         'To uninstall @module, the following module must be uninstalled first: @required_modules',
         'To uninstall @module, the following modules must be uninstalled first: @required_modules',
-        array('@module' => $form['modules'][$module]['#module_name'], '@required_modules' => implode(', ', $form['modules'][$module]['#dependents'])));
+        array('@module' => $form['modules'][$module]['#module_name'], '@required_modules' => implode(', ', $form['modules'][$module]['#required_by'])));
       $disabled_message = '<div class="admin-requirements">' . $disabled_message . '</div>';
     }
     else {
@@ -636,7 +663,13 @@ function theme_system_modules_uninstall($variables) {
     );
   }
 
-  $output  = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No modules are available to uninstall.')));
+  $table = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No modules are available to uninstall.'),
+  );
+  $output  = drupal_render($table);
   $output .= drupal_render_children($form);
 
   return $output;
@@ -648,6 +681,7 @@ function theme_system_modules_uninstall($variables) {
  * @param $variables
  *   An associative array containing:
  *   - theme_groups: An associative array containing groups of themes.
+ *   - theme_group_titles: An associative array containing titles of themes.
  *
  * @ingroup themeable
  */
@@ -734,6 +768,8 @@ function theme_system_themes_page($variables) {
  * @see locale_menu()
  * @see system_date_format_localize_form_submit()
  * @ingroup forms
+ *
+ * @deprecated Use \Drupal\system\Form\SystemForm::localizeDateFormat()
  */
 function system_date_format_localize_form($form, &$form_state, $langcode) {
   // Display the current language name.
@@ -830,8 +866,13 @@ function theme_system_date_format_localize_form($variables) {
     $rows[] = $row;
   }
 
+  $table = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
   $output = drupal_render($form['language']);
-  $output .= theme('table', array('header' => $header, 'rows' => $rows));
+  $output .= drupal_render($table);
   $output .= drupal_render_children($form);
 
   return $output;

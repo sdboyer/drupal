@@ -8,6 +8,7 @@
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Language\Language;
 use Drupal\field\Field;
+use Drupal\field\FieldInstanceInterface;
 
 /**
  * @defgroup field_info Field Info API
@@ -42,29 +43,6 @@ function field_info_cache_clear() {
   \Drupal::service('plugin.manager.entity.field.field_type')->clearCachedDefinitions();
 
   Field::fieldInfo()->flush();
-}
-
-/**
- * Determines the behavior of a widget with respect to an operation.
- *
- * @param string $op
- *   The name of the operation. Currently supported: 'default_value',
- *   'multiple_values'.
- * @param array $instance
- *   The field instance array.
- *
- * @return int
- *   One of these values:
- *   - FIELD_BEHAVIOR_NONE: Do nothing for this operation.
- *   - FIELD_BEHAVIOR_CUSTOM: Use the widget's callback function.
- *   - FIELD_BEHAVIOR_DEFAULT: Use field.module default behavior.
- */
-function field_behaviors_widget($op, $instance) {
-  $info = array();
-  if ($component = entity_get_form_display($instance['entity_type'], $instance['bundle'], 'default')->getComponent($instance['field_name'])) {
-    $info = \Drupal::service('plugin.manager.field.widget')->getDefinition($component['type']);
-  }
-  return isset($info[$op]) ? $info[$op] : FIELD_BEHAVIOR_DEFAULT;
 }
 
 /**

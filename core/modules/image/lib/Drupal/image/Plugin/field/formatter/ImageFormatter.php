@@ -9,7 +9,7 @@ namespace Drupal\image\Plugin\field\formatter;
 
 use Drupal\field\Annotation\FieldFormatter;
 use Drupal\Core\Annotation\Translation;
-use Drupal\Core\Entity\Field\FieldInterface;
+use Drupal\Core\Entity\Field\FieldItemListInterface;
 
 /**
  * Plugin implementation of the 'image' formatter.
@@ -91,7 +91,7 @@ class ImageFormatter extends ImageFormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldInterface $items) {
+  public function viewElements(FieldItemListInterface $items) {
     $elements = array();
 
     $image_link_setting = $this->getSetting('image_link');
@@ -119,6 +119,14 @@ class ImageFormatter extends ImageFormatterBase {
           '#image_style' => $image_style_setting,
           '#path' => isset($uri) ? $uri : '',
         );
+        // Pass field item attributes to the theme function.
+        if (isset($item->_attributes)) {
+          $elements[$delta]['#item'] += array('attributes' => array());
+          $elements[$delta]['#item']['attributes'] += $item->_attributes;
+          // Unset field item attributes since they have been included in the
+          // formatter output and should not be rendered in the field template.
+          unset($item->_attributes);
+        }
       }
     }
 

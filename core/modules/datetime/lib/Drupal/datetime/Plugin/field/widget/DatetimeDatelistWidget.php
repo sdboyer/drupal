@@ -6,11 +6,11 @@
 
 namespace Drupal\datetime\Plugin\field\widget;
 
+use Drupal\Core\Entity\Field\FieldItemListInterface;
 use Drupal\field\Annotation\FieldWidget;
 use Drupal\Core\Annotation\Translation;
 use Drupal\field\Plugin\Type\Widget\WidgetBase;
 use Drupal\Core\Entity\Field\FieldDefinitionInterface;
-use Drupal\Core\Entity\Field\FieldInterface;
 use Drupal\field\FieldInstanceInterface;
 use Drupal\datetime\DateHelper;
 
@@ -58,7 +58,7 @@ class DateTimeDatelistWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function formElement(FieldInterface $items, $delta, array $element, array &$form, array &$form_state) {
+  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, array &$form_state) {
     $date_order = $this->getSetting('date_order');
     $time_type = $this->getSetting('time_type');
     $increment = $this->getSetting('increment');
@@ -126,7 +126,7 @@ class DateTimeDatelistWidget extends WidgetBase {
     // validator will not have access to the field definition.
     $element['value']['#date_storage_format'] = $storage_format;
 
-    if (!empty($items[$delta]->date)) {
+    if ($items[$delta]->date) {
       $date = $items[$delta]->date;
       // The date was created and verified during field_load(), so it is safe to
       // use without further inspection.

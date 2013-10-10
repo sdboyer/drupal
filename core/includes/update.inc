@@ -10,6 +10,7 @@
 
 use Drupal\Component\Graph\Graph;
 use Drupal\Component\Utility\Settings;
+use Drupal\Component\Utility\String;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\ConfigException;
 use Drupal\Core\DrupalKernel;
@@ -335,7 +336,6 @@ function update_prepare_d8_bootstrap() {
       }
 
       $module_config = \Drupal::config('system.module');
-      $disabled_modules = \Drupal::config('system.module.disabled');
       $theme_config = \Drupal::config('system.theme');
       $disabled_themes = \Drupal::config('system.theme.disabled');
       $schema_store = \Drupal::keyValue('system.schema');
@@ -378,9 +378,6 @@ function update_prepare_d8_bootstrap() {
           if ($record->status && isset($module_data[$record->name])) {
             $module_config->set('enabled.' . $record->name, $record->weight);
           }
-          else {
-            $disabled_modules->set($record->name, $record->weight);
-          }
         }
         elseif ($record->type == 'theme') {
           if ($record->status) {
@@ -399,7 +396,6 @@ function update_prepare_d8_bootstrap() {
         $sorted_with_filenames[$m] = drupal_get_filename('module', $m);
       }
       \Drupal::moduleHandler()->setModuleList($sorted_with_filenames);
-      $disabled_modules->save();
       $theme_config->save();
       $disabled_themes->save();
 
@@ -490,8 +486,7 @@ function update_prepare_stored_includes() {
  */
 function update_prepare_d8_language() {
   if (db_table_exists('languages')) {
-
-    module_enable(array('language'));
+    \Drupal::moduleHandler()->install(array('language'));
 
     $languages = db_select('languages', 'l')
       ->fields('l')
@@ -588,7 +583,7 @@ function update_prepare_d8_language() {
 
     // Convert languages to config entities.
     $result = db_query('SELECT * FROM {language}');
-    $uuid = new Uuid();
+    $uuid = \Drupal::service('uuid');
     foreach ($result as $language) {
       \Drupal::config('language.entity.' . $language->langcode)
         ->set('id', $language->langcode)
@@ -683,7 +678,7 @@ function update_fix_d8_requirements() {
 
     // Make sure that file.module is enabled as it is required for the user
     // picture upgrade path.
-    module_enable(array('file'));
+    \Drupal::moduleHandler()->install(array('file'));
 
     $schema = array(
       'description' => 'Generic key/value storage table with an expiration.',
@@ -728,7 +723,7 @@ function update_fix_d8_requirements() {
     // Like any other module APIs and services, Views' services are not available
     // in update.php. Existing listings are migrated into configuration, using
     // the limited standard tools of raw database queries and \Drupal::config().
-    module_enable(array('views'));
+    \Drupal::moduleHandler()->install(array('views'));
 
     update_variable_set('update_d8_requirements', TRUE);
   }
@@ -819,7 +814,9 @@ function update_do_one($module, $number, $dependency_map, &$context) {
       require_once __DIR__ . '/errors.inc';
       $variables = _drupal_decode_exception($e);
       unset($variables['backtrace']);
-      // The exception message is run through check_plain() by _drupal_decode_exception().
+      // The exception message is run through
+      // \Drupal\Component\Utility\String::checkPlain() by
+      // _drupal_decode_exception().
       $ret['#abort'] = array('success' => FALSE, 'query' => t('%type: !message in %function (line %line of %file).', $variables));
     }
   }
@@ -847,7 +844,7 @@ function update_do_one($module, $number, $dependency_map, &$context) {
     drupal_set_installed_schema_version($module, $number);
   }
 
-  $context['message'] = 'Updating ' . check_plain($module) . ' module';
+  $context['message'] = 'Updating ' . String::checkPlain($module) . ' module';
 }
 
 /**
@@ -1060,7 +1057,7 @@ function update_get_update_list() {
  *   - 'module': The name of the module that this update function belongs to.
  *   - 'number': The number of this update function within that module.
  *
- * @see Drupal\Component\Graph\Graph::searchAndSort()
+ * @see \Drupal\Component\Graph\Graph::searchAndSort()
  */
 function update_resolve_dependencies($starting_updates) {
   // Obtain a dependency graph for the requested update functions.
@@ -1176,7 +1173,7 @@ function update_get_update_function_list($starting_updates) {
  *   - 'module': The name of the module that this update function belongs to.
  *   - 'number': The number of this update function within that module.
  *
- * @see Drupal\Component\Graph\Graph::searchAndSort()
+ * @see \Drupal\Component\Graph\Graph::searchAndSort()
  * @see update_resolve_dependencies()
  */
 function update_build_dependency_graph($update_functions) {
@@ -1541,7 +1538,7 @@ function update_variables_to_state(array $variable_map) {
  *   A $primary_key values of rows to be updated.
  */
 function update_add_uuids(&$sandbox, $table, $primary_key, $values) {
-  $uuid = new Uuid();
+  $uuid = \Drupal::service('uuid');
   foreach ($values as $value) {
     db_update($table)
       ->fields(array(

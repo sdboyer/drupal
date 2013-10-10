@@ -6,7 +6,7 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityNG;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Field\PrepareCacheInterface;
 use Drupal\Core\Language\Language;
 use Drupal\entity\Entity\EntityDisplay;
@@ -597,7 +597,7 @@ function field_attach_form(EntityInterface $entity, &$form, &$form_state, $langc
  * elements. Fieldable entity types should call this function during their own
  * form validation function.
  *
- * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @param \Drupal\Core\Entity\ContentEntityInterface $entity
  *   The entity being submitted. The actual field values will be read
  *   from $form_state['values'].
  * @param $form
@@ -611,7 +611,7 @@ function field_attach_form(EntityInterface $entity, &$form, &$form_state, $langc
  *
  * @deprecated as of Drupal 8.0. Use the entity system instead.
  */
-function field_attach_form_validate(EntityInterface $entity, $form, &$form_state, array $options = array()) {
+function field_attach_form_validate(ContentEntityInterface $entity, $form, &$form_state, array $options = array()) {
   $has_violations = FALSE;
   foreach ($entity as $field_name => $field) {
     $definition = $field->getDefinition();
@@ -719,8 +719,8 @@ function field_attach_prepare_view($entity_type, array $entities, array $display
   // instance, call the prepareView() method on the formatter object handed by
   // the entity display.
   $target_function = function ($instance) use ($displays) {
-    if (isset($displays[$instance['bundle']])) {
-      return $displays[$instance['bundle']]->getRenderer($instance['field_name']);
+    if (isset($displays[$instance->bundle])) {
+      return $displays[$instance->bundle]->getRenderer($instance->getFieldName());
     }
   };
   $null = NULL;
@@ -763,7 +763,7 @@ function field_attach_view(EntityInterface $entity, EntityDisplay $display, $lan
   // For each instance, call the view() method on the formatter object handed
   // by the entity display.
   $target_function = function ($instance) use ($display) {
-    return $display->getRenderer($instance['field_name']);
+    return $display->getRenderer($instance->getFieldName());
   };
   $null = NULL;
   $output = field_invoke_method('view', $target_function, $entity, $null, $null, $options);
@@ -828,4 +828,33 @@ function field_get_items(EntityInterface $entity, $field_name, $langcode = NULL)
  */
 function field_get_default_value(EntityInterface $entity, $field, $instance, $langcode = NULL) {
   return $instance->getFieldDefaultValue($entity);
+}
+
+/**
+ * Determines whether the user has access to a given field.
+ *
+ * @param string $op
+ *   The operation to be performed. Possible values:
+ *   - edit
+ *   - view
+ * @param \Drupal\field\FieldInterface $field
+ *   The field on which the operation is to be performed.
+ * @param $entity_type
+ *   The type of $entity; for example, 'node' or 'user'.
+ * @param $entity
+ *   (optional) The entity for the operation.
+ * @param $account
+ *   (optional) The account to check, if not given use currently logged in user.
+ *
+ * @return
+ *   TRUE if the operation is allowed; FALSE if the operation is denied.
+ *
+ * @deprecated as of Drupal 8.0. Use
+ *   Drupal\Core\Entity\EntityAccessControllerInterface::fieldAccess()
+ */
+function field_access($op, FieldInterface $field, $entity_type, $entity = NULL, $account = NULL) {
+  $access_controller = \Drupal::entityManager()->getAccessController($entity_type);
+
+  $items = $entity ? $entity->get($field->id()) : NULL;
+  return $access_controller->fieldAccess($op, $field, $account, $items);
 }

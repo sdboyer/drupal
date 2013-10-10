@@ -7,6 +7,7 @@
 
 namespace Drupal\Core\Entity;
 
+use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Language\Language;
@@ -28,6 +29,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * requiring special handling can extend the class.
  */
 class DatabaseStorageController extends FieldableEntityStorageControllerBase {
+
+  /**
+   * The UUID service.
+   *
+   * @var \Drupal\Component\Uuid\UuidInterface
+   */
+  protected $uuidService;
 
   /**
    * Name of entity's revision database table field, if it supports revisions.
@@ -76,7 +84,8 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
       $entity_type,
       $entity_info,
       $container->get('database'),
-      $container->get('field.info')
+      $container->get('field.info'),
+      $container->get('uuid')
     );
   }
 
@@ -91,12 +100,15 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
    *   The database connection to be used.
    * @param \Drupal\field\FieldInfo $field_info
    *   The field info service.
+   * @param \Drupal\Component\Uuid\UuidInterface $uuid_service
+   *   The UUID service.
    */
-  public function __construct($entity_type, array $entity_info, Connection $database, FieldInfo $field_info) {
+  public function __construct($entity_type, array $entity_info, Connection $database, FieldInfo $field_info, UuidInterface $uuid_service) {
     parent::__construct($entity_type, $entity_info);
 
     $this->database = $database;
     $this->fieldInfo = $field_info;
+    $this->uuidService = $uuid_service;
 
     // Check if the entity type supports IDs.
     if (isset($this->entityInfo['entity_keys']['id'])) {
@@ -156,7 +168,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
       if (!empty($this->entityInfo['class'])) {
         // We provide the necessary arguments for PDO to create objects of the
         // specified entity class.
-        // @see Drupal\Core\Entity\EntityInterface::__construct()
+        // @see \Drupal\Core\Entity\EntityInterface::__construct()
         $query_result->setFetchMode(\PDO::FETCH_CLASS, $this->entityInfo['class'], array(array(), $this->entityType));
       }
       $queried_entities = $query_result->fetchAllAssoc($this->idKey);
@@ -209,7 +221,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
     if (!empty($this->entityInfo['class'])) {
       // We provide the necessary arguments for PDO to create objects of the
       // specified entity class.
-      // @see Drupal\Core\Entity\EntityInterface::__construct()
+      // @see \Drupal\Core\Entity\EntityInterface::__construct()
       $query_result->setFetchMode(\PDO::FETCH_CLASS, $this->entityInfo['class'], array(array(), $this->entityType));
     }
     $queried_entities = $query_result->fetchAllAssoc($this->idKey);
@@ -306,7 +318,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
     if ($this->revisionKey) {
       // Add all fields from the {entity_revision} table.
       $entity_revision_fields = drupal_map_assoc(drupal_schema_fields_sql($this->entityInfo['revision_table']));
-      // The id field is provided by entity, so remove it.
+      // The ID field is provided by entity, so remove it.
       unset($entity_revision_fields[$this->idKey]);
 
       // Remove all fields from the base table that are also fields by the same
@@ -319,7 +331,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
       }
       $query->fields('revision', $entity_revision_fields);
 
-      // Compare revision id of the base and revision table, if equal then this
+      // Compare revision ID of the base and revision table, if equal then this
       // is the default revision.
       $query->addExpression('base.' . $this->revisionKey . ' = revision.' . $this->revisionKey, 'isDefaultRevision');
     }
@@ -380,8 +392,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
 
     // Assign a new UUID if there is none yet.
     if ($this->uuidKey && !isset($entity->{$this->uuidKey})) {
-      $uuid = new Uuid();
-      $entity->{$this->uuidKey} = $uuid->generate();
+      $entity->{$this->uuidKey} = $this->uuidService->generate();
     }
     $entity->postCreate($this);
 
@@ -577,7 +588,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
       // If the field is translatable ensure that only values having valid
       // languages are retrieved. Since we are loading values for multiple
       // entities, we cannot limit the query to the available translations.
-      $langcodes = $field['translatable'] ? $all_langcodes : array(Language::LANGCODE_NOT_SPECIFIED);
+      $langcodes = $field->isFieldTranslatable() ? $all_langcodes : array(Language::LANGCODE_NOT_SPECIFIED);
       $results = $this->database->select($table, 't')
         ->fields('t')
         ->condition($load_current ? 'entity_id' : 'revision_id', $ids, 'IN')
@@ -592,11 +603,11 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
           $delta_count[$row->entity_id][$row->langcode] = 0;
         }
 
-        if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $delta_count[$row->entity_id][$row->langcode] < $field['cardinality']) {
+        if ($field->getFieldCardinality() == FIELD_CARDINALITY_UNLIMITED || $delta_count[$row->entity_id][$row->langcode] < $field->getFieldCardinality()) {
           $item = array();
           // For each column declared by the field, populate the item from the
           // prefixed database column.
-          foreach ($field['columns'] as $column => $attributes) {
+          foreach ($field->getColumns() as $column => $attributes) {
             $column_name = static::_fieldColumnName($field, $column);
             // Unserialize the value if specified in the column schema.
             $item[$column] = (!empty($attributes['serialize'])) ? unserialize($row->$column_name) : $row->$column_name;
@@ -645,19 +656,17 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
       // Prepare the multi-insert query.
       $do_insert = FALSE;
       $columns = array('entity_id', 'revision_id', 'bundle', 'delta', 'langcode');
-      foreach ($field['columns'] as $column => $attributes) {
+      foreach ($field->getColumns() as $column => $attributes) {
         $columns[] = static::_fieldColumnName($field, $column);
       }
       $query = $this->database->insert($table_name)->fields($columns);
       $revision_query = $this->database->insert($revision_name)->fields($columns);
 
-      $langcodes = $field['translatable'] ? array_keys($entity->getTranslationLanguages()) : array(Language::LANGCODE_NOT_SPECIFIED);
+      $langcodes = $field->isFieldTranslatable() ? array_keys($entity->getTranslationLanguages()) : array(Language::LANGCODE_NOT_SPECIFIED);
       foreach ($langcodes as $langcode) {
-        $items = $entity->getTranslation($langcode)->{$field_name}->getValue();
-        if (!isset($items)) {
-          continue;
-        }
         $delta_count = 0;
+        $items = $entity->getTranslation($langcode)->get($field_name);
+        $items->filterEmptyValues();
         foreach ($items as $delta => $item) {
           // We now know we have someting to insert.
           $do_insert = TRUE;
@@ -668,16 +677,15 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
             'delta' => $delta,
             'langcode' => $langcode,
           );
-          foreach ($field['columns'] as $column => $attributes) {
+          foreach ($field->getColumns() as $column => $attributes) {
             $column_name = static::_fieldColumnName($field, $column);
-            $value = isset($item[$column]) ? $item[$column] : NULL;
             // Serialize the value if specified in the column schema.
-            $record[$column_name] = (!empty($attributes['serialize'])) ? serialize($value) : $value;
+            $record[$column_name] = !empty($attributes['serialize']) ? serialize($item->$column) : $item->$column;
           }
           $query->values($record);
           $revision_query->values($record);
 
-          if ($field['cardinality'] != FIELD_CARDINALITY_UNLIMITED && ++$delta_count == $field['cardinality']) {
+          if ($field->getFieldCardinality() != FIELD_CARDINALITY_UNLIMITED && ++$delta_count == $field->getFieldCardinality()) {
             break;
           }
         }
@@ -780,7 +788,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
       }
     }
     else {
-      if ($field['columns'] != $original['columns']) {
+      if ($field->getColumns() != $original->getColumns()) {
         throw new FieldUpdateForbiddenException("The SQL storage cannot change the schema for an existing field with data.");
       }
       // There is data, so there are no column changes. Drop all the prior
@@ -830,7 +838,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
    */
   public function onFieldDelete(FieldInterface $field) {
     // Mark all data associated with the field for deletion.
-    $field['deleted'] = FALSE;
+    $field->deleted = FALSE;
     $table = static::_fieldTableName($field);
     $revision_table = static::_fieldRevisionTableName($field);
     $this->database->update($table)
@@ -839,7 +847,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
 
     // Move the table to a unique name while the table contents are being
     // deleted.
-    $field['deleted'] = TRUE;
+    $field->deleted = TRUE;
     $new_table = static::_fieldTableName($field);
     $revision_new_table = static::_fieldRevisionTableName($field);
     $this->database->schema()->renameTable($table, $new_table);
@@ -855,11 +863,11 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
     $revision_name = static::_fieldRevisionTableName($field);
     $this->database->update($table_name)
       ->fields(array('deleted' => 1))
-      ->condition('bundle', $instance['bundle'])
+      ->condition('bundle', $instance->bundle)
       ->execute();
     $this->database->update($revision_name)
       ->fields(array('deleted' => 1))
-      ->condition('bundle', $instance['bundle'])
+      ->condition('bundle', $instance->bundle)
       ->execute();
   }
 
@@ -867,22 +875,22 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
    * {@inheritdoc}
    */
   public function onBundleRename($bundle, $bundle_new) {
-    // We need to account for deleted or inactive fields and instances.
-    $instances = field_read_instances(array('entity_type' => $this->entityType, 'bundle' => $bundle_new), array('include_deleted' => TRUE, 'include_inactive' => TRUE));
+    // We need to account for deleted or inactive fields and instances. The
+    // method runs before the instance definitions are updated, so we need to
+    // fetch them using the old bundle name.
+    $instances = field_read_instances(array('entity_type' => $this->entityType, 'bundle' => $bundle), array('include_deleted' => TRUE, 'include_inactive' => TRUE));
     foreach ($instances as $instance) {
       $field = $instance->getField();
-      if ($field['storage']['type'] == 'field_sql_storage') {
-        $table_name = static::_fieldTableName($field);
-        $revision_name = static::_fieldRevisionTableName($field);
-        $this->database->update($table_name)
-          ->fields(array('bundle' => $bundle_new))
-          ->condition('bundle', $bundle)
-          ->execute();
-        $this->database->update($revision_name)
-          ->fields(array('bundle' => $bundle_new))
-          ->condition('bundle', $bundle)
-          ->execute();
-      }
+      $table_name = static::_fieldTableName($field);
+      $revision_name = static::_fieldRevisionTableName($field);
+      $this->database->update($table_name)
+        ->fields(array('bundle' => $bundle_new))
+        ->condition('bundle', $bundle)
+        ->execute();
+      $this->database->update($revision_name)
+        ->fields(array('bundle' => $bundle_new))
+        ->condition('bundle', $bundle)
+        ->execute();
     }
   }
 
@@ -945,13 +953,13 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
    * @see hook_schema()
    */
   public static function _fieldSqlSchema(FieldInterface $field, array $schema = NULL) {
-    if ($field['deleted']) {
-      $description_current = "Data storage for deleted field {$field['id']} ({$field['entity_type']}, {$field['field_name']}).";
-      $description_revision = "Revision archive storage for deleted field {$field['id']} ({$field['entity_type']}, {$field['field_name']}).";
+    if ($field->deleted) {
+      $description_current = "Data storage for deleted field {$field->uuid()} ({$field->entity_type}, {$field->getFieldName()}).";
+      $description_revision = "Revision archive storage for deleted field {$field->uuid()} ({$field->entity_type}, {$field->getFieldName()}).";
     }
     else {
-      $description_current = "Data storage for {$field['entity_type']} field {$field['field_name']}.";
-      $description_revision = "Revision archive storage for {$field['entity_type']} field {$field['field_name']}.";
+      $description_current = "Data storage for {$field->entity_type} field {$field->getFieldName()}.";
+      $description_revision = "Revision archive storage for {$field->entity_type} field {$field->getFieldName()}.";
     }
 
     $current = array(
@@ -1076,12 +1084,12 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
    *
    */
   static public function _fieldTableName(FieldInterface $field) {
-    if ($field['deleted']) {
+    if ($field->deleted) {
       // When a field is a deleted, the table is renamed to
       // {field_deleted_data_FIELD_UUID}. To make sure we don't end up with
       // table names longer than 64 characters, we hash the uuid and return the
       // first 10 characters so we end up with a short unique ID.
-      return "field_deleted_data_" . substr(hash('sha256', $field['uuid']), 0, 10);
+      return "field_deleted_data_" . substr(hash('sha256', $field->uuid()), 0, 10);
     }
     else {
       return static::_generateFieldTableName($field, FALSE);
@@ -1105,12 +1113,12 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
    *   A string containing the generated name for the database table.
    */
   static public function _fieldRevisionTableName(FieldInterface $field) {
-    if ($field['deleted']) {
+    if ($field->deleted) {
       // When a field is a deleted, the table is renamed to
       // {field_deleted_revision_FIELD_UUID}. To make sure we don't end up with
       // table names longer than 64 characters, we hash the uuid and return the
       // first 10 characters so we end up with a short unique ID.
-      return "field_deleted_revision_" . substr(hash('sha256', $field['uuid']), 0, 10);
+      return "field_deleted_revision_" . substr(hash('sha256', $field->uuid()), 0, 10);
     }
     else {
       return static::_generateFieldTableName($field, TRUE);
@@ -1131,7 +1139,7 @@ class DatabaseStorageController extends FieldableEntityStorageControllerBase {
    * @return string
    *   The final table name.
    */
-  static protected function _generateFieldTableName($field, $revision) {
+  static protected function _generateFieldTableName(FieldInterface $field, $revision) {
     $separator = $revision ? '_revision__' : '__';
     $table_name = $field->entity_type . $separator .  $field->name;
     // Limit the string to 48 characters, keeping a 16 characters margin for db

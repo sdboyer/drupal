@@ -297,7 +297,7 @@ function drupal_get_profile() {
  * @deprecated This will be removed in 8.0. Instead, register a new breadcrumb
  *   builder service.
  *
- * @see Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface
+ * @see \Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface
  */
 function drupal_set_breadcrumb($breadcrumb = NULL) {
   $stored_breadcrumb = &drupal_static(__FUNCTION__);
@@ -700,7 +700,7 @@ function valid_number_step($value, $step, $offset = 0.0) {
  * string, so this function can be called independently when the output needs to
  * be a plain-text string for passing to t(), l(),
  * Drupal\Core\Template\Attribute, or another function that will call
- * check_plain() separately.
+ * \Drupal\Component\Utility\String::checkPlain() separately.
  *
  * @param $uri
  *   A plain-text URI that might contain dangerous protocols.
@@ -708,8 +708,8 @@ function valid_number_step($value, $step, $offset = 0.0) {
  * @return
  *   A plain-text URI stripped of dangerous protocols. As with all plain-text
  *   strings, this return value must not be output to an HTML page without
- *   check_plain() being called on it. However, it can be passed to functions
- *   expecting plain-text strings.
+ *   \Drupal\Component\Utility\String::checkPlain() being called on it. However,
+ *   it can be passed to functions expecting plain-text strings.
  *
  * @see \Drupal\Component\Utility\Url::stripDangerousProtocols()
  */
@@ -729,8 +729,8 @@ function drupal_strip_dangerous_protocols($uri) {
  *   value within a $attributes array passed to Drupal\Core\Template\Attribute,
  *   because Drupal\Core\Template\Attribute expects those values to be
  *   plain-text strings. To pass a filtered URI to
- *   Drupal\Core\Template\Attribute, call drupal_strip_dangerous_protocols()
- *   instead.
+ *   Drupal\Core\Template\Attribute, call
+ *   \Drupal\Component\Utility\Url::stripDangerousProtocols() instead.
  *
  * @see \Drupal\Component\Utility\Url::stripDangerousProtocols()
  * @see \Drupal\Component\Utility\String::checkPlain()
@@ -744,7 +744,8 @@ function check_url($uri) {
  *
  * Use only for fields where it is impractical to use the
  * whole filter system, but where some (mainly inline) mark-up
- * is desired (so check_plain() is not acceptable).
+ * is desired (so \Drupal\Component\Utility\String::checkPlain() is not
+ * acceptable).
  *
  * Allows all tags that can be used inside an HTML body, save
  * for scripts and styles.
@@ -826,14 +827,14 @@ function format_rss_channel($title, $link, $description, $items, $langcode = NUL
   $langcode = $langcode ? $langcode : language(Language::TYPE_CONTENT)->id;
 
   $output = "<channel>\n";
-  $output .= ' <title>' . check_plain($title) . "</title>\n";
+  $output .= ' <title>' . String::checkPlain($title) . "</title>\n";
   $output .= ' <link>' . check_url($link) . "</link>\n";
 
   // The RSS 2.0 "spec" doesn't indicate HTML can be used in the description.
   // We strip all HTML tags, but need to prevent double encoding from properly
   // escaped source data (such as &amp becoming &amp;amp;).
-  $output .= ' <description>' . check_plain(decode_entities(strip_tags($description))) . "</description>\n";
-  $output .= ' <language>' . check_plain($langcode) . "</language>\n";
+  $output .= ' <description>' . String::checkPlain(decode_entities(strip_tags($description))) . "</description>\n";
+  $output .= ' <language>' . String::checkPlain($langcode) . "</language>\n";
   $output .= format_xml_elements($args);
   $output .= $items;
   $output .= "</channel>\n";
@@ -848,9 +849,9 @@ function format_rss_channel($title, $link, $description, $items, $langcode = NUL
  */
 function format_rss_item($title, $link, $description, $args = array()) {
   $output = "<item>\n";
-  $output .= ' <title>' . check_plain($title) . "</title>\n";
+  $output .= ' <title>' . String::checkPlain($title) . "</title>\n";
   $output .= ' <link>' . check_url($link) . "</link>\n";
-  $output .= ' <description>' . check_plain($description) . "</description>\n";
+  $output .= ' <description>' . String::checkPlain($description) . "</description>\n";
   $output .= format_xml_elements($args);
   $output .= "</item>\n";
 
@@ -882,7 +883,7 @@ function format_xml_elements($array) {
         }
 
         if (isset($value['value']) && $value['value'] != '') {
-          $output .= '>' . (is_array($value['value']) ? format_xml_elements($value['value']) : check_plain($value['value'])) . '</' . $value['key'] . ">\n";
+          $output .= '>' . (is_array($value['value']) ? format_xml_elements($value['value']) : String::checkPlain($value['value'])) . '</' . $value['key'] . ">\n";
         }
         else {
           $output .= " />\n";
@@ -890,7 +891,7 @@ function format_xml_elements($array) {
       }
     }
     else {
-      $output .= ' <' . $key . '>' . (is_array($value) ? format_xml_elements($value) : check_plain($value)) . "</$key>\n";
+      $output .= ' <' . $key . '>' . (is_array($value) ? format_xml_elements($value) : String::checkPlain($value)) . "</$key>\n";
     }
   }
   return $output;
@@ -1285,8 +1286,9 @@ function drupal_http_header_attributes(array $attributes = array()) {
  *   The internal path or external URL being linked to, such as "node/34" or
  *   "http://example.com/foo". After the url() function is called to construct
  *   the URL from $path and $options, the resulting URL is passed through
- *   check_plain() before it is inserted into the HTML anchor tag, to ensure
- *   well-formed HTML. See url() for more information and notes.
+ *   \Drupal\Component\Utility\String::checkPlain() before it is inserted into
+ *   the HTML anchor tag, to ensure well-formed HTML. See url() for more
+ *   information and notes.
  * @param array $options
  *   An associative array of additional options. Defaults to an empty array. It
  *   may contain the following elements.
@@ -1379,10 +1381,10 @@ function l($text, $path, array $options = array()) {
 
   // The result of url() is a plain-text URL. Because we are using it here
   // in an HTML argument context, we need to encode it properly.
-  $url = check_plain(url($variables['path'], $variables['options']));
+  $url = String::checkPlain(url($variables['path'], $variables['options']));
 
   // Sanitize the link text if necessary.
-  $text = $variables['options']['html'] ? $variables['text'] : check_plain($variables['text']);
+  $text = $variables['options']['html'] ? $variables['text'] : String::checkPlain($variables['text']);
 
   return '<a href="' . $url . '"' . $attributes . '>' . $text . '</a>';
 }
@@ -1481,7 +1483,7 @@ function drupal_add_html_head_link($attributes, $header = FALSE) {
 
   if ($header) {
     // Also add a HTTP header "Link:".
-    $href = '<' . check_plain($attributes['href']) . '>;';
+    $href = '<' . String::checkPlain($attributes['href']) . '>;';
     unset($attributes['href']);
     $element['#attached']['drupal_add_http_header'][] = array('Link',  $href . drupal_http_header_attributes($attributes), TRUE);
   }
@@ -2089,7 +2091,7 @@ function drupal_html_id($id) {
  *   on.
  * - Add settings ('setting'): Adds settings to Drupal's global storage of
  *   JavaScript settings. Per-page settings are required by some modules to
- *   function properly. All settings will be accessible at Drupal.settings.
+ *   function properly. All settings will be accessible at drupalSettings.
  *
  * Examples:
  * @code
@@ -2134,9 +2136,9 @@ function drupal_html_id($id) {
  *     hosted on the local server. These files will not be aggregated if
  *     JavaScript aggregation is enabled.
  *   - 'setting': An associative array with configuration options. The array is
- *     merged directly into Drupal.settings. All modules should wrap their
+ *     merged directly into drupalSettings. All modules should wrap their
  *     actual configuration settings in another variable to prevent conflicts in
- *     the Drupal.settings namespace. Items added with a string key will replace
+ *     the drupalSettings namespace. Items added with a string key will replace
  *     existing settings with that key; items with numeric array keys will be
  *     added to the existing settings array.
  * @param $options
@@ -2402,7 +2404,7 @@ function drupal_get_js($scope = 'header', $javascript = NULL, $skip_alter = FALS
       // considered "used" and prevented from being added in a later AJAX
       // request.
       // Skip if no files were added to the page otherwise jQuery.extend() will
-      // overwrite the Drupal.settings.ajaxPageState.css object with an empty
+      // overwrite the drupalSettings.ajaxPageState.css object with an empty
       // array.
       $css = drupal_add_css();
       if (!empty($css)) {
@@ -2961,8 +2963,8 @@ function drupal_get_library($module, $name = NULL) {
  * relationships.
  *
  * Note that this function should be called from the theme layer, such as in a
- * .tpl.php file, theme_ function, or in a template_preprocess function, not in
- * a form declaration. Though the same JavaScript could be added to the page
+ * .html.twig file, theme_ function, or in a template_preprocess function, not
+ * in a form declaration. Though the same JavaScript could be added to the page
  * using drupal_add_js() directly, this function helps keep template files
  * clean and readable. It also prevents tabledrag.js from being added twice
  * accidentally.
@@ -2996,7 +2998,6 @@ function drupal_get_library($module, $name = NULL) {
  *   column should not be hidden.
  * @param $limit
  *   (optional) Limit the maximum amount of parenting in this table.
- * @see block-admin-display-form.tpl.php
  * @see theme_menu_overview_form()
  */
 function drupal_add_tabledrag($table_id, $action, $relationship, $group, $subgroup = NULL, $source = NULL, $hidden = TRUE, $limit = 0) {
@@ -3166,8 +3167,8 @@ function _drupal_bootstrap_code() {
  *
  * DrupalKernel skips this and replicates it via event listeners.
  *
- * @see Drupal\Core\EventSubscriber\PathSubscriber;
- * @see Drupal\Core\EventSubscriber\LegacyRequestSubscriber;
+ * @see \Drupal\Core\EventSubscriber\PathSubscriber;
+ * @see \Drupal\Core\EventSubscriber\LegacyRequestSubscriber;
  */
 function _drupal_bootstrap_full($skip = FALSE) {
   static $called = FALSE;
@@ -3946,7 +3947,7 @@ function drupal_render(&$elements) {
   // children.
   // #states and #attached have to be processed before #theme_wrappers, because
   // the #type 'page' render array from drupal_render_page() would render the
-  // $page and wrap it into the html.tpl.php template without the attached
+  // $page and wrap it into the html.html.twig template without the attached
   // assets otherwise.
   // If the internal #render_children property is set, do not call the
   // #theme_wrappers function(s) to prevent infinite recursion.
@@ -4170,7 +4171,7 @@ function drupal_render_cache_set(&$markup, $elements) {
   }
   $bin = isset($elements['#cache']['bin']) ? $elements['#cache']['bin'] : 'cache';
   $expire = isset($elements['#cache']['expire']) ? $elements['#cache']['expire'] : CacheBackendInterface::CACHE_PERMANENT;
-  $tags = isset($elements['#cache']['tags']) ? $elements['#cache']['tags'] : array();
+  $tags = drupal_render_collect_cache_tags($elements);
   cache($bin)->set($cid, $data, $expire, $tags);
 }
 
@@ -4215,6 +4216,50 @@ function drupal_render_collect_attached($elements, $return = FALSE) {
     $attached = array();
     return $return;
   }
+}
+
+/**
+ * Collects cache tags for an element and its children into a single array.
+ *
+ * The cache tags array is returned in a format that is valid for
+ * \Drupal\Core\Cache\CacheBackendInterface::set().
+ *
+ * When caching elements, it is necessary to collect all cache tags into a
+ * single array, from both the element itself and all child elements. This
+ * allows items to be invalidated based on all tags attached to the content
+ * they're constituted from.
+ *
+ * @param array $element
+ *   The element to collect cache tags from.
+ * @param array $tags
+ *   (optional) An array of already collected cache tags (i.e. from a parent
+ *   element). Defaults to an empty array.
+ *
+ * @return array
+ *   The cache tags array for this element and its descendants.
+ */
+function drupal_render_collect_cache_tags($element, $tags = array()) {
+  if (isset($element['#cache']['tags'])) {
+    foreach ($element['#cache']['tags'] as $namespace => $values) {
+      if (is_array($values)) {
+        foreach ($values as $value) {
+          $tags[$namespace][$value] = $value;
+        }
+      }
+      else {
+        if (!isset($tags[$namespace])) {
+          $tags[$namespace] = $values;
+        }
+      }
+    }
+  }
+  if ($children = element_children($element)) {
+    foreach ($children as $child) {
+      $tags = drupal_render_collect_cache_tags($element[$child], $tags);
+    }
+  }
+
+  return $tags;
 }
 
 /**
@@ -4832,7 +4877,7 @@ function drupal_flush_all_caches() {
  */
 function _drupal_flush_css_js() {
   // The timestamp is converted to base 36 in order to make it more compact.
-  variable_set('css_js_query_string', base_convert(REQUEST_TIME, 10, 36));
+  Drupal::state()->set('system.css_js_query_string', base_convert(REQUEST_TIME, 10, 36));
 }
 
 /**
@@ -4852,7 +4897,7 @@ function _drupal_flush_css_js() {
  */
 function debug($data, $label = NULL, $print_r = FALSE) {
   // Print $data contents to string.
-  $string = check_plain($print_r ? print_r($data, TRUE) : var_export($data, TRUE));
+  $string = String::checkPlain($print_r ? print_r($data, TRUE) : var_export($data, TRUE));
 
   // Display values with pre-formatting to increase readability.
   $string = '<pre>' . $string . '</pre>';
@@ -4936,7 +4981,7 @@ function archiver_get_archiver($file) {
  * @return array
  *   The Drupal Updater class registry.
  *
- * @see Drupal\Core\Updater\Updater
+ * @see \Drupal\Core\Updater\Updater
  * @see hook_updater_info()
  * @see hook_updater_info_alter()
  */
@@ -4956,7 +5001,7 @@ function drupal_get_updaters() {
  * @return
  *   The Drupal FileTransfer class registry.
  *
- * @see Drupal\Core\FileTransfer\FileTransfer
+ * @see \Drupal\Core\FileTransfer\FileTransfer
  * @see hook_filetransfer_info()
  * @see hook_filetransfer_info_alter()
  */

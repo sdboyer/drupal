@@ -16,6 +16,14 @@ use Drupal\node\NodeInterface;
 class NodeController {
 
   /**
+   * @todo Remove node_admin_nodes().
+   */
+  public function contentOverview() {
+    module_load_include('admin.inc', 'node');
+    return node_admin_nodes();
+  }
+
+  /**
    * @todo Remove node_add_page().
    */
   public function addPage() {
@@ -29,13 +37,6 @@ class NodeController {
   public function add(EntityInterface $node_type) {
     module_load_include('pages.inc', 'node');
     return node_add($node_type);
-  }
-
-  /**
-   * @todo Remove node_page_view().
-   */
-  public function viewPage(NodeInterface $node) {
-    return node_page_view($node);
   }
 
   /**

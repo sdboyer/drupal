@@ -37,6 +37,7 @@ class EntityTranslationTest extends EntityUnitTestBase {
       'entity_test_rev',
       'entity_test_rev_revision',
       'entity_test_mulrev',
+      'entity_test_mulrev_revision',
       'entity_test_mulrev_property_data',
       'entity_test_mulrev_property_revision',
     ));
@@ -483,7 +484,7 @@ class EntityTranslationTest extends EntityUnitTestBase {
     $entity = $this->reloadEntity($entity);
     $instance_id = implode('.', array($entity->entityType(), $entity->bundle(), $this->field_name));
     $instance = $this->entityManager->getStorageController('field_instance')->load($instance_id);
-    $instance['default_value_function'] = 'entity_test_field_default_value';
+    $instance->default_value_function = 'entity_test_field_default_value';
     $instance->save();
     $translation = $entity->addTranslation($langcode2);
     $field = $translation->get($this->field_name);

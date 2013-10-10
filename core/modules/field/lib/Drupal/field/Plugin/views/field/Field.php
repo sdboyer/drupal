@@ -11,6 +11,7 @@ use Drupal\Core\Entity\DatabaseStorageController;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Language\Language;
+use Drupal\Core\Entity\EntityManager;
 use Drupal\field\Plugin\Type\Formatter\FormatterPluginManager;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -71,6 +72,13 @@ class Field extends FieldPluginBase {
   protected $formatterOptions;
 
   /**
+   * The entity manager.
+   *
+   * @var \Drupal\Core\Entity\EntityManager
+   */
+  protected $entityManager;
+
+  /**
    * The field formatter plugin manager.
    *
    * @var \Drupal\field\Plugin\Type\Formatter\FormatterPluginManager
@@ -86,12 +94,15 @@ class Field extends FieldPluginBase {
    *   The plugin_id for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   *   The field formatter plugin manager.
    * @param \Drupal\field\Plugin\Type\Formatter\FormatterPluginManager $formatter_plugin_manager
    *   The field formatter plugin manager.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, FormatterPluginManager $formatter_plugin_manager) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityManager $entity_manager, FormatterPluginManager $formatter_plugin_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
+    $this->entityManager = $entity_manager;
     $this->formatterPluginManager = $formatter_plugin_manager;
   }
 
@@ -103,6 +114,7 @@ class Field extends FieldPluginBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
+      $container->get('entity.manager'),
       $container->get('plugin.manager.field.formatter')
     );
   }
@@ -117,7 +129,8 @@ class Field extends FieldPluginBase {
     $this->multiple = FALSE;
     $this->limit_values = FALSE;
 
-    if ($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED) {
+    $cardinality = $field->getFieldCardinality();
+    if ($cardinality > 1 || $cardinality == FIELD_CARDINALITY_UNLIMITED) {
       $this->multiple = TRUE;
 
       // If "Display all values in the same row" is FALSE, then we always limit
@@ -133,7 +146,7 @@ class Field extends FieldPluginBase {
 
       // Otherwise, we only limit values if the user hasn't selected "all", 0, or
       // the value matching field cardinality.
-      if ((intval($this->options['delta_limit']) && ($this->options['delta_limit'] != $field['cardinality'])) || intval($this->options['delta_offset'])) {
+      if ((intval($this->options['delta_limit']) && ($this->options['delta_limit'] != $cardinality)) || intval($this->options['delta_offset'])) {
         $this->limit_values = TRUE;
       }
     }
@@ -147,7 +160,8 @@ class Field extends FieldPluginBase {
    */
   public function access() {
     $base_table = $this->get_base_table();
-    return field_access('view', $this->field_info, $this->definition['entity_tables'][$base_table]);
+    $access_controller = $this->entityManager->getAccessController($this->definition['entity_tables'][$base_table]);
+    return $access_controller->fieldAccess('view', $this->field_info);
   }
 
   /**
@@ -302,8 +316,8 @@ class Field extends FieldPluginBase {
 
     // defineOptions runs before init/construct, so no $this->field_info
     $field = field_info_field($this->definition['entity_type'], $this->definition['field_name']);
-    $field_type = \Drupal::service('plugin.manager.entity.field.field_type')->getDefinition($field['type']);
-    $column_names = array_keys($field['columns']);
+    $field_type = \Drupal::service('plugin.manager.entity.field.field_type')->getDefinition($field->getFieldType());
+    $column_names = array_keys($field->getColumns());
     $default_column = '';
     // Try to determine a sensible default.
     if (count($column_names) == 1) {
@@ -338,7 +352,7 @@ class Field extends FieldPluginBase {
     // If we know the exact number of allowed values, then that can be
     // the default. Otherwise, default to 'all'.
     $options['delta_limit'] = array(
-      'default' => ($field['cardinality'] > 1) ? $field['cardinality'] : 'all',
+      'default' => ($field->getFieldCardinality() > 1) ? $field->getFieldCardinality() : 'all',
     );
     $options['delta_offset'] = array(
       'default' => 0,
@@ -374,8 +388,8 @@ class Field extends FieldPluginBase {
     parent::buildOptionsForm($form, $form_state);
 
     $field = $this->field_info;
-    $formatters = $this->formatterPluginManager->getOptions($field['type']);
-    $column_names = array_keys($field['columns']);
+    $formatters = $this->formatterPluginManager->getOptions($field->getFieldType());
+    $column_names = array_keys($field->getColumns());
 
     // If this is a multiple value field, add its options.
     if ($this->multiple) {
@@ -383,7 +397,7 @@ class Field extends FieldPluginBase {
     }
 
     // No need to ask the user anything if the field has only one column.
-    if (count($field['columns']) == 1) {
+    if (count($field->getColumns()) == 1) {
       $form['click_sort_column'] = array(
         '#type' => 'value',
         '#value' => isset($column_names[0]) ? $column_names[0] : '',
@@ -473,14 +487,14 @@ class Field extends FieldPluginBase {
     // translating prefix and suffix separately.
     list($prefix, $suffix) = explode('@count', t('Display @count value(s)'));
 
-    if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED) {
+    if ($field->getFieldCardinality() == FIELD_CARDINALITY_UNLIMITED) {
       $type = 'textfield';
       $options = NULL;
       $size = 5;
     }
     else {
       $type = 'select';
-      $options = drupal_map_assoc(range(1, $field['cardinality']));
+      $options = drupal_map_assoc(range(1, $field->getFieldCardinality()));
       $size = 1;
     }
     $form['multi_type'] = array(
@@ -666,8 +680,6 @@ class Field extends FieldPluginBase {
 
     $items = array();
     if ($this->options['field_api_classes']) {
-      // Make a copy.
-      $array = $render_array;
       return array(array('rendered' => drupal_render($render_array)));
     }
 
@@ -801,14 +813,14 @@ class Field extends FieldPluginBase {
 
   protected function documentSelfTokens(&$tokens) {
     $field = $this->field_info;
-    foreach ($field['columns'] as $id => $column) {
+    foreach ($field->getColumns() as $id => $column) {
       $tokens['[' . $this->options['id'] . '-' . $id . ']'] = t('Raw @column', array('@column' => $id));
     }
   }
 
   protected function addSelfTokens(&$tokens, $item) {
     $field = $this->field_info;
-    foreach ($field['columns'] as $id => $column) {
+    foreach ($field->getColumns() as $id => $column) {
       // Use filter_xss_admin because it's user data and we can't be sure it is safe.
       // We know nothing about the data, though, so we can't really do much else.
 

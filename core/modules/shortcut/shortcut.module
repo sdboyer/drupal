@@ -90,11 +90,6 @@ function shortcut_menu() {
     'description' => 'Add and modify shortcut sets.',
     'route_name' => 'shortcut.set_admin',
   );
-  $items['admin/config/user-interface/shortcut/add-set'] = array(
-    'title' => 'Add shortcut set',
-    'route_name' => 'shortcut.set_add',
-    'type' => MENU_SIBLING_LOCAL_TASK,
-  );
   $items['admin/config/user-interface/shortcut/manage/%shortcut_set'] = array(
     'title' => 'Edit shortcuts',
     'route_name' => 'shortcut.set_customize',
@@ -113,20 +108,12 @@ function shortcut_menu() {
   );
   $items['admin/config/user-interface/shortcut/manage/%shortcut_set/add-link'] = array(
     'title' => 'Add shortcut',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('shortcut_link_add', 5),
-    'access callback' => 'shortcut_set_edit_access',
-    'access arguments' => array(5),
+    'route_name' => 'shortcut.link_edit',
     'type' => MENU_LOCAL_ACTION,
-    'file' => 'shortcut.admin.inc',
   );
   $items['admin/config/user-interface/shortcut/link/%menu_link'] = array(
     'title' => 'Edit shortcut',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('shortcut_link_edit', 5),
-    'access callback' => 'shortcut_link_access',
-    'access arguments' => array(5),
-    'file' => 'shortcut.admin.inc',
+    'route_name' => 'shortcut.link_edit',
   );
   $items['admin/config/user-interface/shortcut/link/%menu_link/delete'] = array(
     'title' => 'Delete shortcut',
@@ -134,12 +121,8 @@ function shortcut_menu() {
   );
   $items['user/%user/shortcuts'] = array(
     'title' => 'Shortcuts',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('shortcut_set_switch', 1),
-    'access callback' => 'shortcut_set_switch_access',
-    'access arguments' => array(1),
+    'route_name' => 'shortcut.overview',
     'type' => MENU_LOCAL_TASK,
-    'file' => 'shortcut.admin.inc',
   );
 
   return $items;
@@ -320,7 +303,7 @@ function shortcut_set_unassign_user($account) {
  */
 function shortcut_current_displayed_set($account = NULL) {
   $shortcut_sets = &drupal_static(__FUNCTION__, array());
-  global $user;
+  $user = \Drupal::currentUser();
   if (!isset($account)) {
     $account = $user;
   }
@@ -357,7 +340,7 @@ function shortcut_current_displayed_set($account = NULL) {
  *   An object representing the default shortcut set.
  */
 function shortcut_default_set($account = NULL) {
-  global $user;
+  $user = \Drupal::currentUser();
   if (!isset($account)) {
     $account = $user;
   }
@@ -438,7 +421,7 @@ function shortcut_renderable_links($shortcut_set = NULL) {
 }
 
 /**
- * Implements hook_preprocess_HOOK() for block.html.twig.
+ * Implements hook_preprocess_HOOK() for block templates.
  */
 function shortcut_preprocess_block(&$variables) {
   if ($variables['configuration']['module'] == 'shortcut') {
@@ -447,7 +430,7 @@ function shortcut_preprocess_block(&$variables) {
 }
 
 /**
- * Implements hook_preprocess_HOOK() for page.tpl.php.
+ * Implements hook_preprocess_HOOK() for page templates.
  */
 function shortcut_preprocess_page(&$variables) {
   // Only display the shortcut link if the user has the ability to edit

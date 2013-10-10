@@ -66,7 +66,7 @@ class UserCancelTest extends WebTestBase {
    * administer the site.
    */
   function testUserCancelUid1() {
-    module_enable(array('views'));
+    \Drupal::moduleHandler()->install(array('views'));
     // Update uid 1's name and password to we know it.
     $password = user_password();
     $account = array(
@@ -275,8 +275,9 @@ class UserCancelTest extends WebTestBase {
    */
   function testUserDelete() {
     \Drupal::config('user.settings')->set('cancel_method', 'user_cancel_delete')->save();
-    module_enable(array('comment'));
+    \Drupal::moduleHandler()->install(array('comment'));
     $this->resetAll();
+    $this->container->get('comment.manager')->addDefaultField('node', 'page');
 
     // Create a user.
     $account = $this->drupalCreateUser(array('cancel account', 'post comments', 'skip comment approval'));
@@ -292,7 +293,7 @@ class UserCancelTest extends WebTestBase {
     $edit['subject'] = $this->randomName(8);
     $edit['comment_body[0][value]'] = $this->randomName(16);
 
-    $this->drupalPostForm('comment/reply/' . $node->id(), $edit, t('Preview'));
+    $this->drupalPostForm('comment/reply/node/' . $node->id() . '/comment', $edit, t('Preview'));
     $this->drupalPostForm(NULL, array(), t('Save'));
     $this->assertText(t('Your comment has been posted.'));
     $comments = entity_load_multiple_by_properties('comment', array('subject' => $edit['subject']));
@@ -390,7 +391,7 @@ class UserCancelTest extends WebTestBase {
    * Create an administrative user and mass-delete other users.
    */
   function testMassUserCancelByAdmin() {
-    module_enable(array('views'));
+    \Drupal::moduleHandler()->install(array('views'));
     \Drupal::config('user.settings')->set('cancel_method', 'user_cancel_reassign')->save();
     // Enable account cancellation notification.
     \Drupal::config('user.settings')->set('notify.status_canceled', TRUE)->save();

@@ -70,11 +70,12 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
     $entity_type = 'entity_test_rev';
 
     $this->field_name = strtolower($this->randomName());
+    $this->field_cardinality = 4;
     $this->field = entity_create('field_entity', array(
       'name' => $this->field_name,
       'entity_type' => $entity_type,
       'type' => 'test_field',
-      'cardinality' => 4,
+      'cardinality' => $this->field_cardinality,
     ));
     $this->field->save();
     $this->instance = entity_create('field_instance', array(
@@ -113,7 +114,7 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
     $query = db_insert($this->revision_table)->fields($columns);
     foreach ($revision_ids as $revision_id) {
       // Put one value too many.
-      for ($delta = 0; $delta <= $this->field['cardinality']; $delta++) {
+      for ($delta = 0; $delta <= $this->field_cardinality; $delta++) {
         $value = mt_rand(1, 127);
         $values[$revision_id][] = $value;
         $query->values(array($bundle, 0, $entity->id(), $revision_id, $delta, $entity->language()->id, $value));
@@ -130,7 +131,7 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
     foreach ($revision_ids as $revision_id) {
       $entity = $storage_controller->loadRevision($revision_id);
       foreach ($values[$revision_id] as $delta => $value) {
-        if ($delta < $this->field['cardinality']) {
+        if ($delta < $this->field_cardinality) {
           $this->assertEqual($entity->{$this->field_name}[$delta]->value, $value);
         }
         else {
@@ -142,7 +143,7 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
     // Load the "current revision" and check the values.
     $entity = $storage_controller->load($entity->id());
     foreach ($values[$revision_id] as $delta => $value) {
-      if ($delta < $this->field['cardinality']) {
+      if ($delta < $this->field_cardinality) {
         $this->assertEqual($entity->{$this->field_name}[$delta]->value, $value);
       }
       else {
@@ -171,7 +172,7 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
 
     // Check insert. Add one value too many.
     $values = array();
-    for ($delta = 0; $delta <= $this->field['cardinality']; $delta++) {
+    for ($delta = 0; $delta <= $this->field_cardinality; $delta++) {
       $values[$delta]['value'] = mt_rand(1, 127);
     }
     $entity->{$this->field_name} = $values;
@@ -179,7 +180,7 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
 
     // Read the tables and check the correct values have been stored.
     $rows = db_select($this->table, 't')->fields('t')->execute()->fetchAllAssoc('delta', \PDO::FETCH_ASSOC);
-    $this->assertEqual(count($rows), $this->field['cardinality']);
+    $this->assertEqual(count($rows), $this->field_cardinality);
     foreach ($rows as $delta => $row) {
       $expected = array(
         'bundle' => $bundle,
@@ -196,7 +197,7 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
     // Test update. Add less values and check that the previous values did not
     // persist.
     $values = array();
-    for ($delta = 0; $delta <= $this->field['cardinality'] - 2; $delta++) {
+    for ($delta = 0; $delta <= $this->field_cardinality - 2; $delta++) {
       $values[$delta]['value'] = mt_rand(1, 127);
     }
     $entity->{$this->field_name} = $values;
@@ -219,7 +220,7 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
     // Create a new revision.
     $revision_values[$entity->getRevisionId()] = $values;
     $values = array();
-    for ($delta = 0; $delta < $this->field['cardinality']; $delta++) {
+    for ($delta = 0; $delta < $this->field_cardinality; $delta++) {
       $values[$delta]['value'] = mt_rand(1, 127);
     }
     $entity->{$this->field_name} = $values;
@@ -230,7 +231,7 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
     // Check that data for both revisions are in the revision table.
     foreach ($revision_values as $revision_id => $values) {
       $rows = db_select($this->revision_table, 't')->fields('t')->condition('revision_id', $revision_id)->execute()->fetchAllAssoc('delta', \PDO::FETCH_ASSOC);
-      $this->assertEqual(count($rows), min(count($values), $this->field['cardinality']));
+      $this->assertEqual(count($rows), min(count($values), $this->field_cardinality));
       foreach ($rows as $delta => $row) {
         $expected = array(
           'bundle' => $bundle,
@@ -456,6 +457,34 @@ class FieldSqlStorageTest extends EntityUnitTestBase {
     $foreign_key_column = DatabaseStorageController::_fieldColumnName($field, $foreign_key_name);
     $this->assertEqual($foreign_key['table'], $foreign_key_name, 'Foreign key table name preserved in the schema');
     $this->assertEqual($foreign_key['columns'][$foreign_key_column], 'id', 'Foreign key column name preserved in the schema');
+  }
+
+  /**
+   * Tests reacting to a bundle being renamed.
+   */
+  function testFieldSqlStorageBundleRename() {
+    $entity_type = $bundle = 'entity_test_rev';
+
+    // Create an entity.
+    $value = mt_rand(1, 127);
+    $entity = entity_create($entity_type, array(
+      'type' => $bundle,
+      $this->field->name => $value,
+    ));
+    $entity->save();
+
+    // Rename the bundle.
+    $bundle_new = $bundle . '_renamed';
+    entity_test_rename_bundle($bundle, $bundle_new, $entity_type);
+
+    // Check that the 'bundle' column has been updated in storage.
+    $row = db_select($this->table, 't')
+      ->fields('t', array('bundle', $this->field->name . '_value'))
+      ->condition('entity_id', $entity->id())
+      ->execute()
+      ->fetch();
+    $this->assertEqual($row->bundle, $bundle_new);
+    $this->assertEqual($row->{$this->field->name . '_value'}, $value);
   }
 
   /**

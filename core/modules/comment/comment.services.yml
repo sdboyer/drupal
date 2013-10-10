@@ -3,4 +3,8 @@ services:
     class: Drupal\comment\CommentBreadcrumbBuilder
     tags:
       - { name: breadcrumb_builder, priority: 100 }
-    arguments: ['@string_translation']
+    arguments: ['@entity.manager']
+
+  comment.manager:
+    class: Drupal\comment\CommentManager
+    arguments: ['@field.info', '@entity.manager']

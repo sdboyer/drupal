@@ -10,7 +10,7 @@ namespace Drupal\text\Plugin\field\formatter;
 use Drupal\field\Annotation\FieldFormatter;
 use Drupal\Core\Annotation\Translation;
 use Drupal\field\Plugin\Type\Formatter\FormatterBase;
-use Drupal\Core\Entity\Field\FieldInterface;
+use Drupal\Core\Entity\Field\FieldItemListInterface;
 
 /**
  * Plugin implementation of the 'text_trimmed'' formatter.
@@ -18,7 +18,7 @@ use Drupal\Core\Entity\Field\FieldInterface;
  * Note: This class also contains the implementations used by the
  * 'text_summary_or_trimmed' formatter.
  *
- * @see Drupal\text\Field\Formatter\TextSummaryOrTrimmedFormatter
+ * @see \Drupal\text\Field\Formatter\TextSummaryOrTrimmedFormatter
  *
  * @FieldFormatter(
  *   id = "text_trimmed",
@@ -64,7 +64,7 @@ class TextTrimmedFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldInterface $items) {
+  public function viewElements(FieldItemListInterface $items) {
     $elements = array();
 
     $text_processing = $this->getFieldSetting('text_processing');

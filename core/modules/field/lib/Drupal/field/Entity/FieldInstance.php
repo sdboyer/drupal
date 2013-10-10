@@ -458,7 +458,12 @@ class FieldInstance extends ConfigEntityBase implements FieldInstanceInterface {
       field_cache_clear();
 
       // Remove the instance from the entity form displays.
-      if ($form_display = entity_load('entity_form_display', $this->entity_type . '.' . $this->bundle . '.default')) {
+      $ids = array();
+      $form_modes = array('default' => array()) + entity_get_form_modes($this->entity_type);
+      foreach (array_keys($form_modes) as $form_mode) {
+        $ids[] = $this->entity_type . '.' . $this->bundle . '.' . $form_mode;
+      }
+      foreach (entity_load_multiple('entity_form_display', $ids) as $form_display) {
         $form_display->removeComponent($this->field->name)->save();
       }
 
@@ -605,44 +610,11 @@ class FieldInstance extends ConfigEntityBase implements FieldInstanceInterface {
   /**
    * {@inheritdoc}
    */
-  public function offsetExists($offset) {
-    return (isset($this->{$offset}) || $offset == 'field_id' || $offset == 'field_name');
+  public function isFieldConfigurable() {
+    return TRUE;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function &offsetGet($offset) {
-    if ($offset == 'field_id') {
-      return $this->field_uuid;
-    }
-    if ($offset == 'field_name') {
-      return $this->field->name;
-    }
-    return $this->{$offset};
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetSet($offset, $value) {
-    if ($offset == 'field_id') {
-      $offset = 'field_uuid';
-    }
-    $this->{$offset} = $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetUnset($offset) {
-    if ($offset == 'field_id') {
-      $offset = 'field_uuid';
-    }
-    unset($this->{$offset});
-  }
-
-  /**
+  /*
    * Implements the magic __sleep() method.
    *
    * Using the Serialize interface and serialize() / unserialize() methods

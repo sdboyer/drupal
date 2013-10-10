@@ -17,6 +17,8 @@ use Drupal\file\FileInterface;
  *
  * @see locale_translate_import_form_submit()
  * @ingroup forms
+ *
+ * @deprecated Use \Drupal\locale\Form\LocaleForm::import()
  */
 function locale_translate_import_form($form, &$form_state) {
   drupal_static_reset('language_list');
@@ -144,6 +146,8 @@ function locale_translate_import_form_submit($form, &$form_state) {
  *
  * @see locale_translate_export_form_submit()
  * @ingroup forms
+ *
+ * @deprecated Use \Drupal\locale\Form\LocaleForm::export()
  */
 function locale_translate_export_form($form, &$form_state) {
   $languages = language_list();
@@ -552,7 +556,7 @@ function locale_translate_batch_refresh(array &$context) {
     if (isset($context['results']['stats'])) {
       // Get list of unique string identifiers and language codes updated.
       $langcodes = array_unique(array_values($context['results']['languages']));
-      foreach ($context['results']['stats'] as $filepath => $report) {
+      foreach ($context['results']['stats'] as $report) {
         $strings = array_merge($strings, $report['strings']);
       }
     }

@@ -9,7 +9,6 @@ namespace Drupal\Core\Entity\Plugin\DataType;
 
 use Drupal\Core\TypedData\Annotation\DataType;
 use Drupal\Core\Annotation\Translation;
-use Drupal\Component\Uuid\Uuid;
 
 /**
  * Defines the 'uuid_field' entity field item.
@@ -20,7 +19,7 @@ use Drupal\Component\Uuid\Uuid;
  *   id = "uuid_field",
  *   label = @Translation("UUID field item"),
  *   description = @Translation("An entity field containing a UUID."),
- *   list_class = "\Drupal\Core\Entity\Field\Field",
+ *   list_class = "\Drupal\Core\Entity\Field\FieldItemList",
  *   constraints = {
  *     "ComplexData" = {
  *       "value" = {"Length" = {"max" = 128}}
@@ -35,7 +34,7 @@ class UuidItem extends StringItem {
    */
   public function applyDefaultValue($notify = TRUE) {
     // Default to one field item with a generated UUID.
-    $uuid = new Uuid();
+    $uuid = \Drupal::service('uuid');
     $this->setValue(array('value' => $uuid->generate()), $notify);
     return $this;
   }

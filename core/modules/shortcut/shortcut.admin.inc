@@ -25,6 +25,8 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  * @ingroup forms
  * @see shortcut_set_switch_validate()
  * @see shortcut_set_switch_submit()
+ *
+ * @deprecated Use \Drupal\shortcut\Form\ShortcutForm::overview()
  */
 function shortcut_set_switch($form, &$form_state, $account = NULL) {
   $user = \Drupal::currentUser();
@@ -131,7 +133,7 @@ function shortcut_set_switch_validate($form, &$form_state) {
  * Submit handler for shortcut_set_switch().
  */
 function shortcut_set_switch_submit($form, &$form_state) {
-  global $user;
+  $user = \Drupal::currentUser();
   $account = $form_state['values']['account'];
 
   if ($form_state['values']['set'] == 'new') {
@@ -188,6 +190,8 @@ function shortcut_set_switch_submit($form, &$form_state) {
  * @ingroup forms
  * @see shortcut_link_edit_validate()
  * @see shortcut_link_add_submit()
+ *
+ * @deprecated Use \Drupal\shortcut\Form\ShortcutForm::add()
  */
 function shortcut_link_add($form, &$form_state, $shortcut_set) {
   drupal_set_title(t('Add new shortcut'));
@@ -215,6 +219,8 @@ function shortcut_link_add($form, &$form_state, $shortcut_set) {
  * @ingroup forms
  * @see shortcut_link_edit_validate()
  * @see shortcut_link_edit_submit()
+ *
+ * @deprecated Use \Drupal\shortcut\Form\ShortcutForm::edit()
  */
 function shortcut_link_edit($form, &$form_state, $shortcut_link) {
   drupal_set_title(t('Editing @shortcut', array('@shortcut' => $shortcut_link['link_title'])));

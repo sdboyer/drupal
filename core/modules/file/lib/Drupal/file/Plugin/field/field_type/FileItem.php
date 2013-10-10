@@ -33,7 +33,7 @@ use Drupal\field\Plugin\Type\FieldType\ConfigFieldItemInterface;
  *   },
  *   default_widget = "file_generic",
  *   default_formatter = "file_default",
- *   list_class = "\Drupal\file\Plugin\field\field_type\FileField"
+ *   list_class = "\Drupal\file\Plugin\field\field_type\FileFieldItemList"
  * )
  */
 class FileItem extends EntityReferenceItem implements ConfigFieldItemInterface {
@@ -203,39 +203,6 @@ class FileItem extends EntityReferenceItem implements ConfigFieldItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function insert() {
-    // @todo Move in FileField in https://drupal.org/node/2073033.
-    $entity = $this->getRoot();
-
-    // Add a new usage for this new uploaded file.
-    file_usage()->add($this->entity, 'file', $entity->entityType(), $entity->id());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function delete() {
-    // @todo Move in FileField in https://drupal.org/node/2073033.
-    $entity = $this->getRoot();
-
-    // Delete all file usages within this entity.
-    file_usage()->delete($this->entity, 'file', $entity->entityType(), $entity->id(), 0);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function deleteRevision() {
-    // @todo Move in FileField in https://drupal.org/node/2073033.
-    $entity = $this->getRoot();
-
-    // Decrement the file usage count by 1.
-    file_usage()->delete($this->entity, 'file', $entity->entityType(), $entity->id());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isEmpty() {
     return empty($this->target_id);
   }
@@ -342,6 +309,19 @@ class FileItem extends EntityReferenceItem implements ConfigFieldItemInterface {
     }
 
     return $validators;
+  }
+
+  /**
+   * Determines whether an item should be displayed when rendering the field.
+   *
+   * @return bool
+   *   TRUE if the item should be displayed, FALSE if not.
+   */
+  public function isDisplayed() {
+    if ($this->getFieldSetting('display_field')) {
+      return (bool) $this->display;
+    }
+    return TRUE;
   }
 
 }

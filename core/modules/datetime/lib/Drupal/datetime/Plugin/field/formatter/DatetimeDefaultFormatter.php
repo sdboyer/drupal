@@ -13,7 +13,7 @@ use Drupal\Core\Datetime\Date;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Entity\Field\FieldDefinitionInterface;
-use Drupal\Core\Entity\Field\FieldInterface;
+use Drupal\Core\Entity\Field\FieldItemListInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\field\Plugin\Type\Formatter\FormatterBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -94,7 +94,7 @@ class DateTimeDefaultFormatter extends FormatterBase implements ContainerFactory
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldInterface $items) {
+  public function viewElements(FieldItemListInterface $items) {
 
     $elements = array();
 
@@ -103,11 +103,8 @@ class DateTimeDefaultFormatter extends FormatterBase implements ContainerFactory
       $formatted_date = '';
       $iso_date = '';
 
-      if (!empty($item->date)) {
-        // The date was created and verified during field_load(), so it is safe
-        // to use without further inspection.
+      if ($item->date) {
         $date = $item->date;
-
         // Create the ISO date in Universal Time.
         $iso_date = $date->format("Y-m-d\TH:i:s") . 'Z';
 

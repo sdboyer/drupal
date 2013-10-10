@@ -30,8 +30,8 @@ function custom_block_help($path, $arg) {
 /**
  * Implements hook_menu_local_tasks().
  */
-function custom_block_menu_local_tasks(&$data, $router_item, $root_path) {
-  if ($router_item['route_name'] == 'custom_block.list') {
+function custom_block_menu_local_tasks(&$data, $route_name) {
+  if ($route_name == 'custom_block.list') {
     // @todo Move to a LocalAction plugin when https://drupal.org/node/2045267
     //   allows local actions to work with query strings.
     $item = menu_get_item('block/add');
@@ -48,13 +48,13 @@ function custom_block_menu_local_tasks(&$data, $router_item, $root_path) {
   $routes = array_map(function ($theme) {
     return "block.admin_display_$theme";
   }, array_keys(list_themes()));
-  if (in_array($router_item['route_name'], $routes)) {
+  if (in_array($route_name, $routes)) {
     // @todo Move to a LocalAction plugin when https://drupal.org/node/2045267
     //   allows local actions to work with query strings.
     $item = menu_get_item('block/add');
     if ($item['access']) {
       // Add a destination parameter.
-      $item['localized_options']['query']['theme'] = end($router_item['map']);
+      $item['localized_options']['query']['theme'] = \Drupal::request()->attributes->get('theme');
       $data['actions']['block/add'] = array(
         '#theme' => 'menu_local_action',
         '#link' => $item,
@@ -202,11 +202,11 @@ function custom_block_entity_bundle_info() {
  */
 function custom_block_add_body_field($block_type_id, $label = 'Block body') {
   // Add or remove the body field, as needed.
-  $field = field_info_field('custom_block', 'block_body');
-  $instance = field_info_instance('custom_block', 'block_body', $block_type_id);
+  $field = field_info_field('custom_block', 'body');
+  $instance = field_info_instance('custom_block', 'body', $block_type_id);
   if (empty($field)) {
     $field = entity_create('field_entity', array(
-      'name' => 'block_body',
+      'name' => 'body',
       'entity_type' => 'custom_block',
       'type' => 'text_with_summary',
     ));
@@ -214,7 +214,7 @@ function custom_block_add_body_field($block_type_id, $label = 'Block body') {
   }
   if (empty($instance)) {
     $instance = entity_create('field_instance', array(
-      'field_name' => 'block_body',
+      'field_name' => 'body',
       'entity_type' => 'custom_block',
       'bundle' => $block_type_id,
       'label' => $label,
@@ -224,14 +224,14 @@ function custom_block_add_body_field($block_type_id, $label = 'Block body') {
 
     // Assign widget settings for the 'default' form mode.
     entity_get_form_display('custom_block', $block_type_id, 'default')
-      ->setComponent('block_body', array(
+      ->setComponent('body', array(
         'type' => 'text_textarea_with_summary',
       ))
       ->save();
 
     // Assign display settings for 'default' view mode.
     entity_get_display('custom_block', $block_type_id, 'default')
-      ->setComponent('block_body', array(
+      ->setComponent('body', array(
         'label' => 'hidden',
         'type' => 'text_default',
       ))

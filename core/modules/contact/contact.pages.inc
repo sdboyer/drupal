@@ -8,11 +8,12 @@
 use Drupal\contact\Entity\Category;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Drupal\Component\Utility\String;
 
 /**
  * Page callback: Presents the site-wide contact form.
  *
- * @param Drupal\contact\Entity\Category $category
+ * @param \Drupal\contact\Entity\Category $category
  *   (optional) The contact category to use.
  *
  * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
@@ -53,7 +54,9 @@ function contact_site_page(Category $category = NULL) {
   $message = entity_create('contact_message', array(
     'category' => $category->id(),
   ));
-  return \Drupal::entityManager()->getForm($message);
+  $form = \Drupal::entityManager()->getForm($message);
+  $form['#title'] = String::checkPlain($category->label());
+  return $form;
 }
 
 /**
@@ -79,13 +82,13 @@ function contact_personal_page($recipient) {
     contact_flood_control();
   }
 
-  drupal_set_title(t('Contact @username', array('@username' => user_format_name($recipient))), PASS_THROUGH);
-
   $message = entity_create('contact_message', array(
     'recipient' => $recipient,
     'category' => 'personal',
   ));
-  return \Drupal::entityManager()->getForm($message);
+  $form = \Drupal::entityManager()->getForm($message);
+  $form['#title'] = t('Contact @username', array('@username' => $recipient->getUsername()));
+  return $form;
 }
 
 /**

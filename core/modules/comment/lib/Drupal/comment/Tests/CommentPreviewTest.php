@@ -41,13 +41,13 @@ class CommentPreviewTest extends CommentTestBase {
     $filter_format = $filter_format_storage_controller->create(array(
       'format' => 'basic_html',
       'name' => 'Basic HTML',
-      'status' => '1',
+      'status' => TRUE,
       'roles' => array('authenticated'),
     ), 'filter_format');
 
     $filter_format->setFilterConfig('filter_html', array(
       'module' => 'filter',
-      'status' => '1',
+      'status' => TRUE,
       'settings' => array(
         'allowed_html' => '<a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h4> <h5> <h6> <p> <span> <img>',
       ),
@@ -64,7 +64,7 @@ class CommentPreviewTest extends CommentTestBase {
     $this->setCommentPreview(DRUPAL_OPTIONAL);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
-    $this->setCommentSettings('comment_default_mode', COMMENT_MODE_THREADED, 'Comment paging changed.');
+    $this->setCommentSettings('default_mode', COMMENT_MODE_THREADED, 'Comment paging changed.');
     $this->drupalLogout();
 
     // Login as web user and add a signature and a user picture.
@@ -107,7 +107,7 @@ class CommentPreviewTest extends CommentTestBase {
     $this->setCommentPreview(DRUPAL_OPTIONAL);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
-    $this->setCommentSettings('comment_default_mode', COMMENT_MODE_THREADED, 'Comment paging changed.');
+    $this->setCommentSettings('default_mode', COMMENT_MODE_THREADED, 'Comment paging changed.');
 
     $edit = array();
     $date = new DrupalDateTime('2008-03-02 17:23');

@@ -22,7 +22,7 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  *   label = @Translation("Block"),
  *   module = "block",
  *   controllers = {
- *     "storage" = "Drupal\block\BlockStorageController",
+ *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
  *     "access" = "Drupal\block\BlockAccessController",
  *     "render" = "Drupal\block\BlockRenderController",
  *     "list" = "Drupal\block\BlockListController",
@@ -37,6 +37,9 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
  *     "id" = "id",
  *     "label" = "label",
  *     "uuid" = "uuid"
+ *   },
+ *   links = {
+ *     "edit-form" = "admin/structure/block/manage/{block}"
  *   }
  * )
  */
@@ -115,18 +118,6 @@ class Block extends ConfigEntityBase implements BlockInterface {
   }
 
   /**
-   * Overrides \Drupal\Core\Entity\Entity::uri();
-   */
-  public function uri() {
-    return array(
-      'path' => 'admin/structure/block/manage/' . $this->id(),
-      'options' => array(
-        'entity_type' => $this->entityType,
-        'entity' => $this,
-      ),
-    );
-  }
-  /**
    * Overrides \Drupal\Core\Entity\Entity::label();
    */
   public function label($langcode = NULL) {
@@ -135,11 +126,11 @@ class Block extends ConfigEntityBase implements BlockInterface {
   }
 
   /**
-   * Overrides \Drupal\Core\Config\Entity\ConfigEntityBase::get();
+   * {@inheritdoc}
    */
-  public function get($property_name, $langcode = NULL) {
+  public function get($property_name) {
     // The theme is stored in the entity ID.
-    $value = parent::get($property_name, $langcode);
+    $value = parent::get($property_name);
     if ($property_name == 'theme' && !$value) {
       list($value) = explode('.', $this->id());
     }

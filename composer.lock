@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "38591fb50ec8bc7c3f2d2a9ea542246f",
+    "hash": "4c727150110aeae10efe10a92ff256f5",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1113,16 +1113,16 @@
         },
         {
             "name": "sdboyer/gliph",
-            "version": "0.1.3",
+            "version": "0.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sdboyer/gliph.git",
-                "reference": "f85ca76fde4913e3b6996691672998e646e0c642"
+                "reference": "aad932ef7d808105341cc9a36538e9fe2cb5ee82"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sdboyer/gliph/zipball/f85ca76fde4913e3b6996691672998e646e0c642",
-                "reference": "f85ca76fde4913e3b6996691672998e646e0c642",
+                "url": "https://api.github.com/repos/sdboyer/gliph/zipball/aad932ef7d808105341cc9a36538e9fe2cb5ee82",
+                "reference": "aad932ef7d808105341cc9a36538e9fe2cb5ee82",
                 "shasum": ""
             },
             "require": {
@@ -1153,7 +1153,7 @@
                 "php",
                 "spl"
             ],
-            "time": "2013-09-22 03:30:09"
+            "time": "2013-09-27 01:15:21"
         },
         {
             "name": "symfony-cmf/routing",

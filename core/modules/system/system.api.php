@@ -410,7 +410,8 @@ function hook_css_alter(&$css) {
  */
 function hook_ajax_render_alter($commands) {
   // Inject any new status messages into the content area.
-  $commands[] = ajax_command_prepend('#block-system-main .content', theme('status_messages'));
+  $status_messages = array('#theme' => 'status_messages');
+  $commands[] = ajax_command_prepend('#block-system-main .content', drupal_render($status_messages));
 }
 
 /**
@@ -502,145 +503,6 @@ function hook_menu_get_item_alter(&$router_item, $path, $original_map) {
  * hook_menu() implementations return an associative array whose keys define
  * paths and whose values are an associative array of properties for each
  * path. (The complete list of properties is in the return value section below.)
- *
- * @section sec_callback_funcs Callback Functions
- * The definition for each path may include a page callback function, which is
- * invoked when the registered path is requested. If there is no other
- * registered path that fits the requested path better, any further path
- * components are passed to the callback function. For example, your module
- * could register path 'abc/def':
- * @code
- *   function mymodule_menu() {
- *     $items['abc/def'] = array(
- *       'page callback' => 'mymodule_abc_view',
- *     );
- *     return $items;
- *   }
- *
- *   function mymodule_abc_view($ghi = 0, $jkl = '') {
- *     // ...
- *   }
- * @endcode
- * When path 'abc/def' is requested, no further path components are in the
- * request, and no additional arguments are passed to the callback function (so
- * $ghi and $jkl would take the default values as defined in the function
- * signature). When 'abc/def/123/foo' is requested, $ghi will be '123' and
- * $jkl will be 'foo'. Note that this automatic passing of optional path
- * arguments applies only to page and theme callback functions.
- *
- * @subsection sub_callback_arguments Callback Arguments
- * In addition to optional path arguments, the page callback and other callback
- * functions may specify argument lists as arrays. These argument lists may
- * contain both fixed/hard-coded argument values and integers that correspond
- * to path components. When integers are used and the callback function is
- * called, the corresponding path components will be substituted for the
- * integers. That is, the integer 0 in an argument list will be replaced with
- * the first path component, integer 1 with the second, and so on (path
- * components are numbered starting from zero). To pass an integer without it
- * being replaced with its respective path component, use the string value of
- * the integer (e.g., '1') as the argument value. This substitution feature
- * allows you to re-use a callback function for several different paths. For
- * example:
- * @code
- *   function mymodule_menu() {
- *     $items['abc/def'] = array(
- *       'page callback' => 'mymodule_abc_view',
- *       'page arguments' => array(1, 'foo'),
- *     );
- *     return $items;
- *   }
- * @endcode
- * When path 'abc/def' is requested, the page callback function will get 'def'
- * as the first argument and (always) 'foo' as the second argument.
- *
- * If a page callback function uses an argument list array, and its path is
- * requested with optional path arguments, then the list array's arguments are
- * passed to the callback function first, followed by the optional path
- * arguments. Using the above example, when path 'abc/def/bar/baz' is requested,
- * mymodule_abc_view() will be called with 'def', 'foo', 'bar' and 'baz' as
- * arguments, in that order.
- *
- * Special care should be taken for the page callback drupal_get_form(), because
- * your specific form callback function will always receive $form and
- * &$form_state as the first function arguments:
- * @code
- *   function mymodule_abc_form($form, &$form_state) {
- *     // ...
- *     return $form;
- *   }
- * @endcode
- * See @link form_api Form API documentation @endlink for details.
- *
- * @section sec_path_wildcards Wildcards in Paths
- * @subsection sub_simple_wildcards Simple Wildcards
- * Wildcards within paths also work with integer substitution. For example,
- * your module could register path 'my-module/%/edit':
- * @code
- *   $items['my-module/%/edit'] = array(
- *     'page callback' => 'mymodule_abc_edit',
- *     'page arguments' => array(1),
- *   );
- * @endcode
- * When path 'my-module/foo/edit' is requested, integer 1 will be replaced
- * with 'foo' and passed to the callback function. Note that wildcards may not
- * be used as the first component.
- *
- * @subsection sub_autoload_wildcards Auto-Loader Wildcards
- * Registered paths may also contain special "auto-loader" wildcard components
- * in the form of '%mymodule_abc', where the '%' part means that this path
- * component is a wildcard, and the 'mymodule_abc' part defines the prefix for a
- * load function, which here would be named mymodule_abc_load(). When a matching
- * path is requested, your load function will receive as its first argument the
- * path component in the position of the wildcard; load functions may also be
- * passed additional arguments (see "load arguments" in the return value
- * section below). For example, your module could register path
- * 'my-module/%mymodule_abc/edit':
- * @code
- *   $items['my-module/%mymodule_abc/edit'] = array(
- *     'page callback' => 'mymodule_abc_edit',
- *     'page arguments' => array(1),
- *   );
- * @endcode
- * When path 'my-module/123/edit' is requested, your load function
- * mymodule_abc_load() will be invoked with the argument '123', and should
- * load and return an "abc" object with internal id 123:
- * @code
- *   function mymodule_abc_load($abc_id) {
- *     return db_query("SELECT * FROM {mymodule_abc} WHERE abc_id = :abc_id", array(':abc_id' => $abc_id))->fetchObject();
- *   }
- * @endcode
- * This 'abc' object will then be passed into the callback functions defined
- * for the menu item, such as the page callback function mymodule_abc_edit()
- * to replace the integer 1 in the argument array. Note that a load function
- * should return NULL when it is unable to provide a loadable object. For
- * example, the node_load() function for the 'node/%node/edit' menu item will
- * return NULL for the path 'node/999/edit' if a node with a node ID of 999
- * does not exist. The menu routing system will return a 404 error in this case.
- *
- * @subsection sub_argument_wildcards Argument Wildcards
- * You can also define a %wildcard_to_arg() function (for the example menu
- * entry above this would be 'mymodule_abc_to_arg()'). The _to_arg() function
- * is invoked to retrieve a value that is used in the path in place of the
- * wildcard. A good example is user.module, which defines
- * user_uid_optional_to_arg() (corresponding to the menu entry
- * 'tracker/%user_uid_optional'). This function returns the user ID of the
- * current user.
- *
- * The _to_arg() function will get called with three arguments:
- * - $arg: A string representing whatever argument may have been supplied by
- *   the caller (this is particularly useful if you want the _to_arg()
- *   function only supply a (default) value if no other value is specified,
- *   as in the case of user_uid_optional_to_arg().
- * - $map: An array of all path fragments (e.g. array('node','123','edit') for
- *   'node/123/edit').
- * - $index: An integer indicating which element of $map corresponds to $arg.
- *
- * _load() and _to_arg() functions may seem similar at first glance, but they
- * have different purposes and are called at different times. _load()
- * functions are called when the menu system is collecting arguments to pass
- * to the callback functions defined for the menu item. _to_arg() functions
- * are called when the menu system is generating links to related paths, such
- * as the tabs for a set of MENU_LOCAL_TASK items.
  *
  * @section sec_render_tabs Rendering Menu Items As Tabs
  * You can also make groups of menu items to be rendered (by default) as tabs
@@ -857,12 +719,10 @@ function hook_menu_alter(&$items) {
  *     associative array as described above.
  *   - tabs: A list of (up to 2) tab levels that contain a list of of tabs keyed
  *     by their href, each one being an associative array as described above.
- * @param array $router_item
- *   The menu system router item of the page.
- * @param string $root_path
- *   The path to the root item for this set of tabs.
+ * @param string $route_name
+ *   The route name of the page.
  */
-function hook_menu_local_tasks(&$data, $router_item, $root_path) {
+function hook_menu_local_tasks(&$data, $route_name) {
   // Add an action linking to node/add to all pages.
   $data['actions']['node/add'] = array(
     '#theme' => 'menu_local_action',
@@ -889,8 +749,6 @@ function hook_menu_local_tasks(&$data, $router_item, $root_path) {
         ),
       ),
     ),
-    // Define whether this link is active. This can usually be omitted.
-    '#active' => ($router_item['path'] == $root_path),
   );
 }
 
@@ -903,14 +761,12 @@ function hook_menu_local_tasks(&$data, $router_item, $root_path) {
  * @param array $data
  *   An associative array containing tabs and actions. See
  *   hook_menu_local_tasks() for details.
- * @param array $router_item
- *   The menu system router item of the page.
- * @param string $root_path
- *   The path to the root item for this set of tabs.
+ * @param string $route_name
+ *   The route name of the page.
  *
  * @see hook_menu_local_tasks()
  */
-function hook_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+function hook_menu_local_tasks_alter(&$data, $route_name) {
 }
 
 /**
@@ -937,53 +793,6 @@ function hook_menu_local_actions_alter(&$local_actions) {
 function hook_local_task_alter(&$local_tasks) {
   // Remove a specified local task plugin.
   unset($local_tasks['example_plugin_id']);
-}
-
-/**
- * Alter links in the active trail before it is rendered as the breadcrumb.
- *
- * This hook is invoked by menu_get_active_breadcrumb() and allows alteration
- * of the breadcrumb links for the current page, which may be preferred instead
- * of setting a custom breadcrumb via drupal_set_breadcrumb().
- *
- * Implementations should take into account that menu_get_active_breadcrumb()
- * subsequently performs the following adjustments to the active trail *after*
- * this hook has been invoked:
- * - The last link in $active_trail is removed, if its 'href' is identical to
- *   the 'href' of $item. This happens, because the breadcrumb normally does
- *   not contain a link to the current page.
- * - The (second to) last link in $active_trail is removed, if the current $item
- *   is a MENU_DEFAULT_LOCAL_TASK. This happens in order to do not show a link
- *   to the current page, when being on the path for the default local task;
- *   e.g. when being on the path node/%/view, the breadcrumb should not contain
- *   a link to node/%.
- *
- * Each link in the active trail must contain:
- * - title: The localized title of the link.
- * - href: The system path to link to.
- * - localized_options: An array of options to pass to url().
- *
- * @param $active_trail
- *   An array containing breadcrumb links for the current page.
- * @param $item
- *   The menu router item of the current page.
- *
- * @see drupal_set_breadcrumb()
- * @see menu_get_active_breadcrumb()
- * @see menu_get_active_trail()
- * @see menu_set_active_trail()
- */
-function hook_menu_breadcrumb_alter(&$active_trail, $item) {
-  // Always display a link to the current page by duplicating the last link in
-  // the active trail. This means that menu_get_active_breadcrumb() will remove
-  // the last link (for the current page), but since it is added once more here,
-  // it will appear.
-  if (!drupal_is_front_page()) {
-    $end = end($active_trail);
-    if ($item['href'] == $end['href']) {
-      $active_trail[] = $end;
-    }
-  }
 }
 
 /**
@@ -1398,6 +1207,29 @@ function hook_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
+ * Perform alterations to the breadcrumb built by the BreadcrumbManager.
+ *
+ * @param array $breadcrumb
+ *   An array of breadcrumb link a tags, returned by the breadcrumb manager
+ *   build method, for example
+ *   @code
+ *     array('<a href="/">Home</a>');
+ *   @endcode
+ * @param array $attributes
+ *   Attributes representing the current page, coming from
+ *   \Drupal::request()->attributes.
+ * @param array $context
+ *   May include the following key:
+ *   - builder: the instance of
+ *     \Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface that constructed this
+ *     breadcrumb, or NULL if no builder acted based on the current attributes.
+ */
+function hook_system_breadcrumb_alter(array &$breadcrumb, array $attributes, array $context) {
+  // Add an item to the end of the breadcrumb.
+  $breadcrumb[] = Drupal::l(t('Text'), 'example_route_name');
+}
+
+/**
  * Return additional themes provided by modules.
  *
  * Only use this hook for testing purposes. Use a hidden MYMODULE_test.module
@@ -1553,7 +1385,7 @@ function hook_permission() {
  *     path, include it here. This path should be relative to the Drupal root
  *     directory.
  *   - template: If specified, this theme implementation is a template, and
- *     this is the template file without an extension. Do not put .tpl.php on
+ *     this is the template file without an extension. Do not put .html.twig on
  *     this file; that extension will be added automatically by the default
  *     rendering engine (which is Twig). If 'path' above is specified, the
  *     template should also be in this path.
@@ -1583,7 +1415,7 @@ function hook_permission() {
  *   - override preprocess functions: Set to TRUE when a theme does NOT want
  *     the standard preprocess functions to run. This can be used to give a
  *     theme FULL control over how variables are set. For example, if a theme
- *     wants total control over how certain variables in the page.tpl.php are
+ *     wants total control over how certain variables in the page.html.twig are
  *     set, this can be set to true. Please keep in mind that when this is used
  *     by a theme, that theme becomes responsible for making sure necessary
  *     variables are set.
@@ -1929,26 +1761,12 @@ function hook_rebuild() {
 }
 
 /**
- * Perform necessary actions before modules are installed.
+ * Perform necessary actions before a module is installed.
  *
- * This function allows all modules to react prior to a module being installed.
- *
- * @param $modules
- *   An array of modules about to be installed.
+ * @param string $module
+ *   The name of the module about to be installed.
  */
-function hook_modules_preinstall($modules) {
-  mymodule_cache_clear();
-}
-
-/**
- * Perform necessary actions before modules are enabled.
- *
- * This function allows all modules to react prior to a module being enabled.
- *
- * @param $module
- *   An array of modules about to be enabled.
- */
-function hook_modules_preenable($modules) {
+function hook_module_preinstall($module) {
   mymodule_cache_clear();
 }
 
@@ -1958,14 +1776,13 @@ function hook_modules_preenable($modules) {
  * This function differs from hook_install() in that it gives all other modules
  * a chance to perform actions when a module is installed, whereas
  * hook_install() is only called on the module actually being installed. See
- * module_enable() for a detailed description of the order in which install and
- * enable hooks are invoked.
+ * \Drupal\Core\Extension\ModuleHandler::install() for a detailed description of
+ * the order in which install hooks are invoked.
  *
  * @param $modules
  *   An array of the modules that were installed.
  *
- * @see module_enable()
- * @see hook_modules_enabled()
+ * @see \Drupal\Core\Extension\ModuleHandler::install()
  * @see hook_install()
  */
 function hook_modules_installed($modules) {
@@ -1975,45 +1792,13 @@ function hook_modules_installed($modules) {
 }
 
 /**
- * Perform necessary actions after modules are enabled.
+ * Perform necessary actions before a module is uninstalled.
  *
- * This function differs from hook_enable() in that it gives all other modules a
- * chance to perform actions when modules are enabled, whereas hook_enable() is
- * only called on the module actually being enabled. See module_enable() for a
- * detailed description of the order in which install and enable hooks are
- * invoked.
- *
- * @param $modules
- *   An array of the modules that were enabled.
- *
- * @see hook_enable()
- * @see hook_modules_installed()
- * @see module_enable()
+ * @param string $module
+ *   The name of the module about to be uninstalled.
  */
-function hook_modules_enabled($modules) {
-  if (in_array('lousy_module', $modules)) {
-    drupal_set_message(t('mymodule is not compatible with lousy_module'), 'error');
-    mymodule_disable_functionality();
-  }
-}
-
-/**
- * Perform necessary actions after modules are disabled.
- *
- * This function differs from hook_disable() in that it gives all other modules
- * a chance to perform actions when modules are disabled, whereas hook_disable()
- * is only called on the module actually being disabled.
- *
- * @param $modules
- *   An array of the modules that were disabled.
- *
- * @see hook_disable()
- * @see hook_modules_uninstalled()
- */
-function hook_modules_disabled($modules) {
-  if (in_array('lousy_module', $modules)) {
-    mymodule_enable_functionality();
-  }
+function hook_module_preuninstall($module) {
+  mymodule_cache_clear();
 }
 
 /**
@@ -2327,9 +2112,9 @@ function hook_requirements($phase) {
  * .module file is needed, it may be loaded with drupal_load().
  *
  * The tables declared by this hook will be automatically created when the
- * module is first enabled, and removed when the module is uninstalled. This
- * happens before hook_install() is invoked, and after hook_uninstall() is
- * invoked, respectively.
+ * module is installed, and removed when the module is uninstalled. This happens
+ * before hook_install() is invoked, and after hook_uninstall() is invoked,
+ * respectively.
  *
  * By declaring the tables used by your module via an implementation of
  * hook_schema(), these tables will be available on all supported database
@@ -2501,11 +2286,10 @@ function hook_query_TAG_alter(Drupal\Core\Database\Query\AlterableInterface $que
  *
  * Implementations of this hook are by convention declared in the module's
  * .install file. The implementation can rely on the .module file being loaded.
- * The hook will only be called the first time a module is enabled or after it
- * is re-enabled after being uninstalled. The module's schema version will be
- * set to the module's greatest numbered update hook. Because of this, any time
- * a hook_update_N() is added to the module, this function needs to be updated
- * to reflect the current version of the database schema.
+ * The hook will only be called when a module is installed. The module's schema
+ * version will be set to the module's greatest numbered update hook. Because of
+ * this, any time a hook_update_N() is added to the module, this function needs
+ * to be updated to reflect the current version of the database schema.
  *
  * See the @link http://drupal.org/node/146843 Schema API documentation @endlink
  * for details on hook_schema and how database tables are defined.
@@ -2519,9 +2303,7 @@ function hook_query_TAG_alter(Drupal\Core\Database\Query\AlterableInterface $que
  * be removed during uninstall should be removed with hook_uninstall().
  *
  * @see hook_schema()
- * @see module_enable()
- * @see hook_enable()
- * @see hook_disable()
+ * @see \Drupal\Core\Extension\ModuleHandler::install()
  * @see hook_uninstall()
  * @see hook_modules_installed()
  */
@@ -2601,7 +2383,7 @@ function hook_install() {
  * @param $sandbox
  *   Stores information for multipass updates. See above for more information.
  *
- * @throws Drupal\Core\Utility\UpdateException, PDOException
+ * @throws \Drupal\Core\Utility\UpdateException, PDOException
  *   In case of error, update hooks should throw an instance of
  *   Drupal\Core\Utility\UpdateException with a meaningful message for the user.
  *   If a database query fails for whatever reason, it will throw a
@@ -2657,12 +2439,14 @@ function hook_update_N(&$sandbox) {
 
   $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
 
+  if ($some_error_condition_met) {
+    // In case of an error, simply throw an exception with an error message.
+    throw new UpdateException('Something went wrong; here is what you should do.');
+  }
+
   // To display a message to the user when the update is completed, return it.
   // If you do not want to display a completion message, simply return nothing.
   return t('The update did what it was supposed to do.');
-
-  // In case of an error, simply throw an exception with an error message.
-  throw new UpdateException('Something went wrong; here is what you should do.');
 }
 
 /**
@@ -2762,35 +2546,6 @@ function hook_update_last_removed() {
  */
 function hook_uninstall() {
   variable_del('upload_file_types');
-}
-
-/**
- * Perform necessary actions after module is enabled.
- *
- * The hook is called every time the module is enabled. It should be
- * implemented in the module's .install file. The implementation can
- * rely on the .module file being loaded.
- *
- * @see module_enable()
- * @see hook_install()
- * @see hook_modules_enabled()
- */
-function hook_enable() {
-  mymodule_cache_rebuild();
-}
-
-/**
- * Perform necessary actions before module is disabled.
- *
- * The hook is called every time the module is disabled. It should be
- * implemented in the module's .install file. The implementation can rely
- * on the .module file being loaded.
- *
- * @see hook_uninstall()
- * @see hook_modules_disabled()
- */
-function hook_disable() {
-  mymodule_cache_rebuild();
 }
 
 /**
@@ -3201,7 +2956,6 @@ function hook_tokens_alter(array &$replacements, array $context) {
   else {
     $langcode = NULL;
   }
-  $sanitize = !empty($options['sanitize']);
 
   if ($context['type'] == 'node' && !empty($context['data']['node'])) {
     $node = $context['data']['node'];
@@ -3457,7 +3211,7 @@ function hook_countries_alter(&$countries) {
  *   - 'weight': Optional. Integer weight used for sorting connection types on
  *     the authorize.php form.
  *
- * @see Drupal\Core\FileTransfer\FileTransfer
+ * @see \Drupal\Core\FileTransfer\FileTransfer
  * @see authorize.php
  * @see hook_filetransfer_info_alter()
  * @see drupal_get_filetransfer_info()
@@ -3675,6 +3429,9 @@ function hook_link_alter(&$variables) {
  * *   base_table = "comment"
  * * )
  * @endcode
+ *
+ * Note that you must use double quotes; single quotes will not work in
+ * annotations.
  *
  * The available annotation classes are listed in this topic, and can be
  * identified when you are looking at the Drupal source code by having
