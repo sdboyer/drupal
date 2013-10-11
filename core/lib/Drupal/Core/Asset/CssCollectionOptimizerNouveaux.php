@@ -7,19 +7,20 @@
 
 namespace Drupal\Core\Asset;
 
+use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 
 /**
  * Optimizes a collection of CSS assets.
  */
-class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerInterface {
+class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerNouveauxInterface {
 
   /**
-   * A CSS asset grouper.
+   * A CSS asset aggregator.
    *
-   * @var \Drupal\Core\Asset\CssCollectionGrouper
+   * @var \Drupal\Core\Asset\AssetCollectionAggregatorInterface
    */
-  protected $grouper;
+  protected $aggregator;
 
   /**
    * A CSS asset optimizer.
@@ -45,8 +46,8 @@ class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerInterfac
   /**
    * Constructs a CssCollectionOptimizerNouveaux.
    *
-   * @param \Drupal\Core\Asset\AssetCollectionGrouperInterface
-   *   The grouper for CSS assets.
+   * @param \Drupal\Core\Asset\AssetCollectionAggregatorInterface
+   *   The aggregator for CSS assets.
    * @param \Drupal\Core\Asset\AssetOptimizerInterface
    *   The optimizer for a single CSS asset.
    * @param \Drupal\Core\Asset\AssetDumperInterface
@@ -54,8 +55,8 @@ class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerInterfac
    * @param \Drupal\Core\KeyValueStore\KeyValueStoreInterface
    *   The state key/value store.
    */
-  public function __construct(AssetCollectionGrouperInterface $grouper, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, KeyValueStoreInterface $state) {
-    $this->grouper = $grouper;
+  public function __construct(AssetCollectionAggregatorInterface $aggregator, AssetOptimizerInterface $optimizer, AssetDumperInterface $dumper, KeyValueStoreInterface $state) {
+    $this->aggregator = $aggregator;
     $this->optimizer = $optimizer;
     $this->dumper = $dumper;
     $this->state = $state;
@@ -64,9 +65,25 @@ class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerInterfac
   /**
    * {@inheritdoc}
    */
-  public function optimize(array $assets) {
-    $tsl = $this->grouper->group($assets);
-  }
+  public function optimize(AssetCollectionInterface $collection) {
+    $collection = $this->aggregator->aggregate($collection);
 
+    // Get the map of all aggregates that have been generated so far.
+    $map = $this->state->get('drupal_css_cache_files') ?: array();
+    foreach ($collection as $asset) {
+      if ($asset->isPreprocessable()) {
+        $id = $asset->id();
+        $uri = isset($map[$id]) ? $map[$id] : '';
+        if (empty($uri || !file_exists($uri))) {
+          // TODO optimizer needs to be refactored to basically just set filters.
+          $this->optimizer->optimize($asset);
+          // TODO refactor dumper to not need second param
+          $this->dumper->dump($asset, 'css');
+        }
+      }
+    }
+
+    return $collection;
+  }
 
 }

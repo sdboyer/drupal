@@ -6,8 +6,10 @@
  */
 
 namespace Drupal\Core\Asset;
+
 use Drupal\Core\Asset\Aggregate\CssAggregateAsset;
 use Drupal\Core\Asset\Collection\AssetCollection;
+use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Gliph\Traversal\DepthFirst;
 use Gliph\Visitor\DepthFirstBasicVisitor;
 use Drupal\Core\Asset\AssetGraph;
@@ -15,7 +17,7 @@ use Drupal\Core\Asset\AssetGraph;
 /**
  * Groups CSS assets.
  */
-class CssCollectionGrouperNouveaux {
+class CssCollectionGrouperNouveaux implements AssetCollectionAggregatorInterface {
 
   /**
    * @var AssetLibraryRepository
@@ -42,16 +44,10 @@ class CssCollectionGrouperNouveaux {
   }
 
   /**
-   * Groups a collection of assets into logical groups of asset collections.
-   *
-   * @param array $assets
-   *   An asset collection.
-   *
-   * @return array
-   *   A sorted array of asset groups.
+   * {@inheritdoc}
    */
-  public function group(AssetCollection $assets) {
-    $tsl = $this->getOptimalTSL($assets);
+  public function aggregate(AssetCollectionInterface $collection) {
+    $tsl = $this->getOptimalTSL($collection);
 
     // TODO ordering suddenly matters here...problem?
     $processed = new AssetCollection();
@@ -74,14 +70,14 @@ class CssCollectionGrouperNouveaux {
   /**
    * Gets a topologically sorted list that is optimal for grouping.
    *
-   * @param array $assets
+   * @param AssetCollectionInterface $assets
    *
    * @return array
    *   A linear list of assets that will enable optimal groupings.
    *
    * @throws \LogicException
    */
-  protected function getOptimalTSL(AssetCollection $assets) {
+  protected function getOptimalTSL(AssetCollectionInterface $assets) {
     // We need to define the optimum minimal group set, given metadata
     // boundaries across which aggregates cannot be safely made.
     $this->optimal = array();
