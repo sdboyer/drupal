@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\CssCollectionGrouperNouveaux.
+ * Contains \Drupal\Core\Asset\CssCollectionAggregator.
  */
 
 namespace Drupal\Core\Asset;
@@ -15,9 +15,9 @@ use Gliph\Visitor\DepthFirstBasicVisitor;
 use Drupal\Core\Asset\AssetGraph;
 
 /**
- * Groups CSS assets.
+ * Aggregates CSS assets.
  */
-class CssCollectionGrouperNouveaux implements AssetCollectionAggregatorInterface {
+class CssCollectionAggregator implements AssetCollectionAggregatorInterface {
 
   /**
    * @var AssetLibraryRepository
