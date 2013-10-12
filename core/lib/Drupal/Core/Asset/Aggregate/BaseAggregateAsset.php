@@ -57,9 +57,6 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
    */
   protected $assetIdMap = array();
 
-  protected $filters;
-  protected $sourceRoot;
-  protected $targetPath;
   protected $content;
 
   /**
@@ -69,15 +66,13 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
    *   Assets to add to this aggregate.
    * @param array $filters
    *   Filters to apply to this aggregate.
-   * @param array $sourceRoot TODO get rid of me
    */
-  public function __construct(AssetMetadataBag $metadata, $assets = array(), $filters = array(), $sourceRoot = array()) {
+  public function __construct(AssetMetadataBag $metadata, $assets = array(), $filters = array()) {
+    parent::__construct($filters);
+
     $this->metadata = $metadata;
-    $this->sourceRoot = $sourceRoot;
     $this->assetStorage = new \SplObjectStorage();
     $this->nestedStorage = new \SplObjectStorage();
-
-    $this->filters = new FilterCollection($filters);
 
     foreach ($assets as $asset) {
       $this->add($asset);
@@ -293,27 +288,6 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   /**
    * {@inheritdoc}
    */
-  public function ensureFilter(FilterInterface $filter) {
-    $this->filters->ensure($filter);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFilters() {
-    return $this->filters->all();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function clearFilters() {
-    $this->filters->clear();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function load(FilterInterface $additionalFilter = NULL) {
     // loop through leaves and load each asset
     $parts = array();
@@ -353,55 +327,6 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function getSourceRoot() {
-    return $this->sourceRoot;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSourcePath() {
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getTargetPath() {
-    return $this->targetPath;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setTargetPath($targetPath) {
-    $this->targetPath = $targetPath;
-  }
-
-  /**
-   * Returns the highest last-modified value of all contained assets.
-   *
-   * @return integer|null
-   *   A UNIX timestamp
-   */
-  public function getLastModified() {
-    if (!count($this->assetStorage)) {
-      return;
-    }
-
-    $mtime = 0;
-    foreach ($this->assetStorage as $asset) {
-      $assetMtime = $asset->getLastModified();
-      if ($assetMtime > $mtime) {
-        $mtime = $assetMtime;
-      }
-    }
-
-    return $mtime;
-  }
-
-  /**
    * TODO Assetic uses their iterator to clone, then populate values and return here; is that a good model for us?
    */
   public function getIterator() {
@@ -418,7 +343,6 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   public function isEmpty() {
     return $this->assetStorage->count() === 0;
   }
-
 
   /**
    * Ensures that the asset is of the correct subtype (e.g., css vs. js).

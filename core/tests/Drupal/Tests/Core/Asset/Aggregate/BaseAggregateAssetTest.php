@@ -31,7 +31,6 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   public function testId() {
-
   }
 
   public function testGetAssetType() {
