@@ -43,6 +43,12 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertContains($js, $this->collection);
   }
 
+  public function testContains() {
+    $css = $this->createMockFileAsset('css');
+    $this->collection->add($css);
+    $this->assertTrue($this->collection->contains($css));
+  }
+
   public function testGetCss() {
     $css = $this->createMockFileAsset('css');
     $js = $this->createMockFileAsset('js');

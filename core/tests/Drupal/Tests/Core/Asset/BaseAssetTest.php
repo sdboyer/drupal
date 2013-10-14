@@ -25,9 +25,9 @@ class BaseAssetTest extends AssetUnitTest {
   /**
    * Creates a BaseAsset for testing purposes.
    *
-   * @param $type
+   * @param array $defaults
    *
-   * @return BaseAsset;
+   * @return BaseAsset
    */
   public function createBaseAsset($defaults = array()) {
     $mockmeta = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', $defaults);
