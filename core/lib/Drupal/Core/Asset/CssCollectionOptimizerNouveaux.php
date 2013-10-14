@@ -74,7 +74,7 @@ class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerNouveaux
       if ($asset->isPreprocessable()) {
         $id = $asset->id();
         $uri = isset($map[$id]) ? $map[$id] : '';
-        if (empty($uri || !file_exists($uri))) {
+        if (empty($uri) || !file_exists($uri)) {
           // TODO optimizer needs to be refactored to basically just set filters.
           $this->optimizer->optimize($asset);
           // TODO refactor dumper to not need second param
