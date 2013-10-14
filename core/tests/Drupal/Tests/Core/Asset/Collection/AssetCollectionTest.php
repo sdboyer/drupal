@@ -200,4 +200,47 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertTrue($this->collection->isEmpty());
   }
 
+  public function testSort() {
+    $stub1 = $this->createMockFileAsset('css');
+    $stub2 = $this->createMockFileAsset('js');
+    $stub3 = $this->createMockFileAsset('css');
+
+    $this->collection->add($stub1);
+    $this->collection->add($stub2);
+    $this->collection->add($stub3);
+
+    $assets = array(
+      $stub1->id() => $stub1,
+      $stub2->id() => $stub2,
+      $stub3->id() => $stub3,
+    );
+
+    $dummysort = function ($a, $b) {
+      return strnatcasecmp($a, $b);
+    };
+
+    $this->collection->sort($dummysort);
+    uksort($assets, $dummysort);
+    $this->assertEquals($assets, $this->collection->all());
+  }
+
+    public function testKsort() {
+    $stub1 = $this->createMockFileAsset('css');
+    $stub2 = $this->createMockFileAsset('js');
+    $stub3 = $this->createMockFileAsset('css');
+
+    $this->collection->add($stub1);
+    $this->collection->add($stub2);
+    $this->collection->add($stub3);
+
+    $assets = array(
+      $stub1->id() => $stub1,
+      $stub2->id() => $stub2,
+      $stub3->id() => $stub3,
+    );
+
+    $this->collection->ksort();
+    ksort($assets);
+    $this->assertEquals($assets, $this->collection->all());
+  }
 }

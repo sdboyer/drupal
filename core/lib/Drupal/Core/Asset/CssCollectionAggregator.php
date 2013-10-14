@@ -49,7 +49,6 @@ class CssCollectionAggregator implements AssetCollectionAggregatorInterface {
   public function aggregate(AssetCollectionInterface $collection) {
     $tsl = $this->sorter->groupAndSort($collection);
 
-    // TODO ordering suddenly matters here. replace with an order-guaranteed construct.
     $processed = new AssetCollection();
     $last_key = FALSE;
     foreach ($tsl as $asset) {

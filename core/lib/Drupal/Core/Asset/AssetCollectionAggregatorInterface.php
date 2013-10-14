@@ -19,10 +19,10 @@ interface AssetCollectionAggregatorInterface {
    * @param AssetCollectionInterface $collection
    *   The AssetCollectionInterface to aggregate.
    *
-   * // TODO AssetCollectionInterface is not the right thing, as it makes no ordering guarantees. Maybe AssetAggregateInterface?
    * @return AssetCollectionInterface
-   *   A new AssetCollectionInterface containing the aggregated assets,
-   *   represented as objects implementing AssetAggregateInterface.
+   *   A new AssetCollectionInterface containing the aggregated assets. The
+   *   collection is populated by objects implementing at least AssetInterface,
+   *   and possibly also AssetAggregateInterface.
    */
   public function aggregate(AssetCollectionInterface $collection);
 }

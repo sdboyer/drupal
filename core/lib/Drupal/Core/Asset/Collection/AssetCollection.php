@@ -174,6 +174,20 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function sort($callback) {
+    uksort($this->assetIdMap, $callback);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function ksort() {
+    ksort($this->assetIdMap);
+  }
+
+  /**
    * Checks if the asset library is frozen, throws an exception if it is.
    */
   protected function attemptWrite() {

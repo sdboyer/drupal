@@ -86,4 +86,20 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    * @return \Traversable
    */
   public function getJs();
+
+  /**
+   * Sorts contained assets by id by passing the provided callback to uksort().
+   *
+   * @param $callback
+   *
+   * @return void
+   */
+  public function sort($callback);
+
+  /**
+   * Sorts contained assets via ksort() on their ids.
+   *
+   * @return void
+   */
+  public function ksort();
 }
