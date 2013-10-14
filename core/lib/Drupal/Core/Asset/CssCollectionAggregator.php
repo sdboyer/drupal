@@ -11,9 +11,6 @@ use Drupal\Core\Asset\Aggregate\CssAggregateAsset;
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\GroupSort\AssetGroupSorterInterface;
-use Gliph\Traversal\DepthFirst;
-use Gliph\Visitor\DepthFirstBasicVisitor;
-use Drupal\Core\Asset\AssetGraph;
 
 /**
  * Aggregates CSS assets.
