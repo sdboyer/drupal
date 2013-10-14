@@ -131,8 +131,10 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
     }
     $this->ensureCorrectType($asset);
 
-    $this->assetStorage->attach($asset);
-    $this->assetIdMap[$asset->id()] = $asset;
+    if (!$this->contains($asset)) {
+      $this->assetStorage->attach($asset);
+      $this->assetIdMap[$asset->id()] = $asset;
+    }
 
     if ($asset instanceof AssetAggregateInterface) {
       $this->nestedStorage->attach($asset);
