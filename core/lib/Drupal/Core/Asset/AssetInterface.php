@@ -8,7 +8,7 @@
 namespace Drupal\Core\Asset;
 
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
 /**
  * Represents a CSS or Javascript asset.
@@ -21,7 +21,7 @@ interface AssetInterface extends AsseticAssetInterface {
   /**
    * Returns the metadata bag for this asset.
    *
-   * @return AssetMetadataBag
+   * @return AssetMetadataInterface
    */
   public function getMetadata();
 

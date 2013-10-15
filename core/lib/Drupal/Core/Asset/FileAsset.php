@@ -10,13 +10,13 @@ namespace Drupal\Core\Asset;
 use Assetic\Util\PathUtils;
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\BaseAsset;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
 class FileAsset extends BaseAsset {
 
   protected $source;
 
-  public function __construct(AssetMetadataBag $metadata, $source, $filters = array()) {
+  public function __construct(AssetMetadataInterface $metadata, $source, $filters = array()) {
     $sourceRoot = dirname($source);
     $sourcePath = basename($source);
     $this->source = $source;

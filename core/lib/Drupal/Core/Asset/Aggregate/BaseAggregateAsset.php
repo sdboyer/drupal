@@ -14,7 +14,7 @@ use Drupal\Core\Asset\AssetInterface;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\Aggregate\AssetAggregateInterface;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
 /**
  * Base class for representing aggregate assets.
@@ -23,7 +23,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \IteratorAggregate, AssetInterface, AssetAggregateInterface {
 
   /**
-   * @var \Drupal\Core\Asset\Metadata\AssetMetadataBag
+   * @var \Drupal\Core\Asset\Metadata\AssetMetadataInterface
    */
   protected $metadata;
 
@@ -60,14 +60,14 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   protected $content;
 
   /**
-   * @param AssetMetadataBag $metadata
+   * @param AssetMetadataInterface $metadata
    *   The metadata bag for this aggregate.
    * @param array $assets
    *   Assets to add to this aggregate.
    * @param array $filters
    *   Filters to apply to this aggregate.
    */
-  public function __construct(AssetMetadataBag $metadata, $assets = array(), $filters = array()) {
+  public function __construct(AssetMetadataInterface $metadata, $assets = array(), $filters = array()) {
     parent::__construct($filters);
 
     $this->metadata = $metadata;

@@ -18,7 +18,7 @@ namespace Drupal\Core\Asset\Metadata;
  * TODO this is totally not specific to assets - move it somewhere more generic?
  * TODO it's maybe not so important to rigorously control access to the defaults data
  */
-abstract class AssetMetadataBag implements \IteratorAggregate, \Countable {
+abstract class AssetMetadataBag implements AssetMetadataInterface {
 
   /**
    * Contains default values.
@@ -39,10 +39,7 @@ abstract class AssetMetadataBag implements \IteratorAggregate, \Countable {
   }
 
   /**
-   * Indicates the type of asset for which this metadata is intended.
-   *
-   * @return string
-   *   A string indicating type - 'js' or 'css' are the expected values.
+   * {@inheritdoc}
    */
   abstract public function getType();
 
@@ -50,46 +47,60 @@ abstract class AssetMetadataBag implements \IteratorAggregate, \Countable {
     return array_replace_recursive($this->default, $this->explicit);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function keys() {
     return array_keys($this->all());
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function has($key) {
     return array_key_exists($key, $this->explicit) ||
       array_key_exists($key, $this->default);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function set($key, $value) {
     $this->explicit[$key] = $value;
   }
 
   /**
-   * Reverts the associated with the passed key back to its default.
-   *
-   * If no default is set, the value for that key simply disappears.
-   *
-   * @param $key
-   *   The key identifying the value to revert.
-   *
-   * @return void
+   * {@inheritdoc}
    */
   public function revert($key) {
     unset($this->explicit[$key]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function isDefault($key) {
     return !array_key_exists($key, $this->explicit) &&
       array_key_exists($key, $this->default);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function add(array $values = array()) {
     $this->explicit = array_replace_recursive($this->explicit, $values);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function replace(array $values = array()) {
     $this->explicit = $values;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function get($key) {
     if (array_key_exists($key, $this->explicit)) {
       return $this->explicit[$key];
@@ -100,10 +111,16 @@ abstract class AssetMetadataBag implements \IteratorAggregate, \Countable {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getIterator() {
     return new \ArrayIterator($this->all());
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function count() {
     return count($this->all());
   }

@@ -8,7 +8,7 @@
 namespace Drupal\Core\Asset;
 
 use Drupal\Core\Asset\AssetInterface;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
 /**
  * A base abstract asset.
@@ -23,7 +23,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, AssetOrderingInterface {
 
   /**
-   * @var AssetMetadataBag
+   * @var AssetMetadataInterface
    */
   protected $metadata;
 
@@ -33,7 +33,7 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
 
   protected $predecessors = array();
 
-  public function __construct(AssetMetadataBag $metadata, $filters = array(), $sourceRoot = NULL, $sourcePath = NULL) {
+  public function __construct(AssetMetadataInterface $metadata, $filters = array(), $sourceRoot = NULL, $sourcePath = NULL) {
     $this->metadata = $metadata;
     parent::__construct($filters, $sourceRoot, $sourcePath);
   }

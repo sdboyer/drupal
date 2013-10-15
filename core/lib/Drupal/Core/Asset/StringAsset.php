@@ -10,7 +10,7 @@ namespace Drupal\Core\Asset;
 use Assetic\Filter\FilterInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Asset\BaseAsset;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
 class StringAsset extends BaseAsset {
 
@@ -26,7 +26,7 @@ class StringAsset extends BaseAsset {
 
   protected $lastModified;
 
-  public function __construct(AssetMetadataBag $metadata, $content, $filters = array()) {
+  public function __construct(AssetMetadataInterface $metadata, $content, $filters = array()) {
     if (!is_string($content)) {
       throw new \InvalidArgumentException('StringAsset requires a string for its content.');
     }

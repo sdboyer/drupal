@@ -10,14 +10,14 @@ namespace Drupal\Core\Asset;
 use Assetic\Util\PathUtils;
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\BaseAsset;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 class ExternalAsset extends BaseAsset {
 
   protected $sourceUrl;
 
-  public function __construct(AssetMetadataBag $metadata, $sourceUrl, $filters = array()) {
+  public function __construct(AssetMetadataInterface $metadata, $sourceUrl, $filters = array()) {
     if (FALSE === strpos($sourceUrl, '://')) {
       throw new \InvalidArgumentException(sprintf('"%s" is not a valid URL.', $sourceUrl));
     }

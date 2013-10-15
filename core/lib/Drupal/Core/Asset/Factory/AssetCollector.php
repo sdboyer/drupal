@@ -8,7 +8,7 @@ namespace Drupal\Core\Asset\Factory;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\Exception\LockedObjectException;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 use Drupal\Core\Asset\Metadata\CssMetadataBag;
 use Drupal\Core\Asset\Metadata\JsMetadataBag;
 
@@ -220,7 +220,7 @@ class AssetCollector implements AssetCollectorInterface {
    * @throws \InvalidArgumentException
    *   Thrown if an invalid metadata type is provided (i.e., not 'css' or 'js').
    */
-  public function setDefaultMetadata(AssetMetadataBag $metadata) {
+  public function setDefaultMetadata(AssetMetadataInterface $metadata) {
     if ($this->isLocked()) {
       throw new LockedObjectException('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
     }

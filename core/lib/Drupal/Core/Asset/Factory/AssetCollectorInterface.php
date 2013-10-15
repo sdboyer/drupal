@@ -8,7 +8,7 @@
 namespace Drupal\Core\Asset\Factory;
 
 use Drupal\Core\Asset\Exception\LockedObjectException;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 
@@ -171,14 +171,14 @@ interface AssetCollectorInterface {
    * Sets the default metadata for a particular type.
    *
    * The type of metadata is determined internally by calling
-   * AssetMetadataBag::getType().
+   * AssetMetadataInterface::getType().
    *
-   * @param AssetMetadataBag $metadata
+   * @param AssetMetadataInterface $metadata
    *   The default metadata object.
    *
    * @return void
    */
-  public function setDefaultMetadata(AssetMetadataBag $metadata);
+  public function setDefaultMetadata(AssetMetadataInterface $metadata);
 
   /**
    * Gets a clone of the metadata bag for a given asset type.
@@ -190,7 +190,7 @@ interface AssetCollectorInterface {
    * @param $type
    *   A string, 'css' or 'js', indicating the type of metadata to retrieve.
    *
-   * @return AssetMetadataBag
+   * @return AssetMetadataInterface
    *
    * @throws \InvalidArgumentException
    *   Thrown if a type other than 'css' or 'js' is provided.

@@ -8,7 +8,7 @@
 namespace Drupal\Core\Asset\Aggregate;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
-use Drupal\Core\Asset\Metadata\AssetMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 use Drupal\Core\Asset\Metadata\CssMetadataBag;
 
 /**
@@ -21,7 +21,7 @@ class CssAggregateAsset extends BaseAggregateAsset {
    *
    * @throws \Drupal\Core\Asset\Exception\AssetTypeMismatchException
    */
-  public function __construct(AssetMetadataBag $metadata, $assets = array(), $filters = array(), $sourceRoot = array()) {
+  public function __construct(AssetMetadataInterface $metadata, $assets = array(), $filters = array(), $sourceRoot = array()) {
     if (!$metadata instanceof CssMetadataBag) {
       throw new AssetTypeMismatchException('CSS aggregates require CSS metadata bags.');
     }
