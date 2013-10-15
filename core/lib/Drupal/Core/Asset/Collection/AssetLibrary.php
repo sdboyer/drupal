@@ -7,10 +7,10 @@
 
 namespace Drupal\Core\Asset\Collection;
 
-use Drupal\Core\Asset\AssetOrderingInterface;
+use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Collection\AssetCollection;
 
-class AssetLibrary extends AssetCollection implements AssetOrderingInterface {
+class AssetLibrary extends AssetCollection implements DependencyInterface {
 
   /**
    * The asset library's title.

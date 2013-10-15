@@ -7,8 +7,6 @@
 
 namespace Drupal\Core\Asset\Collection;
 use Drupal\Core\Asset\AssetInterface;
-use Assetic\Asset\AssetInterface as AsseticAssetInterface;
-use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 /**
  * Describes an asset collection: a container for assets.
@@ -16,9 +14,9 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * Asset collections are nothing more than a mechanism for holding and easily
  * moving a set of a specific type of asset around.
  *
- * This interface contains the subset of methods that feasible for
- * AssetAggregateInterface to share; because certain internal sequencing and
- * state is important to aggregates, they cannot behave like a full collection.
+ * This interface contains the subset of methods that are shared with
+ * AssetAggregateInterface. Because certain internal ordering and state is
+ * important to aggregates, they cannot behave like a full collection.
  *
  * @see \Drupal\Core\Asset\Aggregate\AssetAggregateInterface
  * @see \Drupal\Core\Asset\Collection\AssetCollectionInterface
@@ -66,6 +64,7 @@ interface AssetCollectionBasicInterface extends \Traversable {
    *   FALSE if no asset could be found with that id, or an AssetInterface.
    *
    * @throws \OutOfBoundsException
+   *   Thrown if no asset could be found by the given id and $graceful = FALSE.
    */
   public function getById($id, $graceful = TRUE);
 

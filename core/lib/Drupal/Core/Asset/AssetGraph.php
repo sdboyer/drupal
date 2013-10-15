@@ -13,7 +13,7 @@ use Gliph\Graph\DirectedAdjacencyList;
  * An extension of the DirectedAdjacencyGraph concept designed specifically for
  * Drupal's asset management use case.
  *
- * Drupal allows for two types of sequencing declarations:
+ * Drupal allows for two types of positioning declarations:
  *
  *   - Dependencies, which guarantee that dependent asset must be present and
  *     that it must precede the asset declaring it as a dependency.
@@ -46,13 +46,14 @@ class AssetGraph extends DirectedAdjacencyList {
    * Creates a new AssetGraph object.
    *
    * AssetGraphs are a specialization of DirectedAdjacencyGraph that is tailored
-   * to handling the sequencing information carried by AssetOrderingInterface
+   * to handling the ordering information carried by RelativePositionInterface
    * instances.
    *
    * @param bool $process
-   *   Whether or not to automatically process sequencing as vertices are added.
-   *   This should be left as TRUE in most every user-facing case; its primary
-   *   audience is for the creation of a graph transpose.
+   *   Whether or not to automatically process positioning metadata as vertices
+   *   are added. This should be left as TRUE in most every user-facing case;
+   *   the primary use case for setting FALSE is the creation of a graph
+   *   transpose.
    */
   public function __construct($process = TRUE) {
     parent::__construct();
@@ -78,7 +79,7 @@ class AssetGraph extends DirectedAdjacencyList {
   }
 
   /**
-   * Processes all sequencing information for a given vertex.
+   * Processes all positioning information for a given vertex.
    *
    * @param AssetInterface $vertex
    */
@@ -100,7 +101,7 @@ class AssetGraph extends DirectedAdjacencyList {
     }
 
     // Add watches for this vertex, if it implements the interface.
-    if ($vertex instanceof AssetOrderingInterface) {
+    if ($vertex instanceof RelativePositionInterface) {
       // TODO this logic assumes collections enforce uniqueness - ensure that's the case.
       foreach ($vertex->getPredecessors() as $predecessor) {
         // Normalize to id string.
@@ -138,7 +139,7 @@ class AssetGraph extends DirectedAdjacencyList {
    * Remove a vertex from the graph. Unsupported in AssetGraph.
    *
    * Vertex removals are unsupported because it would necessitate permanent
-   * bookkeeping on sequencing data. With forty or fifty assets, each having
+   * bookkeeping on positioning data. With forty or fifty assets, each having
    * only a few dependencies, there would be a fair bit of pointless iterating.
    *
    * @throws \LogicException
