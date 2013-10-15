@@ -11,6 +11,7 @@ use Drupal\Core\Asset\Exception\LockedObjectException;
 use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
+use Drupal\Core\Asset\Metadata\MetadataFactoryInterface;
 
 /**
  * Interface for asset collectors, which help to create and collect assets.
@@ -168,17 +169,17 @@ interface AssetCollectorInterface {
   public function isLocked();
 
   /**
-   * Sets the default metadata for a particular type.
+   * Sets the metadata factory to use for generating asset metadata.
    *
-   * The type of metadata is determined internally by calling
-   * AssetMetadataInterface::getType().
-   *
-   * @param AssetMetadataInterface $metadata
-   *   The default metadata object.
+   * @param MetadataFactoryInterface $factory
+   *   The factory to use.
    *
    * @return void
+   *
+   * @throws LockedObjectException
+   *   Thrown if the collector is locked when this method is called.
    */
-  public function setDefaultMetadata(AssetMetadataInterface $metadata);
+  public function setMetadataFactory(MetadataFactoryInterface $factory);
 
   /**
    * Gets a clone of the metadata bag for a given asset type.

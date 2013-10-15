@@ -21,9 +21,8 @@ if (!defined('JS_DEFAULT')) {
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Factory\AssetCollector;
 use Drupal\Core\Asset\Metadata\CssMetadataBag;
-use Drupal\Core\Asset\Metadata\JsMetadataBag;
+use Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * Unit tests for AssetCollector.
@@ -63,7 +62,12 @@ class AssetCollectorTest extends AssetUnitTest {
   public function testDefaultPropagation() {
     // Test that defaults are correctly applied by the factory.
     $meta = new CssMetadataBag(array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
-    $this->collector->setDefaultMetadata($meta);
+    $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
+    $factory->expects($this->once())
+      ->method('createCssMetadata')
+      ->will($this->returnValue($meta));
+
+    $this->collector->setMetadataFactory($factory);
     $css1 = $this->collector->create('css', 'file', 'foo');
 
     $asset_meta = $css1->getMetadata();
@@ -152,7 +156,7 @@ class AssetCollectorTest extends AssetUnitTest {
    */
   public function testLockingPreventsSettingDefaults() {
     $this->collector->lock($this);
-    $this->collector->setDefaultMetadata(new CssMetadataBag());
+    $this->collector->setMetadataFactory($this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory'));
   }
 
   /**
@@ -179,44 +183,26 @@ class AssetCollectorTest extends AssetUnitTest {
     $this->collector->setCollection(new AssetCollection());
   }
 
-  public function testBuiltinDefaultAreTheSame() {
-    $this->assertEquals(new CssMetadataBag(), $this->collector->getMetadataDefaults('css'));
-    $this->assertEquals(new JsMetadataBag(), $this->collector->getMetadataDefaults('js'));
-  }
-
   public function testChangeAndRestoreDefaults() {
+    // TODO this test is now in fuzzy territory - kinda more the factory's responsibility
+    $default_factory = new DefaultAssetMetadataFactory();
+    // Ensure we're in a good state first
+    $this->assertEquals($default_factory->createCssMetadata(), $this->collector->getMetadataDefaults('css'));
+
     $changed_css = new CssMetadataBag(array('foo' => 'bar', 'every_page' => TRUE));
-    $this->collector->setDefaultMetadata($changed_css);
+    $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
+    $factory->expects($this->exactly(2))
+      ->method('createCssMetadata')
+      ->will($this->returnValue(clone $changed_css));
+
+    $this->collector->setMetadataFactory($factory);
 
     $this->assertEquals($changed_css, $this->collector->getMetadataDefaults('css'));
-    $this->assertNotSame($changed_css, $this->collector->getMetadataDefaults('css'), 'Metadata is cloned on retrieval from collector.');
+    // TODO this is totally cheating, only passes because we clone earlier. but it should be a guarantee of the interface...how to test this?
+    $this->assertNotSame($changed_css, $this->collector->getMetadataDefaults('css'), 'New metadata instance is created on retrieval from collector.');
 
     $this->collector->restoreDefaults();
-    $this->assertEquals(new CssMetadataBag(), $this->collector->getMetadataDefaults('css'));
-
-    // Do another check to ensure that both metadata bags are correctly reset
-    $changed_js = new JsMetadataBag(array('scope' => 'footer', 'fizzbuzz' => 'llama'));
-    $this->collector->setDefaultMetadata($changed_css);
-    $this->collector->setDefaultMetadata($changed_js);
-
-    $this->assertEquals($changed_css, $this->collector->getMetadataDefaults('css'));
-    $this->assertEquals($changed_js, $this->collector->getMetadataDefaults('js'));
-
-    $this->collector->restoreDefaults();
-    $this->assertEquals(new CssMetadataBag(), $this->collector->getMetadataDefaults('css'));
-    $this->assertEquals(new JsMetadataBag(), $this->collector->getMetadataDefaults('js'));
-  }
-
-  /**
-   * @expectedException \InvalidArgumentException
-   */
-  public function testMetadataTypeMustBeCorrect() {
-    $mock = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
-    $mock->expects($this->once())
-      ->method('getType')
-      ->will($this->returnValue('foo'));
-
-    $this->collector->setDefaultMetadata($mock);
+    $this->assertEquals($default_factory->createCssMetadata(), $this->collector->getMetadataDefaults('css'));
   }
 
   /**

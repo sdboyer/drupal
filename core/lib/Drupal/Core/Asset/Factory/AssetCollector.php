@@ -8,9 +8,8 @@ namespace Drupal\Core\Asset\Factory;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\Exception\LockedObjectException;
-use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
-use Drupal\Core\Asset\Metadata\CssMetadataBag;
-use Drupal\Core\Asset\Metadata\JsMetadataBag;
+use Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory;
+use Drupal\Core\Asset\Metadata\MetadataFactoryInterface;
 
 /**
  * A class that helps to create and collect assets.
@@ -50,20 +49,11 @@ class AssetCollector implements AssetCollectorInterface {
   protected $lockKey;
 
   /**
-   * The default metadata bag that will be cloned and injected into all CSS
-   * assets that are created.
+   * The factory that creates metadata bags for assets.
    *
-   * @var CssMetadataBag
+   * @var MetadataFactoryInterface
    */
-  protected $defaultCssMetadata;
-
-  /**
-   * The default metadata bag that will be cloned and injected into all JS
-   * assets that are created.
-   *
-   * @var JsMetadataBag
-   */
-  protected $defaultJsMetadata;
+  protected $metadataFactory;
 
   /**
    * The last CSS asset created by this collector, if any.
@@ -86,8 +76,13 @@ class AssetCollector implements AssetCollectorInterface {
     'string' => 'Drupal\\Core\\Asset\\StringAsset',
   );
 
-  public function __construct(AssetCollectionInterface $collection = NULL) {
-    $this->restoreDefaults();
+  public function __construct(AssetCollectionInterface $collection = NULL, MetadataFactoryInterface $factory = NULL) {
+    if (!is_null($factory)) {
+      $this->metadataFactory = $factory;
+    }
+    else {
+      $this->restoreDefaults();
+    }
 
     if (!is_null($collection)) {
       $this->setCollection($collection);
@@ -121,7 +116,7 @@ class AssetCollector implements AssetCollectorInterface {
 
     $metadata = $this->getMetadataDefaults($asset_type);
     if (!empty($options)) {
-      $metadata->replace($options);
+      $metadata->add($options);
     }
 
     $class = $this->classMap[$source_type];
@@ -216,26 +211,13 @@ class AssetCollector implements AssetCollectorInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * @throws \InvalidArgumentException
-   *   Thrown if an invalid metadata type is provided (i.e., not 'css' or 'js').
    */
-  public function setDefaultMetadata(AssetMetadataInterface $metadata) {
+  public function setMetadataFactory(MetadataFactoryInterface $factory) {
     if ($this->isLocked()) {
       throw new LockedObjectException('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
     }
 
-    $type = $metadata->getType();
-
-    if ($type === 'css') {
-      $this->defaultCssMetadata = $metadata;
-    }
-    elseif ($type === 'js') {
-      $this->defaultJsMetadata = $metadata;
-    }
-    else {
-      throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are supported, "%s" requested.', $type));
-    }
+    $this->metadataFactory = $factory;
   }
 
   /**
@@ -243,10 +225,10 @@ class AssetCollector implements AssetCollectorInterface {
    */
   public function getMetadataDefaults($type) {
     if ($type === 'css') {
-      return clone $this->defaultCssMetadata;
+      return $this->metadataFactory->createCssMetadata();
     }
     elseif ($type === 'js') {
-      return clone $this->defaultJsMetadata;
+      return $this->metadataFactory->createJsMetadata();
     }
     else {
       throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are supported, "%s" requested.', $type));
@@ -260,8 +242,8 @@ class AssetCollector implements AssetCollectorInterface {
     if ($this->isLocked()) {
       throw new LockedObjectException('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
     }
-    $this->defaultCssMetadata = new CssMetadataBag();
-    $this->defaultJsMetadata = new JsMetadataBag();
+
+    $this->metadataFactory = new DefaultAssetMetadataFactory();
   }
 }
 
