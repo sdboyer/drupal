@@ -54,28 +54,6 @@ interface AssetMetadataInterface extends \Countable, \IteratorAggregate {
   public function set($key, $value);
 
   /**
-   * Reverts the associated with the passed key back to its default.
-   *
-   * If no default is set, the value for that key simply disappears.
-   *
-   * @param $key
-   *   The key identifying the value to revert.
-   *
-   * @return void
-   */
-  public function revert($key);
-
-  /**
-   * Indicates whether the provided key is a default value.
-   *
-   * @param $key
-   *
-   * @return bool
-   *   TRUE if the value is a default, FALSE if it is explicit or nonexistent.
-   */
-  public function isDefault($key);
-
-  /**
    * Adds a set of key/value pairs into the bag. Replaces existing keys.
    *
    * @param array $values

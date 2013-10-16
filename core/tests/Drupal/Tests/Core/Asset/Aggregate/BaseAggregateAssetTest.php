@@ -35,7 +35,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    * @return BaseAggregateAsset
    */
   public function getAggregate($defaults = array()) {
-    $mockmeta = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', $defaults);
+    $mockmeta = $this->createStubAssetMetadata();
     return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
   }
 
@@ -51,7 +51,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   public function testGetAssetType() {
-    $mockmeta = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $mockmeta = $this->getMock('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', array(), array(), '', FALSE);
     $mockmeta->expects($this->once())
       ->method('getType')
       ->will($this->returnValue('unicorns'));
@@ -61,7 +61,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   public function testGetMetadata() {
-    $mockmeta = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $mockmeta = $this->createStubAssetMetadata();
     $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
 
     $this->assertSame($mockmeta, $aggregate->getMetadata());
@@ -70,7 +70,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   public function testAdd() {
     $aggregate = $this->getAggregate();
 
-    $metamock = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $metamock = $this->createStubAssetMetadata();
     $asset = $this->getMock('\\Drupal\\Core\\Asset\\FileAsset', array(), array($metamock, 'foo'));
     $asset->expects($this->once())
       ->method('id')

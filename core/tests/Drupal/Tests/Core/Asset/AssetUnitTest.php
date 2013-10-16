@@ -6,7 +6,9 @@
  */
 
 namespace Drupal\Tests\Core\Asset;
+
 use Drupal\Core\Asset\FileAsset;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -36,5 +38,20 @@ abstract class AssetUnitTest extends UnitTestCase {
       ->will($this->returnValue($this->randomName()));
 
     return $asset;
+  }
+
+  /**
+   * Creates an asset metadata stub with basic values.
+   *
+   * @param string $type
+   * @param array $values
+   *
+   * @return AssetMetadataBag
+   */
+  public function createStubAssetMetadata($type = 'css', $values = array()) {
+    return $this->getMockBuilder('Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag')
+      ->setConstructorArgs(array($type, $values))
+      ->setMethods(array()) // mock nothing
+      ->getMock();
   }
 }

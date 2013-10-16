@@ -20,7 +20,7 @@ if (!defined('JS_DEFAULT')) {
 
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Factory\AssetCollector;
-use Drupal\Core\Asset\Metadata\CssMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
 
@@ -56,12 +56,11 @@ class AssetCollectorTest extends AssetUnitTest {
     $asset = $this->collector->create('css', 'file', 'foo', array('group' => CSS_AGGREGATE_THEME));
     $meta = $asset->getMetadata();
     $this->assertEquals(CSS_AGGREGATE_THEME, $meta->get('group'), 'Collector injected user-passed parameters into the created asset.');
-    $this->assertFalse($meta->isDefault('group'));
   }
 
   public function testDefaultPropagation() {
     // Test that defaults are correctly applied by the factory.
-    $meta = new CssMetadataBag(array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
+    $meta = new AssetMetadataBag('css', array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
     $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
     $factory->expects($this->once())
       ->method('createCssMetadata')
@@ -189,7 +188,7 @@ class AssetCollectorTest extends AssetUnitTest {
     // Ensure we're in a good state first
     $this->assertEquals($default_factory->createCssMetadata(), $this->collector->getMetadataDefaults('css'));
 
-    $changed_css = new CssMetadataBag(array('foo' => 'bar', 'every_page' => TRUE));
+    $changed_css = new AssetMetadataBag('css', array('foo' => 'bar', 'every_page' => TRUE));
     $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
     $factory->expects($this->exactly(2))
       ->method('createCssMetadata')

@@ -30,19 +30,19 @@ class BaseAssetTest extends AssetUnitTest {
    * @return BaseAsset
    */
   public function createBaseAsset($defaults = array()) {
-    $mockmeta = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', $defaults);
+    $mockmeta = $this->createStubAssetMetadata(NULL, $defaults);
     return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\BaseAsset', array($mockmeta));
   }
 
   public function testGetMetadata() {
-    $mockmeta = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $mockmeta = $this->createStubAssetMetadata();
     $asset = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\BaseAsset', array($mockmeta));
 
     $this->assertSame($mockmeta, $asset->getMetadata());
   }
 
   public function testGetAssetType() {
-    $mockmeta = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $mockmeta = $this->getMock('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', array(), array(), '', FALSE);
     $mockmeta->expects($this->once())
       ->method('getType')
       ->will($this->returnValue('css'));
@@ -52,7 +52,7 @@ class BaseAssetTest extends AssetUnitTest {
   }
 
   public function testIsPreprocessable() {
-    $mockmeta = $this->getMock('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $mockmeta = $this->getMock('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', array(), array(), '', FALSE);
     $mockmeta->expects($this->once())
       ->method('get')
       ->with('preprocess')
@@ -129,7 +129,7 @@ class BaseAssetTest extends AssetUnitTest {
   }
 
   public function testClone() {
-    $mockmeta = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $mockmeta = $this->createStubAssetMetadata();
     $asset = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\BaseAsset', array($mockmeta));
 
     $clone = clone $asset;

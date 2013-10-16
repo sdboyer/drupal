@@ -185,7 +185,7 @@ class AssetCollectionTest extends AssetUnitTest {
    * @expectedException OutOfBoundsException
    */
   public function testGetById() {
-    $metamock = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag');
+    $metamock = $this->createStubAssetMetadata();
 
     $asset = $this->getMock('\\Drupal\\Core\\Asset\\FileAsset', array(), array($metamock, 'foo'));
     $asset->expects($this->once())

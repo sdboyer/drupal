@@ -7,9 +7,8 @@
 
 namespace Drupal\Tests\Core\Asset\Metadata;
 
-use Drupal\Core\Asset\Metadata\CssMetadataBag;
+use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory;
-use Drupal\Core\Asset\Metadata\JsMetadataBag;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -28,7 +27,7 @@ class DefaultAssetMetadataFactoryTest extends UnitTestCase {
 
   public function testCreateCssMetadata() {
     $factory = new DefaultAssetMetadataFactory();
-    $bag = new CssMetadataBag(array(
+    $bag = new AssetMetadataBag('css', array(
       'every_page' => FALSE,
       'media' => 'all',
       'preprocess' => TRUE,
@@ -43,7 +42,7 @@ class DefaultAssetMetadataFactoryTest extends UnitTestCase {
 
   public function testCreateJsMetadata() {
     $factory = new DefaultAssetMetadataFactory();
-    $bag = new JsMetadataBag(array(
+    $bag = new AssetMetadataBag('js', array(
       'every_page' => FALSE,
       'scope' => 'footer',
       'cache' => TRUE,

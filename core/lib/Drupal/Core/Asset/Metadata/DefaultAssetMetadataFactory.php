@@ -16,7 +16,7 @@ class DefaultAssetMetadataFactory implements MetadataFactoryInterface {
    * {@inheritdoc}
    */
   public function createCssMetadata() {
-    return new CssMetadataBag(array(
+    return new AssetMetadataBag('css', array(
       'every_page' => FALSE,
       'media' => 'all',
       'preprocess' => TRUE,
@@ -31,7 +31,7 @@ class DefaultAssetMetadataFactory implements MetadataFactoryInterface {
    * {@inheritdoc}
    */
   public function createJsMetadata() {
-    return new JsMetadataBag(array(
+    return new AssetMetadataBag('js', array(
       'every_page' => FALSE,
       'scope' => 'footer',
       'cache' => TRUE,
