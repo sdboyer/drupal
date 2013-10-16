@@ -186,7 +186,7 @@ class AssetCollectorTest extends AssetUnitTest {
     // TODO this test is now in fuzzy territory - kinda more the factory's responsibility
     $default_factory = new DefaultAssetMetadataFactory();
     // Ensure we're in a good state first
-    $this->assertEquals($default_factory->createCssMetadata(), $this->collector->getMetadataDefaults('css'));
+    $this->assertEquals($default_factory->createCssMetadata('file', 'foo/bar.css'), $this->collector->getMetadataDefaults('css', 'file', 'foo/bar.css'));
 
     $changed_css = new AssetMetadataBag('css', array('foo' => 'bar', 'every_page' => TRUE));
     $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
@@ -196,19 +196,19 @@ class AssetCollectorTest extends AssetUnitTest {
 
     $this->collector->setMetadataFactory($factory);
 
-    $this->assertEquals($changed_css, $this->collector->getMetadataDefaults('css'));
+    $this->assertEquals($changed_css, $this->collector->getMetadataDefaults('css', 'file', 'foo/bar.css'));
     // TODO this is totally cheating, only passes because we clone earlier. but it should be a guarantee of the interface...how to test this?
-    $this->assertNotSame($changed_css, $this->collector->getMetadataDefaults('css'), 'New metadata instance is created on retrieval from collector.');
+    $this->assertNotSame($changed_css, $this->collector->getMetadataDefaults('css', 'file', 'foo/bar.css'), 'New metadata instance is created on retrieval from collector.');
 
     $this->collector->restoreDefaults();
-    $this->assertEquals($default_factory->createCssMetadata(), $this->collector->getMetadataDefaults('css'));
+    $this->assertEquals($default_factory->createCssMetadata('file', 'foo/bar.css'), $this->collector->getMetadataDefaults('css', 'file', 'foo/bar.css'));
   }
 
   /**
    * @expectedException \InvalidArgumentException
    */
   public function testGetNonexistentDefault() {
-    $this->collector->getMetadataDefaults('foo');
+    $this->collector->getMetadataDefaults('foo', 'file', 'foo/bar.css');
   }
 
 

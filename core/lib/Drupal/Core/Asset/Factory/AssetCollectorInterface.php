@@ -188,15 +188,23 @@ interface AssetCollectorInterface {
    * for every asset, and that the default metadata contained in the collector
    * cannot be modified externally.
    *
-   * @param $type
+   * @param string $asset_type
    *   A string, 'css' or 'js', indicating the type of metadata to retrieve.
+   *
+   * @param string $source_type
+   *   The source type for the asset that will receive this metadata: 'file',
+   *   'external', or 'string'.
+   *
+   * @param string $data
+   *   For 'file' or 'external' source types, this is the path to the asset. For
+   *   'string' source types, it is the whole body of the asset.
    *
    * @return AssetMetadataInterface
    *
    * @throws \InvalidArgumentException
    *   Thrown if a type other than 'css' or 'js' is provided.
    */
-  public function getMetadataDefaults($type);
+  public function getMetadataDefaults($asset_type, $source_type, $data);
 
   /**
    * Restores metadata default bags to their default state.

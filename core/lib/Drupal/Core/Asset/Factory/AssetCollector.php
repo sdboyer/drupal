@@ -114,7 +114,7 @@ class AssetCollector implements AssetCollectorInterface {
       throw new \InvalidArgumentException(sprintf('Only sources of type "file", "string", or "external" are allowed, "%s" requested.', $source_type));
     }
 
-    $metadata = $this->getMetadataDefaults($asset_type);
+    $metadata = $this->getMetadataDefaults($asset_type, $source_type, $data);
     if (!empty($options)) {
       $metadata->add($options);
     }
@@ -223,15 +223,15 @@ class AssetCollector implements AssetCollectorInterface {
   /**
    * {@inheritdoc}
    */
-  public function getMetadataDefaults($type) {
-    if ($type === 'css') {
-      return $this->metadataFactory->createCssMetadata();
+  public function getMetadataDefaults($asset_type, $source_type, $data) {
+    if ($asset_type === 'css') {
+      return $this->metadataFactory->createCssMetadata($source_type, $data);
     }
-    elseif ($type === 'js') {
-      return $this->metadataFactory->createJsMetadata();
+    elseif ($asset_type === 'js') {
+      return $this->metadataFactory->createJsMetadata($source_type, $data);
     }
     else {
-      throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are supported, "%s" requested.', $type));
+      throw new \InvalidArgumentException(sprintf('Only assets of type "js" or "css" are supported, "%s" requested.', $asset_type));
     }
   }
 

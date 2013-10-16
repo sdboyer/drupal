@@ -37,7 +37,7 @@ class DefaultAssetMetadataFactoryTest extends UnitTestCase {
       ),
     ));
 
-    $this->assertEquals($bag, $factory->createCssMetadata());
+    $this->assertEquals($bag, $factory->createCssMetadata('file', 'foo/bar.css'));
   }
 
   public function testCreateJsMetadata() {
@@ -52,6 +52,6 @@ class DefaultAssetMetadataFactoryTest extends UnitTestCase {
       'browsers' => array(),
     ));
 
-    $this->assertEquals($bag, $factory->createJsMetadata());
+    $this->assertEquals($bag, $factory->createJsMetadata('file', 'foo/bar.js'));
   }
 }
