@@ -204,14 +204,14 @@ class SassFilter extends BaseProcessFilter implements DependencyExtractorInterfa
             if (pathinfo($reference, PATHINFO_EXTENSION)) {
                 $needles = array(
                     $reference,
-                    self::partialize($reference),
+                    '_'.$reference,
                 );
             } else {
                 $needles = array(
                     $reference.'.scss',
                     $reference.'.sass',
-                    self::partialize($reference).'.scss',
-                    self::partialize($reference).'.sass',
+                    '_'.$reference.'.scss',
+                    '_'.$reference.'.sass',
                 );
             }
 
@@ -232,22 +232,5 @@ class SassFilter extends BaseProcessFilter implements DependencyExtractorInterfa
         }
 
         return $children;
-    }
-
-    private static function partialize($reference)
-    {
-        $parts = pathinfo($reference);
-
-        if ('.' === $parts['dirname']) {
-            $partial = '_'.$parts['filename'];
-        } else {
-            $partial = $parts['dirname'].DIRECTORY_SEPARATOR.'_'.$parts['filename'];
-        }
-
-        if (isset($parts['extension'])) {
-            $partial .= '.'.$parts['extension'];
-        }
-
-        return $partial;
     }
 }

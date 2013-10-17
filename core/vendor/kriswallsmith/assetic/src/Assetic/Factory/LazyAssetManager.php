@@ -11,7 +11,6 @@
 
 namespace Assetic\Factory;
 
-use Assetic\Asset\AssetCollectionInterface;
 use Assetic\Asset\AssetInterface;
 use Assetic\AssetManager;
 use Assetic\Factory\Loader\FormulaLoaderInterface;
@@ -207,38 +206,34 @@ class LazyAssetManager extends AssetManager
 
     public function getLastModified(AssetInterface $asset)
     {
-        $mtime = 0;
-        foreach ($asset instanceof AssetCollectionInterface ? $asset : array($asset) as $leaf) {
-            $mtime = max($mtime, $leaf->getLastModified());
+        $mtime = $asset->getLastModified();
+        if (!$filters = $asset->getFilters()) {
+            return $mtime;
+        }
 
-            if (!$filters = $leaf->getFilters()) {
+        // prepare load path
+        $sourceRoot = $asset->getSourceRoot();
+        $sourcePath = $asset->getSourcePath();
+        $loadPath = $sourceRoot && $sourcePath ? dirname($sourceRoot.'/'.$sourcePath) : null;
+
+        $prevFilters = array();
+        foreach ($filters as $filter) {
+            $prevFilters[] = $filter;
+
+            if (!$filter instanceof DependencyExtractorInterface) {
                 continue;
             }
 
-            // prepare load path
-            $sourceRoot = $leaf->getSourceRoot();
-            $sourcePath = $leaf->getSourcePath();
-            $loadPath = $sourceRoot && $sourcePath ? dirname($sourceRoot.'/'.$sourcePath) : null;
+            // extract children from asset after running all preceeding filters
+            $clone = clone $asset;
+            $clone->clearFilters();
+            foreach (array_slice($prevFilters, 0, -1) as $prevFilter) {
+                $clone->ensureFilter($prevFilter);
+            }
+            $clone->load();
 
-            $prevFilters = array();
-            foreach ($filters as $filter) {
-                $prevFilters[] = $filter;
-
-                if (!$filter instanceof DependencyExtractorInterface) {
-                    continue;
-                }
-
-                // extract children from leaf after running all preceeding filters
-                $clone = clone $leaf;
-                $clone->clearFilters();
-                foreach (array_slice($prevFilters, 0, -1) as $prevFilter) {
-                    $clone->ensureFilter($prevFilter);
-                }
-                $clone->load();
-
-                foreach ($filter->getChildren($this->factory, $clone->getContent(), $loadPath) as $child) {
-                    $mtime = max($mtime, $this->getLastModified($child));
-                }
+            foreach ($filter->getChildren($this->factory, $clone->getContent(), $loadPath) as $child) {
+                $mtime = max($mtime, $this->getLastModified($child));
             }
         }
 
