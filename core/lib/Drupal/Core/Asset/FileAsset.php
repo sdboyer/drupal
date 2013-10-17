@@ -14,9 +14,34 @@ use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
 class FileAsset extends BaseAsset {
 
+  /**
+   * The path, relative to DRUPAL_ROOT, to the file asset.
+   *
+   * @var string
+   */
   protected $source;
 
+  /**
+   * Creates a new file asset object.
+   *
+   * @param AssetMetadataInterface $metadata
+   *   The metadata object for the new file asset.
+   * @param array $source
+   *   The path at which the external asset lives. This should be the path
+   *   relative to DRUPAL_ROOT, not an absolute path.
+   * @param FilterInterface[] $filters
+   *   (optional) An array of FilterInterface objects to apply to this asset.
+   *
+   * TODO https://drupal.org/node/1308152 would make $source MUCH clearer
+   *
+   * @throws \InvalidArgumentException
+   *   Thrown if an invalid URL is provided for $sourceUrl.
+   */
   public function __construct(AssetMetadataInterface $metadata, $source, $filters = array()) {
+    if (!is_string($source)) {
+      throw new \InvalidArgumentException('File assets require a string filepath for their $source parameter.');
+    }
+
     $sourceRoot = dirname($source);
     $sourcePath = basename($source);
     $this->source = $source;
@@ -32,12 +57,7 @@ class FileAsset extends BaseAsset {
   }
 
   /**
-   * Returns the time the current asset was last modified.
-   *
-   * @return integer|null A UNIX timestamp
-   *
-   * @throws \RuntimeException
-   *   Thrown if the source file does not exist.
+   * {@inheritdoc}
    */
   public function getLastModified() {
     if (!is_file($this->source)) {
@@ -48,14 +68,7 @@ class FileAsset extends BaseAsset {
   }
 
   /**
-   * Loads the asset into memory and applies load filters.
-   *
-   * You may provide an additional filter to apply during load.
-   *
-   * @param FilterInterface $additionalFilter An additional filter
-   *
-   * @throws \RuntimeException
-   *   Thrown if the source file does not exist.
+   * {@inheritdoc}
    */
   public function load(FilterInterface $additionalFilter = NULL) {
     if (!is_file($this->source)) {

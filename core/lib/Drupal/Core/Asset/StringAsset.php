@@ -24,16 +24,28 @@ class StringAsset extends BaseAsset {
    */
   protected $id;
 
-  protected $lastModified;
+  protected $lastModified = FALSE; // TODO this is terrible
 
+  /**
+   * Creates a new string asset object.
+   *
+   * @param AssetMetadataInterface $metadata
+   *   The metadata object for the new string asset.
+   * @param string $content
+   *   The content of the new asset.
+   * @param FilterInterface[] $filters
+   *   (optional) An array of FilterInterface objects to apply to this asset.
+   *
+   * @throws \InvalidArgumentException
+   *   Thrown if a non-string is provided as content.
+   */
   public function __construct(AssetMetadataInterface $metadata, $content, $filters = array()) {
     if (!is_string($content)) {
       throw new \InvalidArgumentException('StringAsset requires a string for its content.');
     }
 
-    $this->id= empty($content) ? Crypt::randomStringHashed(32) : hash('sha256', $content);
+    $this->id= empty($content) ? Crypt::randomBytes(32) : hash('sha256', $content);
     $this->setContent($content);
-    $this->lastModified = REQUEST_TIME; // TODO this is terrible
 
     parent::__construct($metadata, $filters);
   }
