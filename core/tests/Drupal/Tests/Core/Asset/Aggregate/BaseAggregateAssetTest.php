@@ -211,8 +211,18 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertEquals($output, $aggregate->all());
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::replace
+   * @expectedException \OutOfBoundsException
+   */
   public function testIsEmpty() {
-    $this->assertTrue($this->getAggregate()->isEmpty());
+    $aggregate = $this->getAggregate();
+    $this->assertTrue($aggregate->isEmpty());
+
+    // Aggregates containing only empty aggregates are considered empty.
+    $aggregate->add($this->getAggregate());
+    $this->assertTrue($aggregate->isEmpty());
   }
 
   /**
