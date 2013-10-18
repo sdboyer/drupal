@@ -36,10 +36,14 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
   public function add(AssetInterface $asset) {
     $this->attemptWrite();
 
-    if (!$this->contains($asset)) {
-      $this->assetStorage->attach($asset);
-      $this->assetIdMap[$asset->id()] = $asset;
+    if ($this->contains($asset) || $this->getById($asset->id())) {
+      return FALSE;
     }
+
+    $this->assetStorage->attach($asset);
+    $this->assetIdMap[$asset->id()] = $asset;
+
+    return TRUE;
   }
 
   /**

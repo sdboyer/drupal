@@ -11,6 +11,7 @@ use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
+ * @coversDefaultClass \Drupal\Core\Asset\Collection\AssetCollection
  * @group Asset
  */
 class AssetCollectionTest extends AssetUnitTest {
@@ -32,15 +33,41 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->collection = new AssetCollection();
   }
 
+  /**
+   * @covers ::add
+   */
   public function testAdd() {
     $css = $this->createMockFileAsset('css');
     $js = $this->createMockFileAsset('js');
 
-    $this->collection->add($css);
-    $this->collection->add($js);
+    $this->assertTrue($this->collection->add($css));
+    $this->assertTrue($this->collection->add($js));
 
     $this->assertContains($css, $this->collection);
     $this->assertContains($js, $this->collection);
+  }
+
+  /**
+   * Tests that adding the same asset twice is disallowed.
+   *
+   * @depends testAdd
+   * @covers ::add
+   */
+  public function testDoubleAdd() {
+    $asset = $this->createMockFileAsset('css');
+    $this->assertTrue($this->collection->add($asset));
+
+    $this->assertTrue($this->collection->contains($asset));
+
+    // Test by object identity
+    $this->assertFalse($this->collection->add($asset));
+    // Test by id
+    $asset2 = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
+    $asset2->expects($this->once())
+      ->method('id')
+      ->will($this->returnValue($asset->id()));
+
+    $this->assertFalse($this->collection->add($asset2));
   }
 
   public function testContains() {
@@ -188,7 +215,7 @@ class AssetCollectionTest extends AssetUnitTest {
     $metamock = $this->createStubAssetMetadata();
 
     $asset = $this->getMock('\\Drupal\\Core\\Asset\\FileAsset', array(), array($metamock, 'foo'));
-    $asset->expects($this->once())
+    $asset->expects($this->exactly(2)) // once on add, once on searching
       ->method('id')
       ->will($this->returnValue('foo'));
 

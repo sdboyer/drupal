@@ -89,10 +89,6 @@ class BaseAggregateAssetTest extends AssetUnitTest {
 
     $this->assertTrue($aggregate->contains($asset));
 
-    // Double-add: test that adding an asset twice returns FALSE, indicating
-    // the asset was already present.
-    $this->assertFalse($aggregate->add($asset));
-
     // Nesting: add an aggregate to the first aggregate.
     $nested_aggregate = $this->getAggregate();
     $nested_asset = $this->createMockFileAsset('css');
@@ -104,8 +100,29 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   /**
+   * Tests that adding the same asset twice is disallowed.
+   *
+   * @covers ::add
+   */
+  public function testDoubleAdd() {
+    $aggregate = $this->getAggregate();
+    $asset = $this->createMockFileAsset('css');
+    $this->assertTrue($aggregate->add($asset));
+
+    // Test by object identity
+    $this->assertFalse($aggregate->add($asset));
+    // Test by id
+    $asset2 = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
+    $asset2->expects($this->once())
+      ->method('id')
+      ->will($this->returnValue($asset->id()));
+
+    $this->assertFalse($aggregate->add($asset2));
+  }
+
+  /**
    * @covers ::getById
-   * @expectedException OutOfBoundsException
+   * @expectedException \OutOfBoundsException
    */
   public function testGetById() {
     $aggregate = $this->getAggregate();
