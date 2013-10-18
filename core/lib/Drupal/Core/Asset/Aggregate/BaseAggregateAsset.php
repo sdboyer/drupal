@@ -248,6 +248,11 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
     $this->ensureCorrectType($needle);
     $this->ensureCorrectType($replacement);
 
+    if ($this->contains($replacement)) {
+      throw new \LogicException('Asset provided for replacement is already present in the aggregate.');
+    }
+
+    $i = 0;
     foreach ($this->assetIdMap as $id => $asset) {
       if ($asset === $needle) {
         unset($this->assetStorage[$asset], $this->nestedStorage[$asset]);
@@ -264,6 +269,7 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
       if ($asset instanceof AssetAggregateInterface && $asset->replaceLeaf($needle, $replacement, $graceful)) {
         return TRUE;
       }
+      $i++;
     }
 
     if ($graceful) {

@@ -8,6 +8,7 @@
 namespace Drupal\Tests\Core\Asset\Aggregate;
 
 use Drupal\Core\Asset\Aggregate\BaseAggregateAsset;
+use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
@@ -37,6 +38,28 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   public function getAggregate($defaults = array()) {
     $mockmeta = $this->createStubAssetMetadata();
     return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
+  }
+
+  /**
+   * Generates a BaseAggregateAsset mock with three leaf assets.
+   */
+  public function getThreeLeafAggregate() {
+    $aggregate = $this->getAggregate();
+    $nested_aggregate = $this->getAggregate();
+
+    foreach (array('foo', 'bar', 'baz') as $var) {
+      $$var = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
+      $$var->expects($this->any())
+        ->method('id')
+        ->will($this->returnValue($var));
+    }
+
+    $aggregate->add($foo);
+    $nested_aggregate->add($bar);
+    $nested_aggregate->add($baz);
+    $aggregate->add($nested_aggregate);
+
+    return array($aggregate, $foo, $bar, $baz);
   }
 
   public function testGetAssetType() {
@@ -193,35 +216,136 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   /**
+   * remove() and removeLeaf() are conjoined; test them both here.
+   *
    * @depends testAdd
    * @covers ::remove
+   * @covers ::removeLeaf
    */
   public function testRemove() {
-    $this->fail();
+    list($aggregate, $foo, $bar, $baz) = $this->getThreeLeafAggregate();
+    $this->assertTrue($aggregate->remove('foo'));
+
+    $this->assertNotContains($foo, $aggregate);
+    $this->assertContains($bar, $aggregate);
+    $this->assertContains($baz, $aggregate);
+
+    $this->assertTrue($aggregate->remove($bar));
+
+    $this->assertNotContains($bar, $aggregate);
+    $this->assertContains($baz, $aggregate);
   }
 
   /**
    * @depends testAdd
    * @covers ::removeLeaf
+   * @expectedException \OutOfBoundsException
    */
-  public function testRemoveLeaf() {
-    $this->fail();
+  public function testRemoveNonexistentNeedle() {
+    list($aggregate,,,) = $this->getThreeLeafAggregate();
+    // Nonexistent leaf removal returns FALSE in graceful mode
+    $this->assertFalse($aggregate->removeLeaf($this->createMockFileAsset('css')));
+
+    // In non-graceful mode, an exception is thrown.
+    $aggregate->removeLeaf($this->createMockFileAsset('css'), FALSE);
+  }
+
+  /**
+   * @covers ::removeLeaf
+   * @expectedException \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public function testRemoveLeafVanillaAsseticAsset() {
+    $aggregate = $this->getAggregate();
+    $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
+    $aggregate->removeLeaf($vanilla);
+  }
+
+  /**
+   * replace() and replaceLeaf() are conjoined; test them both here.
+   *
+   * @depends testAdd
+   * @covers ::replace
+   * @covers ::replaceLeaf
+   */
+  public function testReplace() {
+    list($aggregate, $foo, $bar, $baz) = $this->getThreeLeafAggregate();
+    $qux = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
+    $qux->expects($this->any())
+      ->method('id')
+      ->will($this->returnValue('qux'));
+
+    $this->assertTrue($aggregate->replace('foo', $qux));
+
+    $this->assertContains($qux, $aggregate);
+    $this->assertNotContains($foo, $aggregate);
+
+    $contained = array();
+    foreach ($aggregate as $leaf) {
+      $contained[] = $leaf;
+    }
+    $this->assertEquals(array($qux, $bar, $baz), $contained);
+
+    $this->assertTrue($aggregate->replace($bar, $foo));
+
+    $this->assertContains($foo, $aggregate);
+    $this->assertNotContains($bar, $aggregate);
+
+    $contained = array();
+    foreach ($aggregate as $leaf) {
+      $contained[] = $leaf;
+    }
+    $this->assertEquals(array($qux, $foo, $baz), $contained);
   }
 
   /**
    * @depends testAdd
-   * @covers ::replace
+   * @covers ::replaceLeaf
+   * @expectedException \OutOfBoundsException
    */
-  public function testReplace() {
-    $this->fail();
+  public function testReplaceLeafNonexistentNeedle() {
+    list($aggregate,,,) = $this->getThreeLeafAggregate();
+    // Nonexistent leaf replacement returns FALSE in graceful mode
+    $qux = $this->createMockFileAsset('css');
+    $this->assertFalse($aggregate->replaceLeaf($this->createMockFileAsset('css'), $qux));
+    $this->assertNotContains($qux, $aggregate);
+
+    // In non-graceful mode, an exception is thrown.
+    $aggregate->replaceLeaf($this->createMockFileAsset('css'), $qux, FALSE);
+  }
+
+  /**
+   * @depends testAdd
+   * @covers ::replaceLeaf
+   * @expectedException \LogicException
+   */
+  public function testReplaceLeafWithAlreadyPresentAsset() {
+    list($aggregate, $foo, $bar, $baz) = $this->getThreeLeafAggregate();
+    $aggregate->replaceLeaf($foo, $foo);
   }
 
   /**
    * @depends testAdd
    * @covers ::replaceLeaf
    */
-  public function testReplaceLeaf() {
-    $this->fail();
+  public function testReplaceLeafVanillaAsseticAsset() {
+    $aggregate = $this->getAggregate();
+    $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
+    $drupally = $this->createMockFileAsset('css');
+
+    try {
+      $aggregate->replaceLeaf($vanilla, $drupally);
+      $this->fail('BaseAggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+    } catch (UnsupportedAsseticBehaviorException $e) {}
+
+    try {
+      $aggregate->replaceLeaf($vanilla, $vanilla);
+      $this->fail('BaseAggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+    } catch (UnsupportedAsseticBehaviorException $e) {}
+
+    try {
+      $aggregate->replaceLeaf($drupally, $vanilla);
+      $this->fail('BaseAggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+    } catch (UnsupportedAsseticBehaviorException $e) {}
   }
 
   /**
