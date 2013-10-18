@@ -20,6 +20,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 /**
  * Base class for representing aggregate assets.
  *
+ * TODO With PHP5.4, refactor out AssetCollectionBasicInterface into a trait.
  */
 abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \IteratorAggregate, AssetInterface, AssetAggregateInterface {
 

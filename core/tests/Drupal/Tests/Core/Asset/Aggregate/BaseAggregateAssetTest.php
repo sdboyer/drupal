@@ -39,6 +39,91 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
   }
 
+  public function testGetAssetType() {
+    $mockmeta = $this->getMock('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', array(), array(), '', FALSE);
+    $mockmeta->expects($this->once())
+      ->method('getType')
+      ->will($this->returnValue('unicorns'));
+    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
+
+    $this->assertEquals('unicorns', $aggregate->getAssetType());
+  }
+
+  public function testGetMetadata() {
+    $mockmeta = $this->createStubAssetMetadata();
+    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
+
+    $this->assertSame($mockmeta, $aggregate->getMetadata());
+  }
+
+  /**
+   * @covers ::add
+   */
+  public function testAdd() {
+    $aggregate = $this->getAggregate();
+    $asset = $this->createMockFileAsset('css');
+    $this->assertTrue($aggregate->add($asset));
+
+    $this->assertContains($asset, $aggregate);
+
+    // Nesting: add an aggregate to the first aggregate.
+    $nested_aggregate = $this->getAggregate();
+    $nested_asset = $this->createMockFileAsset('css');
+
+    $nested_aggregate->add($nested_asset);
+    $aggregate->add($nested_asset);
+
+    $this->assertContains($nested_asset, $aggregate);
+  }
+
+  /**
+   * Tests that adding the same asset twice is disallowed.
+   *
+   * @depends testAdd
+   * @covers ::add
+   */
+  public function testDoubleAdd() {
+    $aggregate = $this->getAggregate();
+    $asset = $this->createMockFileAsset('css');
+    $this->assertTrue($aggregate->add($asset));
+
+    // Test by object identity
+    $this->assertFalse($aggregate->add($asset));
+    // Test by id
+    $asset2 = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
+    $asset2->expects($this->once())
+      ->method('id')
+      ->will($this->returnValue($asset->id()));
+
+    $this->assertFalse($aggregate->add($asset2));
+  }
+
+  /**
+   * @depends testAdd
+   * @covers ::contains
+   */
+  public function testContains() {
+    $aggregate = $this->getAggregate();
+    $asset = $this->createMockFileAsset('css');
+    $aggregate->add($asset);
+
+    $this->assertTrue($aggregate->contains($asset));
+
+    // Nesting: add an aggregate to the first aggregate.
+    $nested_aggregate = $this->getAggregate();
+    $nested_asset = $this->createMockFileAsset('css');
+
+    $nested_aggregate->add($nested_asset);
+    $aggregate->add($nested_aggregate);
+
+    $this->assertTrue($aggregate->contains($nested_asset));
+  }
+
+  /**
+   * @depends testAdd
+   * @covers ::id
+   * @covers ::calculateId
+   */
   public function testId() {
     // Simple case - test with one contained asset first.
     $aggregate = $this->getAggregate();
@@ -59,65 +144,6 @@ class BaseAggregateAssetTest extends AssetUnitTest {
 
     // The aggregate only uses leaf, non-aggregate assets to determine its id.
     $this->assertEquals(hash('sha256', $asset1->id() . $asset2->id()), $aggregate->id());
-  }
-
-  public function testGetAssetType() {
-    $mockmeta = $this->getMock('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', array(), array(), '', FALSE);
-    $mockmeta->expects($this->once())
-      ->method('getType')
-      ->will($this->returnValue('unicorns'));
-    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
-
-    $this->assertEquals('unicorns', $aggregate->getAssetType());
-  }
-
-  public function testGetMetadata() {
-    $mockmeta = $this->createStubAssetMetadata();
-    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
-
-    $this->assertSame($mockmeta, $aggregate->getMetadata());
-  }
-
-  /**
-   * @covers ::add
-   * @covers ::contains
-   */
-  public function testAddAndContains() {
-    $aggregate = $this->getAggregate();
-    $asset = $this->createMockFileAsset('css');
-    $this->assertTrue($aggregate->add($asset));
-
-    $this->assertTrue($aggregate->contains($asset));
-
-    // Nesting: add an aggregate to the first aggregate.
-    $nested_aggregate = $this->getAggregate();
-    $nested_asset = $this->createMockFileAsset('css');
-
-    $nested_aggregate->add($nested_asset);
-    $this->assertTrue($aggregate->add($nested_aggregate));
-
-    $this->assertTrue($aggregate->contains($nested_asset));
-  }
-
-  /**
-   * Tests that adding the same asset twice is disallowed.
-   *
-   * @covers ::add
-   */
-  public function testDoubleAdd() {
-    $aggregate = $this->getAggregate();
-    $asset = $this->createMockFileAsset('css');
-    $this->assertTrue($aggregate->add($asset));
-
-    // Test by object identity
-    $this->assertFalse($aggregate->add($asset));
-    // Test by id
-    $asset2 = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
-    $asset2->expects($this->once())
-      ->method('id')
-      ->will($this->returnValue($asset->id()));
-
-    $this->assertFalse($aggregate->add($asset2));
   }
 
   /**
@@ -142,6 +168,10 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertTrue($this->getAggregate()->isPreprocessable());
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::all
+   */
   public function testAll() {
     $aggregate = $this->getAggregate();
 
@@ -162,27 +192,52 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertTrue($this->getAggregate()->isEmpty());
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::remove
+   */
   public function testRemove() {
     $this->fail();
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::removeLeaf
+   */
   public function testRemoveLeaf() {
     $this->fail();
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::replace
+   */
   public function testReplace() {
     $this->fail();
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::replaceLeaf
+   */
   public function testReplaceLeaf() {
     $this->fail();
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::load
+   */
   public function testLoad() {
     $this->fail();
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::dump
+   */
   public function testDump() {
     $this->fail();
   }
 }
+

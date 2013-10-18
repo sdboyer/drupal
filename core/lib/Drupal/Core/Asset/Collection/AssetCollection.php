@@ -13,10 +13,10 @@ use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
 /**
  * A container for assets.
  *
- * @see CssCollection
- * @see JsCollection
- *
  * TODO allow direct adding of libraries
+ * TODO js settings...
+ *
+ * TODO With PHP5.4, refactor out AssetCollectionBasicInterface into a trait.
  */
 class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
 
@@ -156,7 +156,6 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
    * {@inheritdoc}
    */
   public function getCss() {
-    // TODO evaluate potential performance impact if this is done a lot...
     $collection = new self();
     foreach (new AssetSubtypeFilterIterator($this->getIterator(), 'css') as $asset) {
       $collection->add($asset);

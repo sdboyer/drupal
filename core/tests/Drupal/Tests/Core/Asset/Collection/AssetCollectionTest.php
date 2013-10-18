@@ -70,12 +70,20 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertFalse($this->collection->add($asset2));
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::contains
+   */
   public function testContains() {
     $css = $this->createMockFileAsset('css');
     $this->collection->add($css);
     $this->assertTrue($this->collection->contains($css));
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::getCss
+   */
   public function testGetCss() {
     $css = $this->createMockFileAsset('css');
     $js = $this->createMockFileAsset('js');
@@ -91,6 +99,10 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertEquals(array($css), $css_result);
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::getJs
+   */
   public function testGetJs() {
     $css = $this->createMockFileAsset('css');
     $js = $this->createMockFileAsset('js');
@@ -106,6 +118,10 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertEquals(array($js), $js_result);
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::all
+   */
   public function testAll() {
     $css = $this->createMockFileAsset('css');
     $js = $this->createMockFileAsset('js');
@@ -116,6 +132,10 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertEquals(array($css->id() => $css, $js->id() => $js), $this->collection->all());
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::remove
+   */
   public function testRemoveByAsset() {
     $stub = $this->createMockFileAsset('css');
 
@@ -125,6 +145,10 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertNotContains($stub, $this->collection);
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::remove
+   */
   public function testRemoveById() {
     $stub = $this->createMockFileAsset('css');
 
@@ -135,7 +159,7 @@ class AssetCollectionTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException OutOfBoundsException
+   * @expectedException \OutOfBoundsException
    */
   public function testRemoveNonexistentId() {
     $this->assertFalse($this->collection->remove('foo'));
@@ -143,7 +167,7 @@ class AssetCollectionTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException OutOfBoundsException
+   * @expectedException \OutOfBoundsException
    */
   public function testRemoveNonexistentAsset() {
     $stub = $this->createMockFileAsset('css');
@@ -161,6 +185,10 @@ class AssetCollectionTest extends AssetUnitTest {
     } catch (\InvalidArgumentException $e) {}
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::mergeCollection
+   */
   public function testMergeCollection() {
     $coll2 = new AssetCollection();
     $stub1 = $this->createMockFileAsset('css');
@@ -209,6 +237,8 @@ class AssetCollectionTest extends AssetUnitTest {
   }
 
   /**
+   * @depends testAdd
+   * @covers ::getById
    * @expectedException OutOfBoundsException
    */
   public function testGetById() {
@@ -233,6 +263,10 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertTrue($this->collection->isEmpty());
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::sort
+   */
   public function testSort() {
     $stub1 = $this->createMockFileAsset('css');
     $stub2 = $this->createMockFileAsset('js');
@@ -257,7 +291,11 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertEquals($assets, $this->collection->all());
   }
 
-    public function testKsort() {
+  /**
+   * @depends testAdd
+   * @covers ::ksort
+   */
+  public function testKsort() {
     $stub1 = $this->createMockFileAsset('css');
     $stub2 = $this->createMockFileAsset('js');
     $stub3 = $this->createMockFileAsset('css');
