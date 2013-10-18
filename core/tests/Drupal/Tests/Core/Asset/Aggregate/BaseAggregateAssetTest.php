@@ -11,7 +11,7 @@ use Drupal\Core\Asset\Aggregate\BaseAggregateAsset;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
- *
+ * @coversDefaultClass \Drupal\Core\Asset\Aggregate\BaseAggregateAsset
  * @group Asset
  */
 class BaseAggregateAssetTest extends AssetUnitTest {
@@ -67,26 +67,29 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertSame($mockmeta, $aggregate->getMetadata());
   }
 
-  public function testAdd() {
+  /**
+   * @covers ::add
+   * @covers ::contains
+   */
+  public function testAddAndContains() {
     $aggregate = $this->getAggregate();
+    $asset = $this->createMockFileAsset('css');
+    $this->assertTrue($aggregate->add($asset));
 
-    $metamock = $this->createStubAssetMetadata();
-    $asset = $this->getMock('\\Drupal\\Core\\Asset\\FileAsset', array(), array($metamock, 'foo'));
-    $asset->expects($this->once())
-      ->method('id')
-      ->will($this->returnValue('foo'));
+    $this->assertTrue($aggregate->contains($asset));
 
-    $aggregate->add($asset);
+    // Double-add: test that adding an asset twice returns FALSE, indicating
+    // the asset was already present.
+    $this->assertFalse($aggregate->add($asset));
 
-    $this->assertContains($asset, $aggregate);
-  }
+    // Nesting: add an aggregate to the first aggregate.
+    $nested_aggregate = $this->getAggregate();
+    $nested_asset = $this->createMockFileAsset('css');
 
-  public function testContains() {
-    $aggregate = $this->getAggregate();
-    $css = $this->createMockFileAsset('css');
+    $nested_aggregate->add($nested_asset);
+    $this->assertTrue($aggregate->add($nested_aggregate));
 
-    $aggregate->add($css);
-    $this->assertTrue($aggregate->contains($css));
+    $this->assertTrue($aggregate->contains($nested_asset));
   }
 
   /**

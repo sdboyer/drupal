@@ -32,8 +32,8 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *   The asset to add.
    *
    * @return bool
-   *   TRUE if the asset was already added, FALSE if it was already present in
-   *   the collection.
+   *   TRUE if the asset was added successfully, FALSE if it was already present
+   *   in the collection.
    */
   public function add(AssetInterface $asset);
 

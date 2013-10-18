@@ -9,6 +9,7 @@ namespace Drupal\Core\Asset\Aggregate;
 
 use Assetic\Filter\FilterCollection;
 use Assetic\Filter\FilterInterface;
+use Drupal\Core\Asset\Aggregate\Iterator\AssetAggregateIterator;
 use Drupal\Core\Asset\AsseticAdapterAsset;
 use Drupal\Core\Asset\AssetInterface;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
@@ -134,11 +135,16 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
     if (!$this->contains($asset)) {
       $this->assetStorage->attach($asset);
       $this->assetIdMap[$asset->id()] = $asset;
+
+      if ($asset instanceof AssetAggregateInterface) {
+        $this->nestedStorage->attach($asset);
+      }
+    }
+    else {
+      return FALSE;
     }
 
-    if ($asset instanceof AssetAggregateInterface) {
-      $this->nestedStorage->attach($asset);
-    }
+    return TRUE;
   }
 
   /**
@@ -332,8 +338,7 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
    * TODO Assetic uses their iterator to clone, then populate values and return here; is that a good model for us?
    */
   public function getIterator() {
-    // TODO this is totally junk
-    return new \ArrayIterator($this->assetIdMap);
+    return new \RecursiveIteratorIterator(new AssetAggregateIterator($this));
   }
 
   /**

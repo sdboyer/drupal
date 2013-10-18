@@ -8,7 +8,10 @@
 namespace Drupal\Core\Asset\Aggregate;
 use Assetic\Asset\AssetCollectionInterface as AsseticAssetCollectionInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
+use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
+use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 /**
  * Describes an aggregate asset: a logical asset composed of other assets.
@@ -50,4 +53,24 @@ interface AssetAggregateInterface extends AssetInterface, AssetCollectionBasicIn
    * @throws \OutOfBoundsException
    */
   public function replace($needle, AssetInterface $replacement, $graceful = FALSE);
+
+  /**
+   * Adds an asset to this aggregate.
+   *
+   * @param AsseticAssetInterface $asset
+   *   The asset to add. Note that, despite the type requirements, it must
+   *   conform to Drupal's AssetInterface.
+   *
+   * @return bool
+   *   TRUE if the asset was added successfully, FALSE if it was already present
+   *   in the aggregate.
+   *
+   * @throws UnsupportedAsseticBehaviorException
+   *   Thrown if a vanilla Assetic asset is provided.
+   *
+   * @throws AssetTypeMismatchException
+   *   Thrown if the provided asset is not the correct type for the aggregate
+   *   (e.g., CSS file in a JS aggregate).
+   */
+  public function add(AsseticAssetInterface $asset);
 }
