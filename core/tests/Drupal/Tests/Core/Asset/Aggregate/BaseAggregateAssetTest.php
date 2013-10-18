@@ -40,13 +40,24 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   public function testId() {
+    // Simple case - test with one contained asset first.
     $aggregate = $this->getAggregate();
-
     $asset1 = $this->createMockFileAsset('css');
-    $asset2 = $this->createMockFileAsset('css');
     $aggregate->add($asset1);
-    $aggregate->add($asset2);
 
+    $this->assertEquals(hash('sha256', $asset1->id()), $aggregate->id());
+
+    // Now use two contained assets, one nested in another aggregate.
+    $aggregate = $this->getAggregate();
+    $aggregate->add($asset1);
+
+    $aggregate2 = $this->getAggregate();
+    $asset2 = $this->createMockFileAsset('css');
+    $aggregate2->add($asset2);
+
+    $aggregate->add($aggregate2);
+
+    // The aggregate only uses leaf, non-aggregate assets to determine its id.
     $this->assertEquals(hash('sha256', $asset1->id() . $asset2->id()), $aggregate->id());
   }
 
@@ -93,6 +104,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   /**
+   * @covers ::getById
    * @expectedException OutOfBoundsException
    */
   public function testGetById() {

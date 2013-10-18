@@ -105,11 +105,8 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
    */
   protected function calculateId() {
     $id = '';
-    foreach ($this->assetStorage as $asset) {
-      // Preserve a little id stability by not composing id from aggregates
-      if (!$asset instanceof AssetAggregateInterface) {
-        $id .= $asset->id();
-      }
+    foreach ($this as $asset) {
+      $id .= $asset->id();
     }
     // TODO come up with something stabler/more serialization friendly than object hash
     $this->id = hash('sha256', $id ?: spl_object_hash($this));
