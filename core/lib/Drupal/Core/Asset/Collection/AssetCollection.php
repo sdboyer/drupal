@@ -9,7 +9,9 @@ namespace Drupal\Core\Asset\Collection;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
+use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 /**
  * A container for assets.
@@ -116,6 +118,22 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    */
   public function ksort() {
     ksort($this->assetIdMap);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function resolveLibraries(AssetLibraryRepository $repository) {
+    $this->attemptWrite();
+
+    foreach ($this->assetStorage as $asset) {
+      foreach ($repository->resolveDependencies($asset) as $dep) {
+        $this->add($dep);
+        if ($dep->getAssetType() == $asset->getAssetType()) {
+          $asset->after($dep);
+        }
+      }
+    }
   }
 
   /**

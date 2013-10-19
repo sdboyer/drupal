@@ -83,4 +83,18 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    * @return void
    */
   public function ksort();
+
+  /**
+   * Resolves all contained asset references and adds them to this collection.
+   *
+   * "References" refers to library ids. This includes both libraries added
+   * directly to this collection, as well as those libraries included indirectly
+   * via a contained asset's declared dependencies.
+   *
+   * @param AssetLibraryRepository $repository
+   *   The AssetLibraryRepository against which to resolve dependencies.
+   *
+   * @return void
+   */
+  public function resolveLibraries(AssetLibraryRepository $repository);
 }
