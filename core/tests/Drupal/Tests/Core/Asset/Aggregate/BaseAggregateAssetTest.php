@@ -229,6 +229,14 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     );
 
     $this->assertEquals($output, $aggregate->all());
+
+    // Ensure that only top-level assets are returned.
+    $nested_aggregate = $this->getAggregate();
+    $nested_aggregate->add($this->createMockFileAsset('css'));
+    $aggregate->add($nested_aggregate);
+
+    $output[$nested_aggregate->id()] = $nested_aggregate;
+    $this->assertEquals($output, $aggregate->all());
   }
 
   /**

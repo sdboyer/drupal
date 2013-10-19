@@ -19,13 +19,6 @@ use Drupal\Core\Asset\AssetLibraryRepository;
 interface AssetCollectionInterface extends AssetCollectionBasicInterface {
 
   /**
-   * Returns all assets contained in this collection.
-   *
-   * @return AssetInterface[]
-   */
-  public function all();
-
-  /**
    * Adds an asset to the collection.
    *
    * @param \Drupal\Core\Asset\AssetInterface $asset

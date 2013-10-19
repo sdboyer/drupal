@@ -24,6 +24,18 @@ use Drupal\Core\Asset\AssetInterface;
 interface AssetCollectionBasicInterface extends \Traversable {
 
   /**
+   * Returns all top-level child assets as an array.
+   *
+   * To retrieve assets regardless of nesting level, see the iterators:
+   *
+   * @see AssetCollectionBasicInterface::each()
+   * @see AssetCollectionBasicInterface::eachLeaf()
+   *
+   * @return AssetInterface[]
+   */
+  public function all();
+
+  /**
    * Removes an asset from the aggregate.
    *
    * Wraps Assetic's AssetCollection::removeLeaf() to ease removal of keys.
