@@ -81,6 +81,21 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
   /**
    * @depends testAdd
+   * @depends testContains
+   * @covers ::__construct
+   */
+  public function testCreateWithAssets() {
+    $asset1 = $this->createStubFileAsset();
+    $asset2 = $this->createStubFileAsset();
+    $collection = new AssetCollection(array($asset1, $asset2));
+
+    $this->assertContains($asset1, $collection);
+    $this->assertContains($asset2, $collection);
+  }
+
+
+  /**
+   * @depends testAdd
    * @covers ::getCss
    */
   public function testGetCss() {
@@ -161,8 +176,8 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
    * @expectedException \OutOfBoundsException
    */
   public function testRemoveNonexistentId() {
-    $this->assertFalse($this->collection->remove('foo'));
-    $this->collection->remove('foo', FALSE);
+    $this->assertFalse($this->collection->remove('foo', TRUE));
+    $this->collection->remove('foo');
   }
 
   /**
@@ -170,8 +185,8 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
    */
   public function testRemoveNonexistentAsset() {
     $stub = $this->createStubFileAsset();
-    $this->assertFalse($this->collection->remove($stub));
-    $this->collection->remove($stub, FALSE);
+    $this->assertFalse($this->collection->remove($stub, TRUE));
+    $this->collection->remove($stub);
   }
 
   /**
@@ -251,28 +266,6 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
     // Nonexistent asset, non-graceful
     $this->collection->getById('bar', FALSE);
-  }
-
-  /**
-   * @depends testAdd
-   * @covers ::isEmpty
-   */
-  public function testIsEmpty() {
-    $this->assertTrue($this->collection->isEmpty());
-
-    $this->collection->add($this->createStubFileAsset());
-    $this->assertFalse($this->collection->isEmpty());
-  }
-
-  /**
-   * @depends testAdd
-   * @covers ::count
-   */
-  public function testCount() {
-    $this->assertCount(0, $this->collection);
-
-    $this->collection->add($this->createStubFileAsset());
-    $this->assertCount(1, $this->collection);
   }
 
   /**

@@ -83,6 +83,29 @@ class BasicAssetCollectionTest extends AssetUnitTest {
 
   /**
    * @depends testAdd
+   * @depends testEach
+   * @covers ::__construct
+   */
+  public function testCreateWithAssets() {
+    $asset1 = $this->createStubFileAsset();
+    $asset2 = $this->createStubFileAsset();
+    $collection = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Collection\\BasicAssetCollection', array(array($asset1, $asset2)));
+
+    $this->assertContains($asset1, $collection);
+    $this->assertContains($asset2, $collection);
+  }
+
+  /**
+   * @expectedException \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   * @covers ::add
+   */
+  public function testVanillaAsseticAdd() {
+    $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
+    $this->getBasicCollection()->add($vanilla);
+  }
+
+  /**
+   * @depends testAdd
    * @covers ::each
    * @covers ::getIterator
    * @covers \Drupal\Core\Asset\Collection\Iterator\RecursiveBasicCollectionIterator
@@ -208,6 +231,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    */
   public function testRemove() {
     list($collection, $foo, $bar, $baz, $nested_aggregate) = $this->getThreeLeafBasicCollection();
+    $this->assertFalse($collection->remove('arglebargle', TRUE));
     $this->assertTrue($collection->remove('foo'));
 
     $this->assertNotContains($foo, $collection);
@@ -220,22 +244,22 @@ class BasicAssetCollectionTest extends AssetUnitTest {
     $this->assertContains($baz, $collection);
 
     $this->assertTrue($collection->remove($nested_aggregate));
-    // Can't use contains check because that iterator does not report aggregates
     $this->assertNotContains($nested_aggregate, $collection);
   }
 
   /**
    * @depends testEach
    * @covers ::remove
+   * @covers ::doRemove
    * @expectedException \OutOfBoundsException
    */
   public function testRemoveNonexistentNeedle() {
     list($collection) = $this->getThreeLeafBasicCollection();
     // Nonexistent leaf removal returns FALSE in graceful mode
-    $this->assertFalse($collection->remove($this->createStubFileAsset()));
+    $this->assertFalse($collection->remove($this->createStubFileAsset(), TRUE));
 
     // In non-graceful mode, an exception is thrown.
-    $collection->remove($this->createStubFileAsset(), FALSE);
+    $collection->remove($this->createStubFileAsset());
   }
 
   /**
@@ -250,6 +274,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
         ->method('id')
         ->will($this->returnValue('qux'));
 
+    $this->assertFalse($collection->replace('arglebargle', $qux, TRUE));
     $this->assertTrue($collection->replace('foo', $qux));
 
     $this->assertContains($qux, $collection);
@@ -276,17 +301,18 @@ class BasicAssetCollectionTest extends AssetUnitTest {
   /**
    * @depends testEach
    * @covers ::replace
+   * @covers ::doReplace
    * @expectedException \OutOfBoundsException
    */
   public function testReplaceNonexistentNeedle() {
     list($collection) = $this->getThreeLeafBasicCollection();
     // Nonexistent leaf replacement returns FALSE in graceful mode
     $qux = $this->createStubFileAsset();
-    $this->assertFalse($collection->replace($this->createStubFileAsset(), $qux));
+    $this->assertFalse($collection->replace($this->createStubFileAsset(), $qux, TRUE));
     $this->assertNotContains($qux, $collection);
 
     // In non-graceful mode, an exception is thrown.
-    $collection->replace($this->createStubFileAsset(), $qux, FALSE);
+    $collection->replace($this->createStubFileAsset(), $qux);
   }
 
   /**

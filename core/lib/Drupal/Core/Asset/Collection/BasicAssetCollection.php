@@ -135,8 +135,6 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
       throw new \InvalidArgumentException('Invalid type provided to AssetCollectionBasicInterface::replace(); must provide either a string asset id or AssetInterface instance.');
     }
 
-    $this->ensureCorrectType($needle);
-
     return $this->doRemove($needle, $graceful);
   }
 
@@ -163,7 +161,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
         return TRUE;
       }
 
-      if ($asset instanceof AssetCollectionBasicInterface && $asset->remove($needle, TRUE)) {
+      if ($asset instanceof AssetCollectionBasicInterface && $asset->doRemove($needle, TRUE)) {
         return TRUE;
       }
     }
@@ -227,7 +225,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
         return TRUE;
       }
 
-      if ($asset instanceof AssetCollectionBasicInterface && $asset->replace($needle, $replacement, TRUE)) {
+      if ($asset instanceof AssetCollectionBasicInterface && $asset->doReplace($needle, $replacement, TRUE)) {
         return TRUE;
       }
       $i++;

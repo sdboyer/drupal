@@ -105,7 +105,6 @@ abstract class BaseAggregateAsset extends BasicAssetCollection implements \Itera
     if (!$needle instanceof AssetInterface) {
       throw new UnsupportedAsseticBehaviorException('Vanilla Assetic asset provided; Drupal aggregates require Drupal-flavored assets.');
     }
-    $this->ensureCorrectType($needle);
 
     return $this->doRemove($needle, $graceful);
   }
@@ -116,6 +115,11 @@ abstract class BaseAggregateAsset extends BasicAssetCollection implements \Itera
   public function replaceLeaf(AsseticAssetInterface $needle, AsseticAssetInterface $replacement, $graceful = FALSE) {
     if (!($needle instanceof AssetInterface && $replacement instanceof AssetInterface)) {
       throw new UnsupportedAsseticBehaviorException('Vanilla Assetic asset(s) provided; Drupal aggregates require Drupal-flavored assets.');
+    }
+
+    $this->ensureCorrectType($replacement);
+    if ($this->contains($replacement)) {
+      throw new \LogicException('Asset to be swapped in is already present in the collection.');
     }
 
     return $this->doReplace($needle, $replacement, $graceful);

@@ -105,6 +105,21 @@ class BaseAggregateAssetTest extends BasicAssetCollectionTest {
 
   /**
    * @depends testAdd
+   * @depends testEach
+   * @covers ::__construct
+   */
+  public function testCreateWithAssets() {
+    $asset1 = $this->createStubFileAsset();
+    $asset2 = $this->createStubFileAsset();
+    $meta = $this->createStubAssetMetadata();
+    $collection = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($meta, array($asset1, $asset2)));
+
+    $this->assertContains($asset1, $collection);
+    $this->assertContains($asset2, $collection);
+  }
+
+  /**
+   * @depends testAdd
    * @covers ::id
    * @covers ::calculateId
    */
@@ -142,10 +157,10 @@ class BaseAggregateAssetTest extends BasicAssetCollectionTest {
   public function testRemoveNonexistentNeedle() {
     list($aggregate) = $this->getThreeLeafAggregate();
     // Nonexistent leaf removal returns FALSE in graceful mode
-    $this->assertFalse($aggregate->removeLeaf($this->createStubFileAsset()));
+    $this->assertFalse($aggregate->removeLeaf($this->createStubFileAsset(), TRUE));
 
     // In non-graceful mode, an exception is thrown.
-    $aggregate->removeLeaf($this->createStubFileAsset(), FALSE);
+    $aggregate->removeLeaf($this->createStubFileAsset());
   }
 
   /**
@@ -167,11 +182,11 @@ class BaseAggregateAssetTest extends BasicAssetCollectionTest {
     list($aggregate) = $this->getThreeLeafAggregate();
     // Nonexistent leaf replacement returns FALSE in graceful mode
     $qux = $this->createStubFileAsset();
-    $this->assertFalse($aggregate->replaceLeaf($this->createStubFileAsset(), $qux));
+    $this->assertFalse($aggregate->replaceLeaf($this->createStubFileAsset(), $qux, TRUE));
     $this->assertNotContains($qux, $aggregate);
 
     // In non-graceful mode, an exception is thrown.
-    $aggregate->replaceLeaf($this->createStubFileAsset(), $qux, FALSE);
+    $aggregate->replaceLeaf($this->createStubFileAsset(), $qux);
   }
 
   /**
