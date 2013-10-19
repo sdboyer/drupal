@@ -5,7 +5,6 @@
  * Contains \Drupal\Tests\Core\Asset\AssetLibraryRepositoryTest.
  */
 
-
 namespace Drupal\Tests\Core\Asset {
 
 if (!defined('CSS_AGGREGATE_THEME')) {
@@ -32,7 +31,7 @@ use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Tests\UnitTestCase;
 
 /**
- *
+ * @coversDefaultClass \Drupal\Core\Asset\AssetLibraryRepository
  * @group Asset
  */
 class AssetLibraryRepositoryTest extends UnitTestCase {
@@ -42,8 +41,6 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
    */
   protected $repository;
 
-  protected $moduleHandler;
-
   public static function getInfo() {
     return array(
       'name' => 'Asset library repository test',
@@ -52,23 +49,103 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
     );
   }
 
-  /**
-   * Sets up an AssetLibraryRepository with a fake ModuleHandler that will point
-   * it at our two stub hook implementations.
-   */
-  public function setUp() {
-    $this->moduleHandler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
-    $this->moduleHandler->expects($this->any())
+  public function createAssetLibraryRepository() {
+    $module_handler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
+    $module_handler->expects($this->any())
       ->method('getImplementations')
       ->with('library_info')
       ->will($this->returnValue(array('stub1', 'stub2')));
 
-    $this->repository = new AssetLibraryRepository($this->moduleHandler);
+    $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryCollector', $module_handler);
+    return new AssetLibraryRepository($factory);
   }
 
-  public function testInitialize() {
-    // TODO this is a terrible test...but really, because AssetLibraryRepository needs to be refactored.
-    $this->assertEquals(16, count($this->repository->getNames()));
+  /**
+   * @covers ::set
+   */
+  public function testSet() {
+    $repository = $this->createAssetLibraryRepository();
+    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $repository->set('foo:bar', $library);
+
+    $this->assertAttributeContains($library, 'libraries', $repository);
+  }
+
+  /**
+   * @covers ::set
+   * @expectedException \InvalidArgumentException
+   */
+  public function testSetNoColon() {
+    $repository = $this->createAssetLibraryRepository();
+    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+
+    $repository->set('foobar', $library);
+  }
+
+  /**
+   * @covers ::set
+   * @expectedException \InvalidArgumentException
+   */
+  public function testSetTooManyColons() {
+    $repository = $this->createAssetLibraryRepository();
+    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+
+    $repository->set('foo::bar', $library);
+  }
+
+  /**
+   * @covers ::set
+   * @expectedException \InvalidArgumentException
+   */
+  public function testSetInvalidKeyChars() {
+    $repository = $this->createAssetLibraryRepository();
+    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+
+    $repository->set("$∫≤ˆ\"'\n\t\r", $library);
+  }
+
+  /**
+   * @depends testSet
+   * @covers ::has
+   */
+  public function testHas() {
+    $repository = $this->createAssetLibraryRepository();
+    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+
+    $this->assertFalse($repository->has('foo:bar'));
+
+    $repository->set('foo:bar', $library);
+    $this->assertTrue($repository->has('foo:bar'));
+  }
+
+  /**
+   * @depends testSet
+   * @covers ::getNames
+   */
+  public function testGetNames() {
+    $repository = $this->createAssetLibraryRepository();
+    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+
+    $repository->set('foo:bar', $library);
+    $repository->set('baz:bing', $library);
+
+    $this->assertEquals(array('foo:bar', 'baz:bing'), $repository->getNames());
+  }
+
+  /**
+   * @depends testSet
+   * @covers ::get
+   */
+  public function testGet() {
+    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryCollector');
+    $factory->expects($this->once())
+      ->method('getLibrary')
+      ->with($this->equalTo('foo:bar'))
+      ->will($this->returnValue($library));
+
+    $repository = new AssetLibraryRepository($factory);
+    $this->assertSame($library, $repository->get('foo:bar'));
   }
 }
 

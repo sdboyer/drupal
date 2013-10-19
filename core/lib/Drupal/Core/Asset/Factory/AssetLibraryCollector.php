@@ -10,14 +10,13 @@ use Drupal\Component\Utility\Crypt;
 use \Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Factory\AssetCollector;
 use Drupal\Core\Asset\Collection\AssetLibrary;
-use Drupal\Core\Asset\Metadata\JsMetadataBag;
 
 class AssetLibraryCollector {
 
   /**
    * @var \Drupal\Core\Asset\AssetLibraryRepository
    */
-  protected $manager;
+  protected $repository;
 
   protected $module;
 
@@ -28,11 +27,11 @@ class AssetLibraryCollector {
   protected $privateKey;
 
   public function __construct(AssetLibraryRepository $manager) {
-    $this->manager = $manager;
+    $this->repository = $manager;
   }
 
   public function add($name, AssetLibrary $library) {
-    $this->manager->add($this->module, $name, $library);
+    $this->repository->add($this->module, $name, $library);
     return $this;
   }
 
@@ -40,7 +39,6 @@ class AssetLibraryCollector {
     $library = $this->createLibrary($name, $values);
 
     $collector = new AssetCollector($library);
-    $collector->setDefaultMetadata(new JsMetadataBag(array('group' => JS_LIBRARY)));
     $collector->lock($this->getPrivateKey()); // TODO is locking here a bad idea?
 
     return $collector;

@@ -9,35 +9,28 @@ namespace Drupal\Core\Asset;
 
 use Drupal\Core\Asset\Collection\AssetLibrary;
 use Drupal\Core\Asset\Factory\AssetLibraryCollector;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 
 /**
  * TODO the flow here is completely wrong. the state contained here needs proper management, beyond a single request.
  */
-class AssetLibraryRepository implements \IteratorAggregate {
+class AssetLibraryRepository {
 
+  /**
+   * An array of loaded AssetLibrary objects.
+   *
+   * @var AssetLibrary[]
+   */
   protected $libraries;
 
-  protected $flattened;
-
   /**
-   * Indicates whether or not the repository has initialized its collection.
+   * The library collector responsible for lazy-loading libraries.
    *
-   * @todo this is very dirty; shift responsibility for populating to something external
-   *
-   * @var bool
+   * @var
    */
-  protected $initialized = FALSE;
+  protected $collector;
 
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  function __construct($module_handler) {
-    $this->moduleHandler = $module_handler;
+  function __construct(AssetLibraryCollector $collector) {
+    $this->collector = $collector;
   }
 
   protected function initialize() {
@@ -72,66 +65,71 @@ class AssetLibraryRepository implements \IteratorAggregate {
   }
 
   /**
-   * Gets a library by composite key.
+   * Gets a library by its composite key.
    *
-   * @param string $module
-   *   The module owner that declared the library.
-   *
-   * @param string $name
-   *   The library name.
+   * @param string $key
+   *   The key of the library, as a string of the form "$module:$name".
    *
    * @return \Drupal\Core\Asset\Collection\AssetLibrary
    *   The requested library.
    *
-   * @throws \InvalidArgumentException If there is no library by that name
+   * @throws \InvalidArgumentException
+   *   Thrown if no library can be found with the given key.
    */
-  public function get($module, $name) {
-    $this->initialize();
-    if (!isset($this->libraries[$module][$name])) {
-      throw new \InvalidArgumentException(sprintf('There is no library identified by "%s/%s" in the repository.', $module, $name));
+  public function get($key) {
+    if ($this->has($key)) {
+      return $this->libraries[$key];
     }
 
-    return $this->libraries[$module][$name];
+    if ($library = $this->collector->getLibrary($key)) {
+      $this->set($key, $library);
+    }
+    else {
+      throw new \InvalidArgumentException(sprintf('No library could be found with the key "%s".', $key));
+    }
+
+    return $this->libraries[$key];
+  }
+
+  public function set($key, AssetLibrary $library) {
+    if (preg_match('/[^0-9A-Za-z:_-]/', $key)) {
+      throw new \InvalidArgumentException(sprintf('The name "%s" is invalid.', $key));
+    }
+    elseif (substr_count($key, ':') !== 1) {
+      throw new \InvalidArgumentException(sprintf('Invalid key "%s" provided; asset libraries must have exactly one colon in their key, separating the owning module from the library name.', $key));
+    }
+
+    $this->libraries[$key] = $library;
   }
 
   /**
-   * Checks if the current library repository has a certain library.
+   * Checks if the current library repository contains a certain library.
    *
-   * @param string $module
-   *   The module owner that declared the library.
+   * Note that this does not verify whether or not such a library could be
+   * created from declarations elsewhere in the system - only if it HAS been
+   * created already.
    *
-   * @param string $name
-   *   The library name.
+   * @param string $key
+   *   The key of the library, as a string of the form "$module:$name".
    *
    * @return bool
-   *   True if the library has been set, false if not
+   *   TRUE if the library has been built, FALSE otherwise.
    */
-  public function has($module, $name) {
-    $this->initialize();
-    return isset($this->libraries[$module][$name]);
-  }
-
-  public function add($module, $name, AssetLibrary $library) {
-    // TODO add validation - alphanum + underscore only
-    if (!isset($this->libraries[$module])) {
-      $this->libraries[$module] = array();
-    }
-
-    $this->libraries[$module][$name] = $library;
-    $this->flattened = NULL;
+  public function has($key) {
+    return isset($this->libraries[$key]);
   }
 
   /**
    * Retrieves the asset objects on which the passed asset depends.
    *
-   * @param AssetOrderingInterface $asset
+   * @param DependencyInterface $asset
    *   The asset whose dependencies should be retrieved.
    *
    * @return array
    *   An array of AssetInterface objects if any dependencies were found;
    *   otherwise, an empty array.
    */
-  public function resolveDependencies(AssetOrderingInterface $asset) {
+  public function resolveDependencies(DependencyInterface $asset) {
     $dependencies = array();
 
     if ($asset->hasDependencies()) {
@@ -149,38 +147,13 @@ class AssetLibraryRepository implements \IteratorAggregate {
    * @return array An array of library names
    */
   public function getNames() {
-    $this->initialize();
-    return array_keys($this->flatten());
+    return array_keys($this->libraries);
   }
 
   /**
    * Clears all libraries.
    */
   public function clear() {
-    $this->initialize();
     $this->libraries = array();
-    $this->flattened = NULL;
   }
-
-  /**
-   * Flattens contained library data into a more accessible form.
-   */
-  protected function flatten() {
-    if (is_null($this->flattened)) {
-      $this->flattened = array();
-      foreach ($this->libraries as $module => $set) {
-        foreach ($set as $name => $library) {
-          $this->flattened["$module:$name"] = $library;
-        }
-      }
-    }
-
-    return $this->flattened;
-  }
-
-  public function getIterator() {
-    $this->initialize();
-    return new \ArrayIterator($this->flatten());
-  }
-
 }
