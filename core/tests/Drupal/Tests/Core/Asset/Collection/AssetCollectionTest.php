@@ -259,8 +259,26 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->collection->getById('bar', FALSE);
   }
 
+  /**
+   * @depends testAdd
+   * @covers ::isEmpty
+   */
   public function testIsEmpty() {
     $this->assertTrue($this->collection->isEmpty());
+
+    $this->collection->add($this->createMockFileAsset('css'));
+    $this->assertFalse($this->collection->isEmpty());
+  }
+
+  /**
+   * @depends testAdd
+   * @covers ::count
+   */
+  public function testCount() {
+    $this->assertCount(0, $this->collection);
+
+    $this->collection->add($this->createMockFileAsset('css'));
+    $this->assertCount(1, $this->collection);
   }
 
   /**
@@ -315,3 +333,4 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->assertEquals($assets, $this->collection->all());
   }
 }
+

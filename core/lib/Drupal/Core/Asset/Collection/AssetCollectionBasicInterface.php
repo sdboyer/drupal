@@ -21,7 +21,7 @@ use Drupal\Core\Asset\AssetInterface;
  * @see \Drupal\Core\Asset\Aggregate\AssetAggregateInterface
  * @see \Drupal\Core\Asset\Collection\AssetCollectionInterface
  */
-interface AssetCollectionBasicInterface extends \Traversable {
+interface AssetCollectionBasicInterface extends \Traversable, \Countable {
 
   /**
    * Returns all top-level child assets as an array.
@@ -34,6 +34,16 @@ interface AssetCollectionBasicInterface extends \Traversable {
    * @return AssetInterface[]
    */
   public function all();
+
+  /**
+   * Returns the total number of leaf assets in this collection.
+   *
+   * Non-leaf assets - objects implementing AssetCollectionBasicInterface - are
+   * not included in the count.
+   *
+   * @return int
+   */
+  public function count();
 
   /**
    * Removes an asset from the aggregate.

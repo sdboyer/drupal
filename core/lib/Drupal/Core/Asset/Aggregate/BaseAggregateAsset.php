@@ -380,6 +380,23 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function count() {
+    if ($this->nestedStorage->count() === 0) {
+      return $this->assetStorage->count();
+    }
+
+    $c = $i = 0;
+    foreach ($this->nestedStorage as $aggregate) {
+      $c += $aggregate->count();
+      $i++;
+    }
+
+    return $this->assetStorage->count() - $i + $c;
+  }
+
+  /**
    * Ensures that the asset is of the correct subtype (e.g., css vs. js).
    *
    * @param AssetInterface $asset

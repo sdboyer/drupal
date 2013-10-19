@@ -404,12 +404,47 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertTrue($aggregate->isEmpty());
 
     $aggregate2 = $this->getAggregate();
-    $aggregate2->add($this->createMockFileAsset('css'));
+    $asset = $this->createMockFileAsset('css');
+    $aggregate2->add($asset);
     $aggregate->add($aggregate2);
     $this->assertFalse($aggregate->isEmpty());
 
     $aggregate->removeLeaf($aggregate2);
     $this->assertTrue($aggregate->isEmpty());
+
+    $aggregate->add($asset);
+    $this->assertFalse($aggregate->isEmpty());
+
+    $aggregate->remove($asset);
+    $this->assertTrue($aggregate->isEmpty());
+  }
+
+  /**
+   * @depends testAdd
+   * @depends testRemove
+   * @covers ::count
+   */
+  public function testCount() {
+    $aggregate = $this->getAggregate();
+    $this->assertCount(0, $aggregate);
+
+    $aggregate->add($this->getAggregate());
+    $this->assertCount(0, $aggregate);
+
+    $aggregate2 = $this->getAggregate();
+    $asset = $this->createMockFileAsset('css');
+    $aggregate2->add($asset);
+    $aggregate->add($aggregate2);
+    $this->assertCount(1, $aggregate);
+
+    $aggregate->removeLeaf($aggregate2);
+    $this->assertCount(0, $aggregate);
+
+    $aggregate->add($asset);
+    $this->assertCount(1, $aggregate);
+
+    $aggregate->remove($asset);
+    $this->assertCount(0, $aggregate);
   }
 
   /**

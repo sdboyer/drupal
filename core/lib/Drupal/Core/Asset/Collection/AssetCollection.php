@@ -155,6 +155,13 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
   /**
    * {@inheritdoc}
    */
+  public function count() {
+    return count($this->assetStorage);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCss() {
     $collection = new self();
     foreach (new AssetSubtypeFilterIterator($this->getIterator(), 'css') as $asset) {
