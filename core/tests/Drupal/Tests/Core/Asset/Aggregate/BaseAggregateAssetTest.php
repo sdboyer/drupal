@@ -120,6 +120,21 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   /**
+   * @depends testAdd
+   * @covers ::eachLeaf
+   * @covers \Drupal\Core\Asset\Aggregate\Iterator\AssetAggregateIterator
+   */
+  public function testEachLeaf() {
+    list($aggregate, $foo, $bar, $baz) = $this->getThreeLeafAggregate();
+
+    $contained = array();
+    foreach ($aggregate->eachLeaf() as $leaf) {
+      $contained[] = $leaf;
+    }
+    $this->assertEquals(array($foo, $bar, $baz), $contained);
+  }
+
+  /**
    * Tests that adding the same asset twice is disallowed.
    *
    * @depends testAdd
