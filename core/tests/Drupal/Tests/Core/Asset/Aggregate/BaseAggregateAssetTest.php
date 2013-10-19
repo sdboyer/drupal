@@ -80,6 +80,10 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   /**
+   * This uses PHPUnit's reflection-based assertions rather than assertContains
+   * so that this test can honestly sit at the root of the test method
+   * dependency tree.
+   *
    * @covers ::add
    */
   public function testAdd() {
@@ -87,16 +91,32 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $asset = $this->createMockFileAsset('css');
     $this->assertTrue($aggregate->add($asset));
 
-    $this->assertContains($asset, $aggregate);
+    $this->assertAttributeContains($asset, 'assetStorage', $aggregate);
+    $this->assertAttributeContains($asset, 'assetIdMap', $aggregate);
 
     // Nesting: add an aggregate to the first aggregate.
     $nested_aggregate = $this->getAggregate();
-    $nested_asset = $this->createMockFileAsset('css');
+    $aggregate->add($nested_aggregate);
 
-    $nested_aggregate->add($nested_asset);
-    $aggregate->add($nested_asset);
+    $this->assertAttributeContains($nested_aggregate, 'assetStorage', $aggregate);
+    $this->assertAttributeContains($nested_aggregate, 'assetIdMap', $aggregate);
+    $this->assertAttributeContains($nested_aggregate, 'nestedStorage', $aggregate);
+  }
 
-    $this->assertContains($nested_asset, $aggregate);
+  /**
+   * @depends testAdd
+   * @covers ::each
+   * @covers ::getIterator
+   * @covers \Drupal\Core\Asset\Aggregate\Iterator\AssetAggregateIterator
+   */
+  public function testEach() {
+    list($aggregate, $foo, $bar, $baz, $nested_aggregate) = $this->getThreeLeafAggregate();
+
+    $contained = array();
+    foreach ($aggregate->each() as $leaf) {
+      $contained[] = $leaf;
+    }
+    $this->assertEquals(array($nested_aggregate, $foo, $bar, $baz), $contained);
   }
 
   /**
@@ -214,8 +234,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   /**
    * remove() and removeLeaf() are conjoined; test them both here.
    *
-   * @depends testAdd
-   * @depends testContains
+   * @depends testEach
    * @covers ::remove
    * @covers ::removeLeaf
    */
@@ -234,11 +253,11 @@ class BaseAggregateAssetTest extends AssetUnitTest {
 
     $this->assertTrue($aggregate->remove($nested_aggregate));
     // Can't use contains check because that iterator does not report aggregates
-    $this->assertFalse($aggregate->contains($nested_aggregate));
+    $this->assertNotContains($nested_aggregate, $aggregate);
   }
 
   /**
-   * @depends testAdd
+   * @depends testEach
    * @covers ::removeLeaf
    * @expectedException \OutOfBoundsException
    */
@@ -264,7 +283,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   /**
    * replace() and replaceLeaf() are conjoined; test them both here.
    *
-   * @depends testAdd
+   * @depends testEach
    * @covers ::replace
    * @covers ::replaceLeaf
    */
@@ -281,7 +300,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertNotContains($foo, $aggregate);
 
     $contained = array();
-    foreach ($aggregate as $leaf) {
+    foreach ($aggregate->eachLeaf() as $leaf) {
       $contained[] = $leaf;
     }
     $this->assertEquals(array($qux, $bar, $baz), $contained);
@@ -292,14 +311,14 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertNotContains($bar, $aggregate);
 
     $contained = array();
-    foreach ($aggregate as $leaf) {
+    foreach ($aggregate->eachLeaf() as $leaf) {
       $contained[] = $leaf;
     }
     $this->assertEquals(array($qux, $foo, $baz), $contained);
   }
 
   /**
-   * @depends testAdd
+   * @depends testEach
    * @covers ::replaceLeaf
    * @expectedException \OutOfBoundsException
    */
@@ -315,7 +334,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   /**
-   * @depends testAdd
+   * @depends testEach
    * @covers ::replaceLeaf
    * @expectedException \LogicException
    */

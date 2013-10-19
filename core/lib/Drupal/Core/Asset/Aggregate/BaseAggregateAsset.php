@@ -106,7 +106,7 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
    */
   protected function calculateId() {
     $id = '';
-    foreach ($this as $asset) {
+    foreach ($this->eachLeaf() as $asset) {
       $id .= $asset->id();
     }
     // TODO come up with something stabler/more serialization friendly than object hash
@@ -338,9 +338,24 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   }
 
   /**
+   * {@inheritdoc}
    * TODO Assetic uses their iterator to clone, then populate values and return here; is that a good model for us?
    */
   public function getIterator() {
+    return new \RecursiveIteratorIterator(new AssetAggregateIterator($this), \RecursiveIteratorIterator::SELF_FIRST);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function each() {
+    return $this->getIterator();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function eachLeaf() {
     return new \RecursiveIteratorIterator(new AssetAggregateIterator($this));
   }
 
@@ -361,7 +376,7 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
       $i++;
     }
 
-    return $i == $maincount;
+    return $i === $maincount;
   }
 
   /**

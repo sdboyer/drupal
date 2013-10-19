@@ -71,11 +71,12 @@ interface AssetCollectionBasicInterface extends \Traversable {
   /**
    * Indicates whether the collection contains any assets.
    *
-   * Note that this will only return true if there are 'leaf' assets - that is,
-   * assets that do not implement AssetCollectionBasicInterface.
+   * Note that this will only return TRUE if leaf assets are present - that is,
+   * assets that do NOT implement AssetCollectionBasicInterface.
    *
    * @return bool
    *   TRUE if the collection is devoid of any leaf assets, FALSE otherwise.
    */
   public function isEmpty();
+
 }

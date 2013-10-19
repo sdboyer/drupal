@@ -73,4 +73,24 @@ interface AssetAggregateInterface extends AssetInterface, AssetCollectionBasicIn
    *   (e.g., CSS file in a JS aggregate).
    */
   public function add(AsseticAssetInterface $asset);
+
+  /**
+   * Retrieves a traversable that will return all contained assets.
+   *
+   * 'All' assets includes both AssetCollectionBasicInterface objects and plain
+   * AssetInterface objects.
+   *
+   * @return \Traversable
+   */
+  public function each();
+
+  /**
+   * Retrieves a traversable that returns only contained leaf assets.
+   *
+   * Leaf assets are objects that only implement AssetInterface, not
+   * AssetCollectionBasicInterface.
+   *
+   * @return \Traversable
+   */
+  public function eachLeaf();
 }
