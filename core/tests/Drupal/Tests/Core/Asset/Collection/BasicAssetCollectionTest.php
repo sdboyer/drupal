@@ -198,6 +198,14 @@ class BasicAssetCollectionTest extends AssetUnitTest {
     $collection->add($asset);
     $this->assertSame($asset, $collection->getById($asset->id()));
 
+    $nested_aggregate = $this->getAggregate();
+    $nested_asset = $this->createStubFileAsset();
+
+    $nested_aggregate->add($nested_asset);
+    $collection->add($nested_aggregate);
+
+    $this->assertSame($nested_asset, $collection->getById($nested_asset->id()));
+
     // Nonexistent asset
     $this->assertFalse($collection->getById('bar'));
 

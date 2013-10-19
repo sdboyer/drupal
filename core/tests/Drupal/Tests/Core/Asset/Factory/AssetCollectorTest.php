@@ -50,6 +50,19 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
+   * Tests that constructor-injected params end up in the right place.
+   */
+  public function testConstructorInjection() {
+    $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
+    $collection = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetCollection');
+
+    $collector = new AssetCollector($collection, $factory);
+
+    $this->assertAttributeSame($collection, 'collection', $collector);
+    $this->assertAttributeSame($factory, 'metadataFactory', $collector);
+  }
+
+  /**
    * Tests that the collector injects provided metadata to created assets.
    */
   public function testMetadataInjection() {
