@@ -213,7 +213,7 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
         return TRUE;
       }
 
-      if ($asset instanceof AssetAggregateInterface && $asset->removeLeaf($needle, $graceful)) {
+      if ($asset instanceof AssetAggregateInterface && $asset->removeLeaf($needle, TRUE)) {
         return TRUE;
       }
     }
@@ -266,7 +266,7 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
         return TRUE;
       }
 
-      if ($asset instanceof AssetAggregateInterface && $asset->replaceLeaf($needle, $replacement, $graceful)) {
+      if ($asset instanceof AssetAggregateInterface && $asset->replaceLeaf($needle, $replacement, TRUE)) {
         return TRUE;
       }
       $i++;

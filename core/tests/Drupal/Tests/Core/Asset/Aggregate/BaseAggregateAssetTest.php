@@ -54,12 +54,12 @@ class BaseAggregateAssetTest extends AssetUnitTest {
         ->will($this->returnValue($var));
     }
 
-    $aggregate->add($foo);
+    $nested_aggregate->add($foo);
     $nested_aggregate->add($bar);
-    $nested_aggregate->add($baz);
     $aggregate->add($nested_aggregate);
+    $aggregate->add($baz);
 
-    return array($aggregate, $foo, $bar, $baz);
+    return array($aggregate, $foo, $bar, $baz, $nested_aggregate);
   }
 
   public function testGetAssetType() {
@@ -215,11 +215,12 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    * remove() and removeLeaf() are conjoined; test them both here.
    *
    * @depends testAdd
+   * @depends testContains
    * @covers ::remove
    * @covers ::removeLeaf
    */
   public function testRemove() {
-    list($aggregate, $foo, $bar, $baz) = $this->getThreeLeafAggregate();
+    list($aggregate, $foo, $bar, $baz, $nested_aggregate) = $this->getThreeLeafAggregate();
     $this->assertTrue($aggregate->remove('foo'));
 
     $this->assertNotContains($foo, $aggregate);
@@ -230,6 +231,10 @@ class BaseAggregateAssetTest extends AssetUnitTest {
 
     $this->assertNotContains($bar, $aggregate);
     $this->assertContains($baz, $aggregate);
+
+    $this->assertTrue($aggregate->remove($nested_aggregate));
+    // Can't use contains check because that iterator does not report aggregates
+    $this->assertFalse($aggregate->contains($nested_aggregate));
   }
 
   /**
@@ -238,7 +243,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    * @expectedException \OutOfBoundsException
    */
   public function testRemoveNonexistentNeedle() {
-    list($aggregate,,,) = $this->getThreeLeafAggregate();
+    list($aggregate) = $this->getThreeLeafAggregate();
     // Nonexistent leaf removal returns FALSE in graceful mode
     $this->assertFalse($aggregate->removeLeaf($this->createMockFileAsset('css')));
 
@@ -264,7 +269,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    * @covers ::replaceLeaf
    */
   public function testReplace() {
-    list($aggregate, $foo, $bar, $baz) = $this->getThreeLeafAggregate();
+    list($aggregate, $foo, $bar, $baz, $nested_aggregate) = $this->getThreeLeafAggregate();
     $qux = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
     $qux->expects($this->any())
       ->method('id')
@@ -299,7 +304,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    * @expectedException \OutOfBoundsException
    */
   public function testReplaceLeafNonexistentNeedle() {
-    list($aggregate,,,) = $this->getThreeLeafAggregate();
+    list($aggregate) = $this->getThreeLeafAggregate();
     // Nonexistent leaf replacement returns FALSE in graceful mode
     $qux = $this->createMockFileAsset('css');
     $this->assertFalse($aggregate->replaceLeaf($this->createMockFileAsset('css'), $qux));
@@ -315,7 +320,21 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    * @expectedException \LogicException
    */
   public function testReplaceLeafWithAlreadyPresentAsset() {
-    list($aggregate, $foo, $bar, $baz) = $this->getThreeLeafAggregate();
+    list($aggregate, $foo) = $this->getThreeLeafAggregate();
+    $aggregate->replaceLeaf($this->createMockFileAsset('css'), $foo);
+  }
+
+  /**
+   * @depends testAdd
+   * @depends testReplaceLeafWithAlreadyPresentAsset
+   * @covers ::replaceLeaf
+   * @expectedException \LogicException
+   *
+   * This fails on the same check that testReplaceLeafWithAlreadyPresentAsset,
+   * but it is demonstrated as its own test for clarity.
+   */
+  public function testReplaceLeafWithSelf() {
+    list($aggregate, $foo) = $this->getThreeLeafAggregate();
     $aggregate->replaceLeaf($foo, $foo);
   }
 
