@@ -88,7 +88,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    */
   public function testAdd() {
     $aggregate = $this->getAggregate();
-    $asset = $this->createMockFileAsset('css');
+    $asset = $this->createStubFileAsset();
     $this->assertTrue($aggregate->add($asset));
 
     $this->assertAttributeContains($asset, 'assetStorage', $aggregate);
@@ -142,7 +142,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    */
   public function testDoubleAdd() {
     $aggregate = $this->getAggregate();
-    $asset = $this->createMockFileAsset('css');
+    $asset = $this->createStubFileAsset();
     $this->assertTrue($aggregate->add($asset));
 
     // Test by object identity
@@ -162,14 +162,14 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    */
   public function testContains() {
     $aggregate = $this->getAggregate();
-    $asset = $this->createMockFileAsset('css');
+    $asset = $this->createStubFileAsset();
     $aggregate->add($asset);
 
     $this->assertTrue($aggregate->contains($asset));
 
     // Nesting: add an aggregate to the first aggregate.
     $nested_aggregate = $this->getAggregate();
-    $nested_asset = $this->createMockFileAsset('css');
+    $nested_asset = $this->createStubFileAsset();
 
     $nested_aggregate->add($nested_asset);
     $aggregate->add($nested_aggregate);
@@ -185,7 +185,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   public function testId() {
     // Simple case - test with one contained asset first.
     $aggregate = $this->getAggregate();
-    $asset1 = $this->createMockFileAsset('css');
+    $asset1 = $this->createStubFileAsset();
     $aggregate->add($asset1);
 
     $this->assertEquals(hash('sha256', $asset1->id()), $aggregate->id());
@@ -195,7 +195,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $aggregate->add($asset1);
 
     $aggregate2 = $this->getAggregate();
-    $asset2 = $this->createMockFileAsset('css');
+    $asset2 = $this->createStubFileAsset();
     $aggregate2->add($asset2);
 
     $aggregate->add($aggregate2);
@@ -211,7 +211,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   public function testGetById() {
     $aggregate = $this->getAggregate();
 
-    $asset = $this->createMockFileAsset('css');
+    $asset = $this->createStubFileAsset();
     $aggregate->add($asset);
     $this->assertSame($asset, $aggregate->getById($asset->id()));
 
@@ -233,8 +233,8 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   public function testAll() {
     $aggregate = $this->getAggregate();
 
-    $asset1 = $this->createMockFileAsset('css');
-    $asset2 = $this->createMockFileAsset('css');
+    $asset1 = $this->createStubFileAsset();
+    $asset2 = $this->createStubFileAsset();
     $aggregate->add($asset1);
     $aggregate->add($asset2);
 
@@ -247,7 +247,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
 
     // Ensure that only top-level assets are returned.
     $nested_aggregate = $this->getAggregate();
-    $nested_aggregate->add($this->createMockFileAsset('css'));
+    $nested_aggregate->add($this->createStubFileAsset());
     $aggregate->add($nested_aggregate);
 
     $output[$nested_aggregate->id()] = $nested_aggregate;
@@ -287,10 +287,10 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   public function testRemoveNonexistentNeedle() {
     list($aggregate) = $this->getThreeLeafAggregate();
     // Nonexistent leaf removal returns FALSE in graceful mode
-    $this->assertFalse($aggregate->removeLeaf($this->createMockFileAsset('css')));
+    $this->assertFalse($aggregate->removeLeaf($this->createStubFileAsset()));
 
     // In non-graceful mode, an exception is thrown.
-    $aggregate->removeLeaf($this->createMockFileAsset('css'), FALSE);
+    $aggregate->removeLeaf($this->createStubFileAsset(), FALSE);
   }
 
   /**
@@ -348,12 +348,12 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   public function testReplaceLeafNonexistentNeedle() {
     list($aggregate) = $this->getThreeLeafAggregate();
     // Nonexistent leaf replacement returns FALSE in graceful mode
-    $qux = $this->createMockFileAsset('css');
-    $this->assertFalse($aggregate->replaceLeaf($this->createMockFileAsset('css'), $qux));
+    $qux = $this->createStubFileAsset();
+    $this->assertFalse($aggregate->replaceLeaf($this->createStubFileAsset(), $qux));
     $this->assertNotContains($qux, $aggregate);
 
     // In non-graceful mode, an exception is thrown.
-    $aggregate->replaceLeaf($this->createMockFileAsset('css'), $qux, FALSE);
+    $aggregate->replaceLeaf($this->createStubFileAsset(), $qux, FALSE);
   }
 
   /**
@@ -363,7 +363,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    */
   public function testReplaceLeafWithAlreadyPresentAsset() {
     list($aggregate, $foo) = $this->getThreeLeafAggregate();
-    $aggregate->replaceLeaf($this->createMockFileAsset('css'), $foo);
+    $aggregate->replaceLeaf($this->createStubFileAsset(), $foo);
   }
 
   /**
@@ -387,7 +387,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   public function testReplaceLeafVanillaAsseticAsset() {
     $aggregate = $this->getAggregate();
     $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
-    $drupally = $this->createMockFileAsset('css');
+    $drupally = $this->createStubFileAsset();
 
     try {
       $aggregate->replaceLeaf($vanilla, $drupally);
@@ -419,7 +419,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertTrue($aggregate->isEmpty());
 
     $aggregate2 = $this->getAggregate();
-    $asset = $this->createMockFileAsset('css');
+    $asset = $this->createStubFileAsset();
     $aggregate2->add($asset);
     $aggregate->add($aggregate2);
     $this->assertFalse($aggregate->isEmpty());
@@ -447,7 +447,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertCount(0, $aggregate);
 
     $aggregate2 = $this->getAggregate();
-    $asset = $this->createMockFileAsset('css');
+    $asset = $this->createStubFileAsset();
     $aggregate2->add($asset);
     $aggregate->add($aggregate2);
     $this->assertCount(1, $aggregate);

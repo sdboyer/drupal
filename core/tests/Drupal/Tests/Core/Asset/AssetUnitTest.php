@@ -27,7 +27,7 @@ abstract class AssetUnitTest extends UnitTestCase {
    *
    * @return FileAsset
    */
-  public function createMockFileAsset($type) {
+  public function createStubFileAsset($type = 'css') {
     $asset = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
     $asset->expects($this->any())
       ->method('getAssetType')
