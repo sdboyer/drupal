@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\BaseAggregateAsset.
+ * Contains \Drupal\Core\Asset\AssetAggregate.
  */
 
 namespace Drupal\Core\Asset\Aggregate;
@@ -19,7 +19,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 /**
  * Base class for representing aggregate assets.
  */
-abstract class BaseAggregateAsset extends BasicAssetCollection implements \IteratorAggregate, AssetInterface, AssetAggregateInterface {
+class AssetAggregate extends BasicAssetCollection implements \IteratorAggregate, AssetInterface, AssetAggregateInterface {
 
   /**
    * @var \Drupal\Core\Asset\Metadata\AssetMetadataInterface
@@ -30,7 +30,7 @@ abstract class BaseAggregateAsset extends BasicAssetCollection implements \Itera
    * A string identifier for this aggregate.
    *
    * For how this is calculated, see:
-   * @see BaseAggregateAsset::calculateId()
+   * @see AssetAggregate::calculateId()
    *
    * @var string
    */

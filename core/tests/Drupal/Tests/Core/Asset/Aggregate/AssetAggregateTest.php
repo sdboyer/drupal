@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\Core\Asset\Aggregate\BaseAggregateAssetTest.
+ * Contains \Drupal\Tests\Core\Asset\Aggregate\AssetAggregateTest.
  */
 
 namespace Drupal\Tests\Core\Asset\Aggregate;
@@ -11,21 +11,21 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Tests\Core\Asset\Collection\BasicAssetCollectionTest;
 
 /**
- * @coversDefaultClass \Drupal\Core\Asset\Aggregate\BaseAggregateAsset
+ * @coversDefaultClass \Drupal\Core\Asset\Aggregate\AssetAggregate
  * @group Asset
  */
-class BaseAggregateAssetTest extends BasicAssetCollectionTest {
+class AssetAggregateTest extends BasicAssetCollectionTest {
 
   public static function getInfo() {
     return array(
       'name' => 'Asset aggregate tests',
-      'description' => 'Unit tests on BaseAggregateAsset',
+      'description' => 'Unit tests on AssetAggregate',
       'group' => 'Asset',
     );
   }
 
   /**
-   * Generates a BaseAggregateAsset mock with three leaf assets.
+   * Generates a AssetAggregate mock with three leaf assets.
    */
   public function getThreeLeafAggregate() {
     $aggregate = $this->getAggregate();
@@ -51,14 +51,14 @@ class BaseAggregateAssetTest extends BasicAssetCollectionTest {
     $mockmeta->expects($this->once())
       ->method('getType')
       ->will($this->returnValue('unicorns'));
-    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
+    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\AssetAggregate', array($mockmeta));
 
     $this->assertEquals('unicorns', $aggregate->getAssetType());
   }
 
   public function testGetMetadata() {
     $mockmeta = $this->createStubAssetMetadata();
-    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
+    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\AssetAggregate', array($mockmeta));
 
     $this->assertSame($mockmeta, $aggregate->getMetadata());
   }
@@ -112,7 +112,7 @@ class BaseAggregateAssetTest extends BasicAssetCollectionTest {
     $asset1 = $this->createStubFileAsset();
     $asset2 = $this->createStubFileAsset();
     $meta = $this->createStubAssetMetadata();
-    $collection = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($meta, array($asset1, $asset2)));
+    $collection = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\AssetAggregate', array($meta, array($asset1, $asset2)));
 
     $this->assertContains($asset1, $collection);
     $this->assertContains($asset2, $collection);
@@ -224,17 +224,17 @@ class BaseAggregateAssetTest extends BasicAssetCollectionTest {
 
     try {
       $aggregate->replaceLeaf($vanilla, $drupally);
-      $this->fail('BaseAggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+      $this->fail('AssetAggregate::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
     } catch (UnsupportedAsseticBehaviorException $e) {}
 
     try {
       $aggregate->replaceLeaf($vanilla, $vanilla);
-      $this->fail('BaseAggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+      $this->fail('AssetAggregate::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
     } catch (UnsupportedAsseticBehaviorException $e) {}
 
     try {
       $aggregate->replaceLeaf($drupally, $vanilla);
-      $this->fail('BaseAggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+      $this->fail('AssetAggregate::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
     } catch (UnsupportedAsseticBehaviorException $e) {}
   }
 

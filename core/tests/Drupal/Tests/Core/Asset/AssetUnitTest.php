@@ -7,7 +7,7 @@
 
 namespace Drupal\Tests\Core\Asset;
 
-use Drupal\Core\Asset\Aggregate\BaseAggregateAsset;
+use Drupal\Core\Asset\Aggregate\AssetAggregate;
 use Drupal\Core\Asset\FileAsset;
 use Drupal\Core\Asset\Metadata\AssetMetadataBag;
 use Drupal\Tests\UnitTestCase;
@@ -58,16 +58,16 @@ abstract class AssetUnitTest extends UnitTestCase {
 
 
   /**
-   * Generates a simple BaseAggregateAsset mock.
+   * Generates a simple AssetAggregate mock.
    *
    * @param array $defaults
    *   Defaults to inject into the aggregate's metadata bag.
    *
-   * @return BaseAggregateAsset
+   * @return AssetAggregate
    */
   public function getAggregate($defaults = array()) {
     $mockmeta = $this->createStubAssetMetadata();
-    return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
+    return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\AssetAggregate', array($mockmeta));
   }
 
 }
