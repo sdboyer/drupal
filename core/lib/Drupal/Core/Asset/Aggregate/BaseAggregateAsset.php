@@ -9,20 +9,17 @@ namespace Drupal\Core\Asset\Aggregate;
 
 use Assetic\Filter\FilterCollection;
 use Assetic\Filter\FilterInterface;
-use Drupal\Core\Asset\Aggregate\Iterator\AssetAggregateIterator;
-use Drupal\Core\Asset\AsseticAdapterAsset;
 use Drupal\Core\Asset\AssetInterface;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\Aggregate\AssetAggregateInterface;
+use Drupal\Core\Asset\Collection\BasicAssetCollection;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
 /**
  * Base class for representing aggregate assets.
- *
- * TODO With PHP5.4, refactor out AssetCollectionBasicInterface into a trait.
  */
-abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \IteratorAggregate, AssetInterface, AssetAggregateInterface {
+abstract class BaseAggregateAsset extends BasicAssetCollection implements \IteratorAggregate, AssetInterface, AssetAggregateInterface {
 
   /**
    * @var \Drupal\Core\Asset\Metadata\AssetMetadataInterface
@@ -30,34 +27,14 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   protected $metadata;
 
   /**
-   * Container for all assets attached to this object.
-   *
-   * @var \SplObjectStorage
-   */
-  protected $assetStorage;
-
-  /**
-   * @var \SplObjectStorage
-   */
-  protected $nestedStorage;
-
-  /**
    * A string identifier for this aggregate.
    *
-   * This is calculated based on
+   * For how this is calculated, see:
+   * @see BaseAggregateAsset::calculateId()
    *
    * @var string
    */
   protected $id;
-
-  /**
-   * Maintains a map, keyed by id, of all assets.
-   *
-   * This map is also the canonical source for ordering information.
-   *
-   * @var array
-   */
-  protected $assetIdMap = array();
 
   protected $content;
 
@@ -124,118 +101,13 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   /**
    * {@inheritdoc}
    */
-  public function add(AsseticAssetInterface $asset) {
-    if (!$asset instanceof AssetInterface) {
-      throw new UnsupportedAsseticBehaviorException('Vanilla Assetic asset provided; Drupal aggregates require Drupal-flavored assets.');
-    }
-    $this->ensureCorrectType($asset);
-
-    if ($this->contains($asset) || $this->getById($asset->id())) {
-      return FALSE;
-    }
-
-    $this->assetStorage->attach($asset);
-    $this->assetIdMap[$asset->id()] = $asset;
-
-    if ($asset instanceof AssetAggregateInterface) {
-      $this->nestedStorage->attach($asset);
-    }
-
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function contains(AssetInterface $asset) {
-    if ($this->assetStorage->contains($asset)) {
-      return TRUE;
-    }
-
-    foreach ($this->nestedStorage as $aggregate) {
-      if ($aggregate->contains($asset)) {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getById($id, $graceful = TRUE) {
-    if (isset($this->assetIdMap[$id])) {
-      return $this->assetIdMap[$id];
-    }
-    else {
-      // Recursively search for the id
-      foreach ($this->nestedStorage as $aggregate) {
-        if ($found = $aggregate->getById($id)) {
-          return $found;
-        }
-      }
-    }
-
-    if ($graceful) {
-      return FALSE;
-    }
-
-    throw new \OutOfBoundsException(sprintf('This aggregate does not contain an asset with id %s.', $id));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function remove($needle, $graceful = TRUE) {
-    if (is_string($needle)) {
-      if (!$needle = $this->getById($needle, $graceful)) {
-        return FALSE;
-      }
-    }
-
-    return $this->removeLeaf($needle, $graceful);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function removeLeaf(AsseticAssetInterface $needle, $graceful = FALSE) {
     if (!$needle instanceof AssetInterface) {
       throw new UnsupportedAsseticBehaviorException('Vanilla Assetic asset provided; Drupal aggregates require Drupal-flavored assets.');
     }
     $this->ensureCorrectType($needle);
 
-    foreach ($this->assetIdMap as $id => $asset) {
-      if ($asset === $needle) {
-        unset($this->assetStorage[$asset], $this->assetIdMap[$id], $this->nestedStorage[$asset]);
-
-        return TRUE;
-      }
-
-      if ($asset instanceof AssetAggregateInterface && $asset->removeLeaf($needle, TRUE)) {
-        return TRUE;
-      }
-    }
-
-    if ($graceful) {
-      return FALSE;
-    }
-
-    throw new \OutOfBoundsException('Asset not found.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function replace($needle, AssetInterface $replacement, $graceful = TRUE) {
-    if (is_string($needle)) {
-      if (!$needle = $this->getById($needle, $graceful)) {
-        return FALSE;
-      }
-    }
-
-    return $this->replaceLeaf($needle, $replacement, $graceful);
+    return $this->doRemove($needle, $graceful);
   }
 
   /**
@@ -245,38 +117,8 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
     if (!($needle instanceof AssetInterface && $replacement instanceof AssetInterface)) {
       throw new UnsupportedAsseticBehaviorException('Vanilla Assetic asset(s) provided; Drupal aggregates require Drupal-flavored assets.');
     }
-    $this->ensureCorrectType($needle);
-    $this->ensureCorrectType($replacement);
 
-    if ($this->contains($replacement)) {
-      throw new \LogicException('Asset provided for replacement is already present in the aggregate.');
-    }
-
-    $i = 0;
-    foreach ($this->assetIdMap as $id => $asset) {
-      if ($asset === $needle) {
-        unset($this->assetStorage[$asset], $this->nestedStorage[$asset]);
-
-        array_splice($this->assetIdMap, $i, 1, array($replacement->id() => $replacement));
-        $this->assetStorage->attach($replacement);
-        if ($replacement instanceof AssetAggregateInterface) {
-          $this->nestedStorage->attach($replacement);
-        }
-
-        return TRUE;
-      }
-
-      if ($asset instanceof AssetAggregateInterface && $asset->replaceLeaf($needle, $replacement, TRUE)) {
-        return TRUE;
-      }
-      $i++;
-    }
-
-    if ($graceful) {
-      return FALSE;
-    }
-
-    throw new \OutOfBoundsException('Asset not found.');
+    return $this->doReplace($needle, $replacement, $graceful);
   }
 
   /**
@@ -287,13 +129,6 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
    */
   public function isPreprocessable() {
     return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function all() {
-    return $this->assetIdMap;
   }
 
   /**
@@ -336,72 +171,4 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   public function setContent($content) {
     $this->content = $content;
   }
-
-  /**
-   * {@inheritdoc}
-   * TODO Assetic uses their iterator to clone, then populate values and return here; is that a good model for us?
-   */
-  public function getIterator() {
-    return new \RecursiveIteratorIterator(new AssetAggregateIterator($this), \RecursiveIteratorIterator::SELF_FIRST);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function each() {
-    return $this->getIterator();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function eachLeaf() {
-    return new \RecursiveIteratorIterator(new AssetAggregateIterator($this));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isEmpty() {
-    $maincount = $this->assetStorage->count();
-    if ($maincount === 0) {
-      return TRUE;
-    }
-
-    $i = 0;
-    foreach ($this->nestedStorage as $aggregate) {
-      if (!$aggregate->isEmpty()) {
-        return FALSE;
-      }
-      $i++;
-    }
-
-    return $i === $maincount;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function count() {
-    if ($this->nestedStorage->count() === 0) {
-      return $this->assetStorage->count();
-    }
-
-    $c = $i = 0;
-    foreach ($this->nestedStorage as $aggregate) {
-      $c += $aggregate->count();
-      $i++;
-    }
-
-    return $this->assetStorage->count() - $i + $c;
-  }
-
-  /**
-   * Ensures that the asset is of the correct subtype (e.g., css vs. js).
-   *
-   * @param AssetInterface $asset
-   *
-   * @throws \Drupal\Core\Asset\Exception\AssetTypeMismatchException
-   */
-  abstract protected function ensureCorrectType(AssetInterface $asset);
 }

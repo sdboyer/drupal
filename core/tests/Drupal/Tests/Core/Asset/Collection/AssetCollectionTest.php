@@ -8,13 +8,12 @@
 namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetCollection;
-use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
  * @coversDefaultClass \Drupal\Core\Asset\Collection\AssetCollection
  * @group Asset
  */
-class AssetCollectionTest extends AssetUnitTest {
+class AssetCollectionTest extends BasicAssetCollectionTest {
 
   /**
    * @var AssetCollection
@@ -175,16 +174,6 @@ class AssetCollectionTest extends AssetUnitTest {
     $this->collection->remove($stub, FALSE);
   }
 
-  public function testRemoveInvalidType() {
-    $invalid = array(0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
-    try {
-      foreach ($invalid as $val) {
-        $this->collection->remove($val);
-        $this->fail('AssetCollection::remove() did not throw exception on invalid argument type.');
-      }
-    } catch (\InvalidArgumentException $e) {}
-  }
-
   /**
    * @depends testAdd
    * @covers ::mergeCollection
@@ -230,10 +219,15 @@ class AssetCollectionTest extends AssetUnitTest {
     foreach ($write_protected as $method => $arg) {
       try {
         $this->collection->$method($arg);
-        $this->fail('Was able to run writable method on frozen AssetCollection');
-      }
-      catch (\LogicException $e) {}
+        $this->fail(sprintf('Was able to run write method "%s" on frozen AssetCollection', $method));
+      } catch (\LogicException $e) {}
     }
+
+    // Do replace method separately, it needs more args
+    try {
+      $this->collection->replace($stub, $this->createStubFileAsset());
+      $this->fail('Was able to run write method "replace" on frozen AssetCollection');
+    } catch (\LogicException $e) {}
   }
 
   /**

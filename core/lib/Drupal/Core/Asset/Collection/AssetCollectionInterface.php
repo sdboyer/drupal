@@ -12,23 +12,11 @@ use Drupal\Core\Asset\AssetLibraryRepository;
 /**
  * Describes an asset collection.
  *
- * TODO we need a few more methods here to deal with asset type disambiguation and library resolution
+ * TODO we need a few more methods here to deal with library resolution
  *
  * @see \Drupal\Core\Asset\Collection\AssetCollectionBasicInterface
  */
 interface AssetCollectionInterface extends AssetCollectionBasicInterface {
-
-  /**
-   * Adds an asset to the collection.
-   *
-   * @param \Drupal\Core\Asset\AssetInterface $asset
-   *   The asset to add.
-   *
-   * @return bool
-   *   TRUE if the asset was added successfully, FALSE if it was already present
-   *   in the collection.
-   */
-  public function add(AssetInterface $asset);
 
   /**
    * Merges another asset collection into this one.

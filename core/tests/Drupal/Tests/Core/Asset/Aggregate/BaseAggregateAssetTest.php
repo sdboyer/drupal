@@ -7,17 +7,14 @@
 
 namespace Drupal\Tests\Core\Asset\Aggregate;
 
-use Drupal\Core\Asset\Aggregate\BaseAggregateAsset;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
-use Drupal\Tests\Core\Asset\AssetUnitTest;
+use Drupal\Tests\Core\Asset\Collection\BasicAssetCollectionTest;
 
 /**
  * @coversDefaultClass \Drupal\Core\Asset\Aggregate\BaseAggregateAsset
  * @group Asset
  */
-class BaseAggregateAssetTest extends AssetUnitTest {
-
-  protected $aggregate;
+class BaseAggregateAssetTest extends BasicAssetCollectionTest {
 
   public static function getInfo() {
     return array(
@@ -25,19 +22,6 @@ class BaseAggregateAssetTest extends AssetUnitTest {
       'description' => 'Unit tests on BaseAggregateAsset',
       'group' => 'Asset',
     );
-  }
-
-  /**
-   * Generates a simple BaseAggregateAsset mock.
-   *
-   * @param array $defaults
-   *   Defaults to inject into the aggregate's metadata bag.
-   *
-   * @return BaseAggregateAsset
-   */
-  public function getAggregate($defaults = array()) {
-    $mockmeta = $this->createStubAssetMetadata();
-    return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\BaseAggregateAsset', array($mockmeta));
   }
 
   /**
@@ -107,7 +91,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
    * @depends testAdd
    * @covers ::each
    * @covers ::getIterator
-   * @covers \Drupal\Core\Asset\Aggregate\Iterator\AssetAggregateIterator
+   * @covers \Drupal\Core\Asset\Collection\Iterator\RecursiveBasicCollectionIterator
    */
   public function testEach() {
     list($aggregate, $foo, $bar, $baz, $nested_aggregate) = $this->getThreeLeafAggregate();
@@ -117,64 +101,6 @@ class BaseAggregateAssetTest extends AssetUnitTest {
       $contained[] = $leaf;
     }
     $this->assertEquals(array($nested_aggregate, $foo, $bar, $baz), $contained);
-  }
-
-  /**
-   * @depends testAdd
-   * @covers ::eachLeaf
-   * @covers \Drupal\Core\Asset\Aggregate\Iterator\AssetAggregateIterator
-   */
-  public function testEachLeaf() {
-    list($aggregate, $foo, $bar, $baz) = $this->getThreeLeafAggregate();
-
-    $contained = array();
-    foreach ($aggregate->eachLeaf() as $leaf) {
-      $contained[] = $leaf;
-    }
-    $this->assertEquals(array($foo, $bar, $baz), $contained);
-  }
-
-  /**
-   * Tests that adding the same asset twice is disallowed.
-   *
-   * @depends testAdd
-   * @covers ::add
-   */
-  public function testDoubleAdd() {
-    $aggregate = $this->getAggregate();
-    $asset = $this->createStubFileAsset();
-    $this->assertTrue($aggregate->add($asset));
-
-    // Test by object identity
-    $this->assertFalse($aggregate->add($asset));
-    // Test by id
-    $asset2 = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
-    $asset2->expects($this->once())
-      ->method('id')
-      ->will($this->returnValue($asset->id()));
-
-    $this->assertFalse($aggregate->add($asset2));
-  }
-
-  /**
-   * @depends testAdd
-   * @covers ::contains
-   */
-  public function testContains() {
-    $aggregate = $this->getAggregate();
-    $asset = $this->createStubFileAsset();
-    $aggregate->add($asset);
-
-    $this->assertTrue($aggregate->contains($asset));
-
-    // Nesting: add an aggregate to the first aggregate.
-    $nested_aggregate = $this->getAggregate();
-    $nested_asset = $this->createStubFileAsset();
-
-    $nested_aggregate->add($nested_asset);
-    $aggregate->add($nested_aggregate);
-
-    $this->assertTrue($aggregate->contains($nested_asset));
   }
 
   /**
@@ -204,79 +130,8 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $this->assertEquals(hash('sha256', $asset1->id() . $asset2->id()), $aggregate->id());
   }
 
-  /**
-   * @covers ::getById
-   * @expectedException \OutOfBoundsException
-   */
-  public function testGetById() {
-    $aggregate = $this->getAggregate();
-
-    $asset = $this->createStubFileAsset();
-    $aggregate->add($asset);
-    $this->assertSame($asset, $aggregate->getById($asset->id()));
-
-    // Nonexistent asset
-    $this->assertFalse($aggregate->getById('bar'));
-
-    // Nonexistent asset, non-graceful
-    $aggregate->getById('bar', FALSE);
-  }
-
   public function testIsPreprocessable() {
     $this->assertTrue($this->getAggregate()->isPreprocessable());
-  }
-
-  /**
-   * @depends testAdd
-   * @covers ::all
-   */
-  public function testAll() {
-    $aggregate = $this->getAggregate();
-
-    $asset1 = $this->createStubFileAsset();
-    $asset2 = $this->createStubFileAsset();
-    $aggregate->add($asset1);
-    $aggregate->add($asset2);
-
-    $output = array(
-      $asset1->id() => $asset1,
-      $asset2->id() => $asset2,
-    );
-
-    $this->assertEquals($output, $aggregate->all());
-
-    // Ensure that only top-level assets are returned.
-    $nested_aggregate = $this->getAggregate();
-    $nested_aggregate->add($this->createStubFileAsset());
-    $aggregate->add($nested_aggregate);
-
-    $output[$nested_aggregate->id()] = $nested_aggregate;
-    $this->assertEquals($output, $aggregate->all());
-  }
-
-  /**
-   * remove() and removeLeaf() are conjoined; test them both here.
-   *
-   * @depends testEach
-   * @covers ::remove
-   * @covers ::removeLeaf
-   */
-  public function testRemove() {
-    list($aggregate, $foo, $bar, $baz, $nested_aggregate) = $this->getThreeLeafAggregate();
-    $this->assertTrue($aggregate->remove('foo'));
-
-    $this->assertNotContains($foo, $aggregate);
-    $this->assertContains($bar, $aggregate);
-    $this->assertContains($baz, $aggregate);
-
-    $this->assertTrue($aggregate->remove($bar));
-
-    $this->assertNotContains($bar, $aggregate);
-    $this->assertContains($baz, $aggregate);
-
-    $this->assertTrue($aggregate->remove($nested_aggregate));
-    // Can't use contains check because that iterator does not report aggregates
-    $this->assertNotContains($nested_aggregate, $aggregate);
   }
 
   /**
@@ -301,43 +156,6 @@ class BaseAggregateAssetTest extends AssetUnitTest {
     $aggregate = $this->getAggregate();
     $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
     $aggregate->removeLeaf($vanilla);
-  }
-
-  /**
-   * replace() and replaceLeaf() are conjoined; test them both here.
-   *
-   * @depends testEach
-   * @covers ::replace
-   * @covers ::replaceLeaf
-   */
-  public function testReplace() {
-    list($aggregate, $foo, $bar, $baz, $nested_aggregate) = $this->getThreeLeafAggregate();
-    $qux = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
-    $qux->expects($this->any())
-      ->method('id')
-      ->will($this->returnValue('qux'));
-
-    $this->assertTrue($aggregate->replace('foo', $qux));
-
-    $this->assertContains($qux, $aggregate);
-    $this->assertNotContains($foo, $aggregate);
-
-    $contained = array();
-    foreach ($aggregate->eachLeaf() as $leaf) {
-      $contained[] = $leaf;
-    }
-    $this->assertEquals(array($qux, $bar, $baz), $contained);
-
-    $this->assertTrue($aggregate->replace($bar, $foo));
-
-    $this->assertContains($foo, $aggregate);
-    $this->assertNotContains($bar, $aggregate);
-
-    $contained = array();
-    foreach ($aggregate->eachLeaf() as $leaf) {
-      $contained[] = $leaf;
-    }
-    $this->assertEquals(array($qux, $foo, $baz), $contained);
   }
 
   /**
@@ -369,7 +187,7 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   /**
    * @depends testAdd
    * @depends testReplaceLeafWithAlreadyPresentAsset
-   * @covers ::replaceLeaf
+   * @covers ::replace
    * @expectedException \LogicException
    *
    * This fails on the same check that testReplaceLeafWithAlreadyPresentAsset,
@@ -403,63 +221,6 @@ class BaseAggregateAssetTest extends AssetUnitTest {
       $aggregate->replaceLeaf($drupally, $vanilla);
       $this->fail('BaseAggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
     } catch (UnsupportedAsseticBehaviorException $e) {}
-  }
-
-  /**
-   * @depends testAdd
-   * @depends testRemove
-   * @covers ::isEmpty
-   */
-  public function testIsEmpty() {
-    $aggregate = $this->getAggregate();
-    $this->assertTrue($aggregate->isEmpty());
-
-    // Aggregates containing only empty aggregates are considered empty.
-    $aggregate->add($this->getAggregate());
-    $this->assertTrue($aggregate->isEmpty());
-
-    $aggregate2 = $this->getAggregate();
-    $asset = $this->createStubFileAsset();
-    $aggregate2->add($asset);
-    $aggregate->add($aggregate2);
-    $this->assertFalse($aggregate->isEmpty());
-
-    $aggregate->removeLeaf($aggregate2);
-    $this->assertTrue($aggregate->isEmpty());
-
-    $aggregate->add($asset);
-    $this->assertFalse($aggregate->isEmpty());
-
-    $aggregate->remove($asset);
-    $this->assertTrue($aggregate->isEmpty());
-  }
-
-  /**
-   * @depends testAdd
-   * @depends testRemove
-   * @covers ::count
-   */
-  public function testCount() {
-    $aggregate = $this->getAggregate();
-    $this->assertCount(0, $aggregate);
-
-    $aggregate->add($this->getAggregate());
-    $this->assertCount(0, $aggregate);
-
-    $aggregate2 = $this->getAggregate();
-    $asset = $this->createStubFileAsset();
-    $aggregate2->add($asset);
-    $aggregate->add($aggregate2);
-    $this->assertCount(1, $aggregate);
-
-    $aggregate->removeLeaf($aggregate2);
-    $this->assertCount(0, $aggregate);
-
-    $aggregate->add($asset);
-    $this->assertCount(1, $aggregate);
-
-    $aggregate->remove($asset);
-    $this->assertCount(0, $aggregate);
   }
 
   /**

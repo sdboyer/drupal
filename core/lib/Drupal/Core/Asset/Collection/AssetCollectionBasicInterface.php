@@ -7,6 +7,9 @@
 
 namespace Drupal\Core\Asset\Collection;
 use Drupal\Core\Asset\AssetInterface;
+use Assetic\Asset\AssetInterface as AsseticAssetInterface;
+use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
+use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 /**
  * Describes an asset collection: a container for assets.
@@ -22,6 +25,106 @@ use Drupal\Core\Asset\AssetInterface;
  * @see \Drupal\Core\Asset\Collection\AssetCollectionInterface
  */
 interface AssetCollectionBasicInterface extends \Traversable, \Countable {
+
+  /**
+   * Adds an asset to this aggregate.
+   *
+   * @param AsseticAssetInterface $asset
+   *   The asset to add. Note that, despite the type requirements, it must
+   *   conform to Drupal's AssetInterface.
+   *
+   * @return bool
+   *   TRUE if the asset was added successfully, FALSE if it was already present
+   *   in the aggregate.
+   *
+   * @throws UnsupportedAsseticBehaviorException
+   *   Thrown if a vanilla Assetic asset is provided.
+   *
+   * @throws AssetTypeMismatchException
+   *   Thrown if the provided asset is not the correct type for the aggregate
+   *   (e.g., CSS file in a JS aggregate).
+   */
+  public function add(AsseticAssetInterface $asset);
+
+  /**
+   * Indicates whether this collection contains the given asset.
+   *
+   * @param AssetInterface $asset
+   *   The asset to check for membership in the collection.
+   *
+   * @return bool
+   *   TRUE if the asset is present in the collection, FALSE otherwise.
+   */
+  public function contains(AssetInterface $asset);
+
+  /**
+   * Retrieves a contained asset by its string identifier.
+   *
+   * Call this with $graceful = TRUE as an equivalent to contains() if all you
+   * have is a string id.
+   *
+   * @param string $id
+   *   The id of the asset to retrieve.
+   * @param bool $graceful
+   *   Whether failure should return FALSE or throw an exception.
+   *
+   * @return AssetInterface|bool
+   *   FALSE if no asset could be found with that id, or an AssetInterface.
+   *
+   * @throws \OutOfBoundsException
+   *   Thrown if no asset could be found by the given id and $graceful = FALSE.
+   */
+  public function getById($id, $graceful = TRUE);
+
+  /**
+   * Removes an asset from the collection.
+   *
+   * @param AssetInterface|string $needle
+   *   Either an AssetInterface instance, or the string id of an asset.
+   * @param bool $graceful
+   *   Whether failure should return FALSE or throw an exception.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on failure to locate the given asset (or an
+   *   exception, depending on the value of $graceful).
+   *
+   * @throws \OutOfBoundsException
+   *   Thrown if $needle could not be located and $graceful = FALSE.
+   */
+  public function remove($needle, $graceful = FALSE);
+
+  /**
+   * Replaces an existing asset in the aggregate with a new one.
+   *
+   * This preserves ordering of the assets within the collection: the new asset
+   * will occupy the same position as the old asset.
+   *
+   * @param AssetInterface|string $needle
+   *   Either an AssetInterface instance, or the string id of an asset.
+   * @param AssetInterface $replacement
+   *   The new asset to swap into place.
+   * @param bool $graceful
+   *   Whether failure should return FALSE or throw an exception.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on failure to locate the given asset (or an
+   *   exception, depending on the value of $graceful).
+   *
+   * @throws \OutOfBoundsException
+   *   Thrown if $needle could not be located and $graceful = FALSE.
+   */
+  public function replace($needle, AssetInterface $replacement, $graceful = FALSE);
+
+  /**
+   * Indicates whether the collection contains any assets.
+   *
+   * Note that this will only return TRUE if leaf assets are present - that is,
+   * assets that do NOT implement AssetCollectionBasicInterface.
+   *
+   * @return bool
+   *   TRUE if the collection is devoid of any leaf assets, FALSE otherwise.
+   */
+  public function isEmpty();
 
   /**
    * Returns all top-level child assets as an array.
@@ -46,59 +149,23 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
   public function count();
 
   /**
-   * Removes an asset from the aggregate.
+   * Retrieves a traversable that will return all contained assets.
    *
-   * Wraps Assetic's AssetCollection::removeLeaf() to ease removal of keys.
+   * 'All' assets includes both AssetCollectionBasicInterface objects and plain
+   * AssetInterface objects.
    *
-   * @param AssetInterface|string $needle
-   *   Either an AssetInterface instance, or the string id of an asset.
-   * @param bool $graceful
-   *   Whether failure should return FALSE or throw an exception.
-   *
-   * @return bool
-   *
-   * @throws \OutOfBoundsException
+   * @return \Traversable
    */
-  public function remove($needle, $graceful = FALSE);
+  public function each();
 
   /**
-   * Indicates whether this collection contains the provided asset.
-  *
-   * @param AssetInterface $asset
-   *   Either an AssetInterface instance, or the string id of an asset.
+   * Retrieves a traversable that returns only contained leaf assets.
    *
-   * @return bool
+   * Leaf assets are objects that only implement AssetInterface, not
+   * AssetCollectionBasicInterface.
+   *
+   * @return \Traversable
    */
-  public function contains(AssetInterface $asset);
-
-  /**
-   * Retrieves a contained asset by its string identifier.
-   *
-   * Call this with $graceful = TRUE as an equivalent to contains() if all you
-   * have is a string id.
-   *
-   * @param string $id
-   *   The id of the asset to retrieve.
-   * @param bool $graceful
-   *   Whether failure should return FALSE or throw an exception.
-   *
-   * @return AssetInterface|bool
-   *   FALSE if no asset could be found with that id, or an AssetInterface.
-   *
-   * @throws \OutOfBoundsException
-   *   Thrown if no asset could be found by the given id and $graceful = FALSE.
-   */
-  public function getById($id, $graceful = TRUE);
-
-  /**
-   * Indicates whether the collection contains any assets.
-   *
-   * Note that this will only return TRUE if leaf assets are present - that is,
-   * assets that do NOT implement AssetCollectionBasicInterface.
-   *
-   * @return bool
-   *   TRUE if the collection is devoid of any leaf assets, FALSE otherwise.
-   */
-  public function isEmpty();
-
+  public function eachLeaf();
 }
+
