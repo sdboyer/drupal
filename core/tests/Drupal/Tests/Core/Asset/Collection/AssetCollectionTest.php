@@ -8,6 +8,7 @@
 namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetCollection;
+use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
 
 /**
  * @coversDefaultClass \Drupal\Core\Asset\Collection\AssetCollection
@@ -30,6 +31,15 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
   public function setUp() {
     $this->collection = new AssetCollection();
+  }
+
+  /**
+   * Returns an AssetCollection, the base collection type for this unit test.
+   *
+   * @return AssetCollectionBasicInterface
+   */
+  public function getCollection() {
+    return new AssetCollection();
   }
 
   /**

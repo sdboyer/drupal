@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\Core\Asset\Collection;
 
+use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
 use Drupal\Core\Asset\Collection\BasicAssetCollection;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
@@ -35,10 +36,19 @@ class BasicAssetCollectionTest extends AssetUnitTest {
   }
 
   /**
+   * Method to return the appropriate collection type for the current test.
+   *
+   * @return AssetCollectionBasicInterface
+   */
+  public function getCollection() {
+    return $this->getBasicCollection();
+  }
+
+  /**
    * Generates a AssetAggregate mock with three leaf assets.
    */
   public function getThreeLeafBasicCollection() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
     $nested_aggregate = $this->getAggregate();
 
     foreach (array('foo', 'bar', 'baz') as $var) {
@@ -64,7 +74,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::add
    */
   public function testAdd() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
     $asset = $this->createStubFileAsset();
     $this->assertTrue($collection->add($asset));
 
@@ -100,7 +110,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    */
   public function testVanillaAsseticAdd() {
     $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
-    $this->getBasicCollection()->add($vanilla);
+    $this->getCollection()->add($vanilla);
   }
 
   /**
@@ -141,7 +151,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::add
    */
   public function testDoubleAdd() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
     $asset = $this->createStubFileAsset();
     $this->assertTrue($collection->add($asset));
 
@@ -161,7 +171,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::contains
    */
   public function testContains() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
     $asset = $this->createStubFileAsset();
     $collection->add($asset);
 
@@ -182,7 +192,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @expectedException \OutOfBoundsException
    */
   public function testGetById() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
 
     $asset = $this->createStubFileAsset();
     $collection->add($asset);
@@ -200,7 +210,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::all
    */
   public function testAll() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
 
     $asset1 = $this->createStubFileAsset();
     $asset2 = $this->createStubFileAsset();
@@ -363,7 +373,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::isEmpty
    */
   public function testIsEmpty() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
     $this->assertTrue($collection->isEmpty());
 
     // Collections containing only empty collections are considered empty.
@@ -392,7 +402,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::count
    */
   public function testCount() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
     $this->assertCount(0, $collection);
 
     $collection->add($this->getAggregate());
@@ -418,7 +428,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::remove
    */
   public function testRemoveInvalidNeedle() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
     $invalid = array(0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
 
     try {
@@ -433,7 +443,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::replace
    */
   public function testReplaceInvalidNeedle() {
-    $collection = $this->getBasicCollection();
+    $collection = $this->getCollection();
     $invalid = array(0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
 
     try {

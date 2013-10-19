@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\Core\Asset\Aggregate;
 
+use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Tests\Core\Asset\Collection\BasicAssetCollectionTest;
 
@@ -44,6 +45,15 @@ class AssetAggregateTest extends BasicAssetCollectionTest {
     $aggregate->add($baz);
 
     return array($aggregate, $foo, $bar, $baz, $nested_aggregate);
+  }
+
+  /**
+   * Returns an AssetAggregate, the base collection type for this unit test.
+   *
+   * @return AssetCollectionBasicInterface
+   */
+  public function getCollection() {
+    return $this->getAggregate();
   }
 
   public function testGetAssetType() {
