@@ -8,6 +8,7 @@
 namespace Drupal\Tests\Core\Asset\Aggregate;
 
 use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
+use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Tests\Core\Asset\Collection\BasicAssetCollectionTest;
 
@@ -33,10 +34,7 @@ class AssetAggregateTest extends BasicAssetCollectionTest {
     $nested_aggregate = $this->getAggregate();
 
     foreach (array('foo', 'bar', 'baz') as $var) {
-      $$var = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
-      $$var->expects($this->any())
-        ->method('id')
-        ->will($this->returnValue($var));
+      $$var = $this->createStubFileAsset('css', $var);
     }
 
     $nested_aggregate->add($foo);
@@ -95,6 +93,16 @@ class AssetAggregateTest extends BasicAssetCollectionTest {
     $this->assertAttributeContains($nested_aggregate, 'assetStorage', $aggregate);
     $this->assertAttributeContains($nested_aggregate, 'assetIdMap', $aggregate);
     $this->assertAttributeContains($nested_aggregate, 'nestedStorage', $aggregate);
+  }
+
+  /**
+   * @depends testAdd
+   * @covers ::ensureCorrectType
+   * @expectedException \Drupal\Core\Asset\Exception\AssetTypeMismatchException
+   */
+  public function testAddEnsureCorrectType() {
+    $aggregate = $this->getAggregate();
+    $aggregate->add($this->createStubFileAsset('js'));
   }
 
   /**
@@ -181,6 +189,34 @@ class AssetAggregateTest extends BasicAssetCollectionTest {
     $aggregate = $this->getAggregate();
     $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
     $aggregate->removeLeaf($vanilla);
+  }
+
+  /**
+   * @depends testAdd
+   * @covers ::ensureCorrectType
+   * @expectedException \Drupal\Core\Asset\Exception\AssetTypeMismatchException
+   */
+  public function testReplaceLeafEnsureCorrectType() {
+    $aggregate = $this->getAggregate();
+    $asset1 = $this->createStubFileAsset();
+    $aggregate->add($asset1);
+
+    $asset2 = $this->createStubFileAsset('js');
+    $aggregate->replaceLeaf($asset1, $asset2);
+  }
+
+  /**
+   * @depends testAdd
+   * @covers ::ensureCorrectType
+   * @expectedException \Drupal\Core\Asset\Exception\AssetTypeMismatchException
+   */
+  public function testReplaceEnsureCorrectType() {
+    $aggregate = $this->getAggregate();
+    $asset1 = $this->createStubFileAsset();
+    $aggregate->add($asset1);
+
+    $asset2 = $this->createStubFileAsset('js');
+    $aggregate->replace($asset1, $asset2);
   }
 
   /**

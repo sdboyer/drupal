@@ -52,10 +52,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
     $nested_aggregate = $this->getAggregate();
 
     foreach (array('foo', 'bar', 'baz') as $var) {
-      $$var = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
-      $$var->expects($this->any())
-           ->method('id')
-           ->will($this->returnValue($var));
+      $$var = $this->createStubFileAsset('css', $var);
     }
 
     $nested_aggregate->add($foo);
@@ -158,10 +155,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
     // Test by object identity
     $this->assertFalse($collection->add($asset));
     // Test by id
-    $asset2 = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
-    $asset2->expects($this->once())
-           ->method('id')
-           ->will($this->returnValue($asset->id()));
+    $asset2 = $this->createStubFileAsset('css', $asset->id());
 
     $this->assertFalse($collection->add($asset2));
   }
@@ -287,10 +281,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    */
   public function testReplace() {
     list($collection, $foo, $bar, $baz, $nested_aggregate) = $this->getThreeLeafBasicCollection();
-    $qux = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
-    $qux->expects($this->any())
-        ->method('id')
-        ->will($this->returnValue('qux'));
+    $qux = $this->createStubFileAsset('css', 'qux');
 
     $this->assertFalse($collection->replace('arglebargle', $qux, TRUE));
     $this->assertTrue($collection->replace('foo', $qux));
@@ -367,7 +358,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::replace
    * @expectedException \LogicException
    *
-   * This fails on the same check that testReplaceLeafWithAlreadyPresentAsset,
+   * This fails on the same check that testReplaceWithAlreadyPresentAsset,
    * but it is demonstrated as its own test for clarity.
    */
   public function testReplaceWithSelf() {

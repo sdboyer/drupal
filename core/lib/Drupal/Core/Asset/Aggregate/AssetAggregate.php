@@ -13,6 +13,7 @@ use Drupal\Core\Asset\AssetInterface;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\Aggregate\AssetAggregateInterface;
 use Drupal\Core\Asset\Collection\BasicAssetCollection;
+use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
@@ -80,8 +81,8 @@ class AssetAggregate extends BasicAssetCollection implements \IteratorAggregate,
    *   Filters to apply to this aggregate.
    */
   public function __construct(AssetMetadataInterface $metadata, $assets = array(), $filters = array()) {
-    parent::__construct($assets);
     $this->metadata = $metadata;
+    parent::__construct($assets);
     $this->filters = new FilterCollection($filters);
   }
 
@@ -150,6 +151,15 @@ class AssetAggregate extends BasicAssetCollection implements \IteratorAggregate,
     }
 
     return $this->doReplace($needle, $replacement, $graceful);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function ensureCorrectType(AssetInterface $asset) {
+    if ($asset->getAssetType() != $this->getAssetType()) {
+      throw new AssetTypeMismatchException(sprintf('Aggregate/asset incompatibility, aggregate of type "%s", asset of type "%s". Aggregates and their contained assets must be of the same type.', $this->getAssetType(), $asset->getAssetType()));
+    }
   }
 
   /**

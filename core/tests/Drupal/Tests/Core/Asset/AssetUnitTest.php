@@ -24,11 +24,15 @@ abstract class AssetUnitTest extends UnitTestCase {
    * id(), with a randomly generated name.
    *
    * @param string $type
-   *   'css' or 'js'.
+   *   'css' or 'js'. Defaults to 'css' if not given.
+   *
+   * @param string $id
+   *   A string id for the asset, to return from AssetInterface::id(). Defaults
+   *   to a random string if not given.
    *
    * @return FileAsset
    */
-  public function createStubFileAsset($type = 'css') {
+  public function createStubFileAsset($type = 'css', $id = '') {
     $asset = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
     $asset->expects($this->any())
       ->method('getAssetType')
@@ -36,7 +40,7 @@ abstract class AssetUnitTest extends UnitTestCase {
 
     $asset->expects($this->any())
       ->method('id')
-      ->will($this->returnValue($this->randomName()));
+      ->will($this->returnValue($id ?: $this->randomName()));
 
     return $asset;
   }
@@ -50,10 +54,15 @@ abstract class AssetUnitTest extends UnitTestCase {
    * @return AssetMetadataBag
    */
   public function createStubAssetMetadata($type = 'css', $values = array()) {
-    return $this->getMockBuilder('Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag')
+    $stub = $this->getMockBuilder('Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag')
       ->setConstructorArgs(array($type, $values))
-      ->setMethods(array()) // mock nothing
       ->getMock();
+
+    $stub->expects($this->any())
+      ->method('getType')
+      ->will($this->returnValue($type));
+
+    return $stub;
   }
 
 
