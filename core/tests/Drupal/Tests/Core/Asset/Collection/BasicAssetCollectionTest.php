@@ -7,7 +7,6 @@
 
 namespace Drupal\Tests\Core\Asset\Collection;
 
-use Drupal\Core\Asset\Aggregate\BaseAggregateAsset;
 use Drupal\Core\Asset\Collection\BasicAssetCollection;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
@@ -264,6 +263,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
 
   /**
    * @depends testEach
+   * @depends testEachLeaf
    * @covers ::replace
    * @covers ::doReplace
    */
@@ -296,6 +296,24 @@ class BasicAssetCollectionTest extends AssetUnitTest {
       $contained[] = $leaf;
     }
     $this->assertEquals(array($qux, $foo, $baz), $contained);
+
+    $aggregate2 = $this->getAggregate();
+    $this->assertTrue($collection->replace($baz, $aggregate2));
+
+    $this->assertContains($aggregate2, $collection);
+    $this->assertNotContains($baz, $collection);
+
+    $contained = array();
+    foreach ($collection->eachLeaf() as $leaf) {
+      $contained[] = $leaf;
+    }
+    $this->assertEquals(array($qux, $foo), $contained);
+
+    $contained = array();
+    foreach ($collection->each() as $leaf) {
+      $contained[] = $leaf;
+    }
+    $this->assertEquals(array($nested_aggregate, $qux, $foo, $aggregate2), $contained);
   }
 
   /**
