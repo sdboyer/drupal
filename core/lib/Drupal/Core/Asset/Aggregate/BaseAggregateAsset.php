@@ -345,13 +345,23 @@ abstract class BaseAggregateAsset extends AsseticAdapterAsset implements \Iterat
   }
 
   /**
-   * Indicates whether this collection contains any assets.
-   *
-   * @return bool
-   *   TRUE if contained assets are present, FALSE otherwise.
+   * {@inheritdoc}
    */
   public function isEmpty() {
-    return $this->assetStorage->count() === 0;
+    $maincount = $this->assetStorage->count();
+    if ($maincount === 0) {
+      return TRUE;
+    }
+
+    $i = 0;
+    foreach ($this->nestedStorage as $aggregate) {
+      if (!$aggregate->isEmpty()) {
+        return FALSE;
+      }
+      $i++;
+    }
+
+    return $i == $maincount;
   }
 
   /**

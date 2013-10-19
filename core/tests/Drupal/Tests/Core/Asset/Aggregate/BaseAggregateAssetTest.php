@@ -212,20 +212,6 @@ class BaseAggregateAssetTest extends AssetUnitTest {
   }
 
   /**
-   * @depends testAdd
-   * @covers ::replace
-   * @expectedException \OutOfBoundsException
-   */
-  public function testIsEmpty() {
-    $aggregate = $this->getAggregate();
-    $this->assertTrue($aggregate->isEmpty());
-
-    // Aggregates containing only empty aggregates are considered empty.
-    $aggregate->add($this->getAggregate());
-    $this->assertTrue($aggregate->isEmpty());
-  }
-
-  /**
    * remove() and removeLeaf() are conjoined; test them both here.
    *
    * @depends testAdd
@@ -356,6 +342,28 @@ class BaseAggregateAssetTest extends AssetUnitTest {
       $aggregate->replaceLeaf($drupally, $vanilla);
       $this->fail('BaseAggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
     } catch (UnsupportedAsseticBehaviorException $e) {}
+  }
+
+  /**
+   * @depends testAdd
+   * @depends testRemove
+   * @covers ::isEmpty
+   */
+  public function testIsEmpty() {
+    $aggregate = $this->getAggregate();
+    $this->assertTrue($aggregate->isEmpty());
+
+    // Aggregates containing only empty aggregates are considered empty.
+    $aggregate->add($this->getAggregate());
+    $this->assertTrue($aggregate->isEmpty());
+
+    $aggregate2 = $this->getAggregate();
+    $aggregate2->add($this->createMockFileAsset('css'));
+    $aggregate->add($aggregate2);
+    $this->assertFalse($aggregate->isEmpty());
+
+    $aggregate->removeLeaf($aggregate2);
+    $this->assertTrue($aggregate->isEmpty());
   }
 
   /**

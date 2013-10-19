@@ -69,10 +69,13 @@ interface AssetCollectionBasicInterface extends \Traversable {
   public function getById($id, $graceful = TRUE);
 
   /**
-   * Indicates whether this collection contains any assets.
+   * Indicates whether the collection contains any assets.
+   *
+   * Note that this will only return true if there are 'leaf' assets - that is,
+   * assets that do not implement AssetCollectionBasicInterface.
    *
    * @return bool
-   *   TRUE if contained assets are present, FALSE otherwise.
+   *   TRUE if the collection is devoid of any leaf assets, FALSE otherwise.
    */
   public function isEmpty();
 }
