@@ -36,7 +36,40 @@ abstract class BaseAggregateAsset extends BasicAssetCollection implements \Itera
    */
   protected $id;
 
+  /**
+   * The body of the aggregate asset. This is lazy-loaded.
+   *
+   * @var string
+   */
   protected $content;
+
+  /**
+   * A collection of filters to be applied to this asset.
+   *
+   * @var FilterCollection
+   */
+  protected $filters;
+
+  /**
+   * The relative path to the asset.
+   *
+   * @var string
+   */
+  protected $sourcePath;
+
+  /**
+   * The desired path at which the asset should be dumped.
+   *
+   * @var string
+   */
+  protected $targetPath;
+
+  /**
+   * Internal state flag indicating whether or not load filters have been run.
+   *
+   * @var bool
+   */
+  protected $loaded = FALSE;
 
   /**
    * @param AssetMetadataInterface $metadata
@@ -47,15 +80,9 @@ abstract class BaseAggregateAsset extends BasicAssetCollection implements \Itera
    *   Filters to apply to this aggregate.
    */
   public function __construct(AssetMetadataInterface $metadata, $assets = array(), $filters = array()) {
-    parent::__construct($filters);
-
+    parent::__construct($assets);
     $this->metadata = $metadata;
-    $this->assetStorage = new \SplObjectStorage();
-    $this->nestedStorage = new \SplObjectStorage();
-
-    foreach ($assets as $asset) {
-      $this->add($asset);
-    }
+    $this->filters = new FilterCollection($filters);
   }
 
   /**
@@ -174,5 +201,83 @@ abstract class BaseAggregateAsset extends BasicAssetCollection implements \Itera
    */
   public function setContent($content) {
     $this->content = $content;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastModified() {
+    // TODO: Implement getLastModified() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSourceRoot() {
+    // Drupal doesn't use this in general, and especially not for aggregates.
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSourcePath() {
+    return $this->sourcePath;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTargetPath() {
+    return $this->targetPath;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setTargetPath($targetPath) {
+    $this->targetPath = $targetPath;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function ensureFilter(FilterInterface $filter) {
+    $this->filters->ensure($filter);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    $this->filters->all();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearFilters() {
+    $this->filters->clear();
+  }
+
+  /**
+   * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public final function getVars() {
+    throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'vars' concept.");
+  }
+
+  /**
+   * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public final function setValues(array $values) {
+    throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'values' concept.");
+  }
+
+  /**
+   * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public final function getValues() {
+    throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'values' concept.");
   }
 }

@@ -253,5 +253,26 @@ class BaseAggregateAssetTest extends BasicAssetCollectionTest {
   public function testDump() {
     $this->fail();
   }
+
+  /**
+   * @expectedException \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public function testGetVars() {
+    $this->getAggregate()->getVars();
+  }
+
+  /**
+   * @expectedException \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public function testSetValues() {
+    $this->getAggregate()->setValues(array());
+  }
+
+  /**
+   * @expectedException \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public function testGetValues() {
+    $this->getAggregate()->getValues();
+  }
 }
 
