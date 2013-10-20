@@ -8,7 +8,7 @@
 namespace Drupal\Core\Asset;
 
 use Drupal\Core\Asset\Collection\AssetLibrary;
-use Drupal\Core\Asset\Factory\AssetLibraryCollector;
+use Drupal\Core\Asset\Factory\AssetLibraryFactory;
 
 /**
  * TODO the flow here is completely wrong. the state contained here needs proper management, beyond a single request.
@@ -29,7 +29,7 @@ class AssetLibraryRepository {
    */
   protected $collector;
 
-  function __construct(AssetLibraryCollector $collector) {
+  function __construct(AssetLibraryFactory $collector) {
     $this->collector = $collector;
   }
 
@@ -40,7 +40,7 @@ class AssetLibraryRepository {
     $this->initialized = TRUE;
 
     // TODO inject or factory-ize the collector class that's used somehow - can't unit test it as-is.
-    $library_collector = new AssetLibraryCollector($this);
+    $library_collector = new AssetLibraryFactory($this);
     foreach ($this->moduleHandler->getImplementations('library_info') as $module) {
       $library_collector->setModule($module);
       $libraries = call_user_func("{$module}_library_info");
