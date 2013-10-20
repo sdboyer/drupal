@@ -33,37 +33,6 @@ class AssetLibraryRepository {
     $this->collector = $collector;
   }
 
-  protected function initialize() {
-    if ($this->initialized) {
-      return;
-    }
-    $this->initialized = TRUE;
-
-    // TODO inject or factory-ize the collector class that's used somehow - can't unit test it as-is.
-    $library_collector = new AssetLibraryFactory($this);
-    foreach ($this->moduleHandler->getImplementations('library_info') as $module) {
-      $library_collector->setModule($module);
-      $libraries = call_user_func("{$module}_library_info");
-      foreach ($libraries as $name => $info) {
-        // Normalize - apparently hook_library_info is allowed to be sloppy.
-        $info += array('dependencies' => array(), 'js' => array(), 'css' => array());
-
-        // TODO This works sorta sanely only because of the array_intersect_key() hack in AssetLibrary::construct()
-        $asset_collector = $library_collector->buildLibrary($name, $info);
-        foreach (array('js', 'css') as $type) {
-          foreach ($info[$type] as $data => $options) {
-            if (is_scalar($options)) {
-              $data = $options;
-              $options = array();
-            }
-            // TODO stop assuming these are all files.
-            $asset_collector->create($type, 'file', $data, $options);
-          }
-        }
-      }
-    }
-  }
-
   /**
    * Gets a library by its composite key.
    *

@@ -44,15 +44,6 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
 
   protected $successors = array();
 
-  public function __construct(array $values = array()) {
-    parent::__construct();
-    // TODO do it right.
-    $vals = array_intersect_key($values, array_flip(array('title', 'version', 'website', 'dependencies')));
-    foreach ($vals as $key => $val) {
-      $this->$key = $val;
-    }
-  }
-
   /**
    * Set the asset library's title.
    *

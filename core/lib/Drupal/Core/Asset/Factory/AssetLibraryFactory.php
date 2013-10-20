@@ -64,16 +64,68 @@ class AssetLibraryFactory {
     }
   }
 
+  /**
+   * Returns an AssetLibrary based on data declared in hook_library_info().
+   *
+   * @param $key
+   *
+   * @return AssetLibrary|bool
+   *   An AssetLibrary instance, or FALSE if the key did not resolve to library
+   *   data.
+   */
   public function getLibrary($key) {
     list($module, $name) = preg_split('/:/', $key);
 
+    if (!$this->moduleHandler->implementsHook($module, 'library_info')) {
+      // Module doesn't implement hook_library_info(), a library can't exist.
+      return FALSE;
+    }
 
-  }
+    $declarations = call_user_func($module . '_library_info');
 
-  public function createLibrary($name, $values) {
-    $library = new AssetLibrary($values);
-    $this->add($name, $library);
+    if (!isset($declarations[$name])) {
+      // No library by the given name.
+      return FALSE;
+    }
 
+    // Normalize the data - hook_library_info() allows sloppiness
+    $info = $declarations[$name] + array('dependencies' => array(), 'js' => array(), 'css' => array());
+    $library = new AssetLibrary();
+
+    if (isset($info['title'])) {
+      $library->setTitle($info['title']);
+    }
+    if (isset($info['version'])) {
+      $library->setVersion($info['version']);
+    }
+    if (isset($info['website'])) {
+      $library->setWebsite($info['website']);
+    }
+
+    // Record dependencies on the library, if any.
+    foreach ($info['dependencies'] as $dep) {
+      $library->addDependency($dep[0], $dep[1]);
+    }
+
+    // Populate the library with asset objects.
+    $this->collector->setCollection($library);
+    foreach (array('js', 'css') as $type) {
+      foreach ($info[$type] as $data => $options) {
+        if (is_scalar($options)) {
+          $data = $options;
+          $options = array();
+        }
+
+        // TODO research whether it's allowed to declare non-file libraries
+        $source_type = isset($options['type']) ? $options['type'] : 'file';
+        unset($options['type']);
+
+        $this->collector->create($type, $source_type, $data, $options);
+      }
+    }
+
+    $library->freeze();
     return $library;
   }
 }
+
