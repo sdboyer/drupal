@@ -37,7 +37,7 @@ class AssetLibraryRepository {
    * Gets a library by its composite key.
    *
    * @param string $key
-   *   The key of the library, as a string of the form "$module:$name".
+   *   The key of the library, as a string of the form "$module/$name".
    *
    * @return \Drupal\Core\Asset\Collection\AssetLibrary
    *   The requested library.
@@ -61,10 +61,10 @@ class AssetLibraryRepository {
   }
 
   public function set($key, AssetLibrary $library) {
-    if (preg_match('/[^0-9A-Za-z:_-]/', $key)) {
+    if (preg_match('/[^0-9A-Za-z\/_-]/', $key)) {
       throw new \InvalidArgumentException(sprintf('The name "%s" is invalid.', $key));
     }
-    elseif (substr_count($key, ':') !== 1) {
+    elseif (substr_count($key, '/') !== 1) {
       throw new \InvalidArgumentException(sprintf('Invalid key "%s" provided; asset libraries must have exactly one colon in their key, separating the owning module from the library name.', $key));
     }
 
@@ -79,7 +79,7 @@ class AssetLibraryRepository {
    * created already.
    *
    * @param string $key
-   *   The key of the library, as a string of the form "$module:$name".
+   *   The key of the library, as a string of the form "$module/$name".
    *
    * @return bool
    *   TRUE if the library has been built, FALSE otherwise.

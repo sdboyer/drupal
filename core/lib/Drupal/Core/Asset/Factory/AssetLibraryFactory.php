@@ -6,8 +6,6 @@
 
 namespace Drupal\Core\Asset\Factory;
 
-use Drupal\Component\Utility\Crypt;
-use \Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Factory\AssetCollector;
 use Drupal\Core\Asset\Collection\AssetLibrary;
 use Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory;
@@ -74,7 +72,7 @@ class AssetLibraryFactory {
    *   data.
    */
   public function getLibrary($key) {
-    list($module, $name) = preg_split('/:/', $key);
+    list($module, $name) = preg_split('/\//', $key);
 
     if (!$this->moduleHandler->implementsHook($module, 'library_info')) {
       // Module doesn't implement hook_library_info(), a library can't exist.

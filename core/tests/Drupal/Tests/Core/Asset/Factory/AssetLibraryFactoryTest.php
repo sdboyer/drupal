@@ -71,9 +71,9 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
     $collector = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetCollector');
     $factory = new AssetLibraryFactory($module_handler, $collector);
 
-    $this->assertFalse($factory->getLibrary('stub1:foo'));
+    $this->assertFalse($factory->getLibrary('stub1/foo'));
 
-    $lib1 = $factory->getLibrary('stub1:solo-nodeps-js');
+    $lib1 = $factory->getLibrary('stub1/solo-nodeps-js');
 
     $this->assertInstanceOf('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary', $lib1);
     $this->assertEquals('solo-nodeps-js', $lib1->getTitle());
@@ -81,7 +81,7 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
     $this->assertEquals('http://foo.bar', $lib1->getWebsite());
     $this->assertTrue($lib1->isFrozen());
 
-    $lib2 = $factory->getLibrary('stub1:solo-onedep-same');
+    $lib2 = $factory->getLibrary('stub1/solo-onedep-same');
 
     $this->assertInstanceOf('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary', $lib2);
     $this->assertEquals(array(array('stub1', 'solo-nodeps-js')), $lib2->getDependencyInfo());
@@ -100,7 +100,7 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
     $collector = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetCollector');
     $factory = new AssetLibraryFactory($module_handler, $collector);
 
-    $this->assertFalse($factory->getLibrary('foo:bar'));
+    $this->assertFalse($factory->getLibrary('foo/bar'));
   }
 }
 

@@ -66,7 +66,7 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
   public function testSet() {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $repository->set('foo:bar', $library);
+    $repository->set('foo/bar', $library);
 
     $this->assertAttributeContains($library, 'libraries', $repository);
   }
@@ -86,11 +86,11 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
    * @covers ::set
    * @expectedException \InvalidArgumentException
    */
-  public function testSetTooManyColons() {
+  public function testSetTooManySlashes() {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
 
-    $repository->set('foo::bar', $library);
+    $repository->set('foo//bar', $library);
   }
 
   /**
@@ -101,7 +101,7 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
 
-    $repository->set("$∫≤ˆ\"'\n\t\r", $library);
+    $repository->set("$∫≤:ˆ\"'\n\t\r", $library);
   }
 
   /**
@@ -112,10 +112,10 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
 
-    $this->assertFalse($repository->has('foo:bar'));
+    $this->assertFalse($repository->has('foo/bar'));
 
-    $repository->set('foo:bar', $library);
-    $this->assertTrue($repository->has('foo:bar'));
+    $repository->set('foo/bar', $library);
+    $this->assertTrue($repository->has('foo/bar'));
   }
 
   /**
@@ -126,10 +126,10 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
 
-    $repository->set('foo:bar', $library);
-    $repository->set('baz:bing', $library);
+    $repository->set('foo/bar', $library);
+    $repository->set('baz/bing', $library);
 
-    $this->assertEquals(array('foo:bar', 'baz:bing'), $repository->getNames());
+    $this->assertEquals(array('foo/bar', 'baz/bing'), $repository->getNames());
   }
 
   /**
@@ -141,11 +141,11 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
     $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryFactory');
     $factory->expects($this->once())
       ->method('getLibrary')
-      ->with($this->equalTo('foo:bar'))
+      ->with($this->equalTo('foo/bar'))
       ->will($this->returnValue($library));
 
     $repository = new AssetLibraryRepository($factory);
-    $this->assertSame($library, $repository->get('foo:bar'));
+    $this->assertSame($library, $repository->get('foo/bar'));
   }
 }
 
