@@ -56,7 +56,7 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
       ->with('library_info')
       ->will($this->returnValue(array('stub1', 'stub2')));
 
-    $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryFactory', $module_handler);
+    $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryFactory', array(), array($module_handler));
     return new AssetLibraryRepository($factory);
   }
 
@@ -101,7 +101,7 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
 
-    $repository->set("$∫≤:ˆ\"'\n\t\r", $library);
+    $repository->set("\$∫≤:ˆ\"'\n\t\r", $library);
   }
 
   /**
@@ -138,7 +138,7 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
    */
   public function testGet() {
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryFactory');
+    $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryFactory', array(), array(), '', FALSE);
     $factory->expects($this->once())
       ->method('getLibrary')
       ->with($this->equalTo('foo/bar'))

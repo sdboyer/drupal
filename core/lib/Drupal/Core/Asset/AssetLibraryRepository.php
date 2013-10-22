@@ -27,10 +27,10 @@ class AssetLibraryRepository {
    *
    * @var
    */
-  protected $collector;
+  protected $factory;
 
-  function __construct(AssetLibraryFactory $collector) {
-    $this->collector = $collector;
+  function __construct(AssetLibraryFactory $factory) {
+    $this->factory = $factory;
   }
 
   /**
@@ -50,7 +50,7 @@ class AssetLibraryRepository {
       return $this->libraries[$key];
     }
 
-    if ($library = $this->collector->getLibrary($key)) {
+    if ($library = $this->factory->getLibrary($key)) {
       $this->set($key, $library);
     }
     else {
