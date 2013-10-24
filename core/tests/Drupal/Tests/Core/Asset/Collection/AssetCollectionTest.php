@@ -280,9 +280,9 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
   /**
    * @depends testAdd
-   * @covers ::sort
+   * @covers ::uksort
    */
-  public function testSort() {
+  public function testUkSort() {
     $stub1 = $this->createStubFileAsset();
     $stub2 = $this->createStubFileAsset();
     $stub3 = $this->createStubFileAsset();
@@ -301,7 +301,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
       return strnatcasecmp($a, $b);
     };
 
-    $this->collection->sort($dummysort);
+    $this->collection->uksort($dummysort);
     uksort($assets, $dummysort);
     $this->assertEquals($assets, $this->collection->all());
   }

@@ -109,7 +109,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
   /**
    * {@inheritdoc}
    */
-  public function sort($callback) {
+  public function uksort($callback) {
     uksort($this->assetIdMap, $callback);
   }
 

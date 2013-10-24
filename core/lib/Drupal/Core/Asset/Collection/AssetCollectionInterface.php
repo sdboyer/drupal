@@ -75,7 +75,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *
    * @return void
    */
-  public function sort($callback);
+  public function uksort($callback);
 
   /**
    * Sorts contained assets via ksort() on their ids.
