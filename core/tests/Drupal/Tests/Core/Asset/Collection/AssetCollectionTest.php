@@ -257,7 +257,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
   /**
    * @depends testAdd
-   * @covers ::getById
+   * @covers ::find
    * @expectedException OutOfBoundsException
    */
   public function testGetById() {
@@ -269,13 +269,13 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
       ->will($this->returnValue('foo'));
 
     $this->collection->add($asset);
-    $this->assertSame($asset, $this->collection->getById('foo'));
+    $this->assertSame($asset, $this->collection->find('foo'));
 
     // Nonexistent asset
-    $this->assertFalse($this->collection->getById('bar'));
+    $this->assertFalse($this->collection->find('bar'));
 
     // Nonexistent asset, non-graceful
-    $this->collection->getById('bar', FALSE);
+    $this->collection->find('bar', FALSE);
   }
 
   /**

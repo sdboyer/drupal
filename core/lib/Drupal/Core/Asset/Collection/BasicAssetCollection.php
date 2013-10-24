@@ -68,7 +68,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
     }
     $this->ensureCorrectType($asset);
 
-    if ($this->contains($asset) || $this->getById($asset->id())) {
+    if ($this->contains($asset) || $this->find($asset->id())) {
       return FALSE;
     }
 
@@ -102,14 +102,14 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
   /**
    * {@inheritdoc}
    */
-  public function getById($id, $graceful = TRUE) {
+  public function find($id, $graceful = TRUE) {
     if (isset($this->assetIdMap[$id])) {
       return $this->assetIdMap[$id];
     }
     else {
       // Recursively search for the id
       foreach ($this->nestedStorage as $aggregate) {
-        if ($found = $aggregate->getById($id)) {
+        if ($found = $aggregate->find($id)) {
           return $found;
         }
       }
@@ -127,7 +127,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
    */
   public function remove($needle, $graceful = FALSE) {
     if (is_string($needle)) {
-      if (!$needle = $this->getById($needle, $graceful)) {
+      if (!$needle = $this->find($needle, $graceful)) {
         return FALSE;
       }
     }
@@ -161,6 +161,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
         return TRUE;
       }
 
+      // TODO wtf, that's protected
       if ($asset instanceof AssetCollectionBasicInterface && $asset->doRemove($needle, TRUE)) {
         return TRUE;
       }
@@ -178,7 +179,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
    */
   public function replace($needle, AssetInterface $replacement, $graceful = FALSE) {
     if (is_string($needle)) {
-      if (!$needle = $this->getById($needle, $graceful)) {
+      if (!$needle = $this->find($needle, $graceful)) {
         return FALSE;
       }
     }

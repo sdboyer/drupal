@@ -58,13 +58,13 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
   public function contains(AssetInterface $asset);
 
   /**
-   * Retrieves a contained asset by its string identifier.
+   * Searches for and retrieves a contained asset by its string identifier.
    *
    * Call this with $graceful = TRUE as an equivalent to contains() if all you
    * have is a string id.
    *
    * @param string $id
-   *   The id of the asset to retrieve.
+   *   The id of the asset to search for.
    * @param bool $graceful
    *   Whether failure should return FALSE or throw an exception.
    *
@@ -74,7 +74,7 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
    * @throws \OutOfBoundsException
    *   Thrown if no asset could be found by the given id and $graceful = FALSE.
    */
-  public function getById($id, $graceful = TRUE);
+  public function find($id, $graceful = TRUE);
 
   /**
    * Removes an asset from the collection.

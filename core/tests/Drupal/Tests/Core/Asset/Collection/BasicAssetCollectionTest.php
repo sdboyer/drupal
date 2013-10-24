@@ -182,7 +182,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
   }
 
   /**
-   * @covers ::getById
+   * @covers ::find
    * @expectedException \OutOfBoundsException
    */
   public function testGetById() {
@@ -190,7 +190,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
 
     $asset = $this->createStubFileAsset();
     $collection->add($asset);
-    $this->assertSame($asset, $collection->getById($asset->id()));
+    $this->assertSame($asset, $collection->find($asset->id()));
 
     $nested_aggregate = $this->getAggregate();
     $nested_asset = $this->createStubFileAsset();
@@ -198,13 +198,13 @@ class BasicAssetCollectionTest extends AssetUnitTest {
     $nested_aggregate->add($nested_asset);
     $collection->add($nested_aggregate);
 
-    $this->assertSame($nested_asset, $collection->getById($nested_asset->id()));
+    $this->assertSame($nested_asset, $collection->find($nested_asset->id()));
 
     // Nonexistent asset
-    $this->assertFalse($collection->getById('bar'));
+    $this->assertFalse($collection->find('bar'));
 
     // Nonexistent asset, non-graceful
-    $collection->getById('bar', FALSE);
+    $collection->find('bar', FALSE);
   }
 
   /**
