@@ -61,6 +61,7 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::__construct
    * @covers ::set
    */
   public function testSet() {
@@ -146,6 +147,25 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
 
     $repository = new AssetLibraryRepository($factory);
     $this->assertSame($library, $repository->get('foo/bar'));
+    // Do it twice, for cache hit coverage.
+    $this->assertSame($library, $repository->get('foo/bar'));
+  }
+
+  /**
+   * @depends testSet
+   * @covers ::clear
+   */
+  public function testClear() {
+    $repository = $this->createAssetLibraryRepository();
+    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+
+    $repository->set('foo/bar', $library);
+    $this->assertAttributeContains($library, 'libraries', $repository);
+
+    $repository->clear();
+
+    $this->setExpectedException('\OutOfBoundsException');
+    $repository->get('foo/bar');
   }
 }
 

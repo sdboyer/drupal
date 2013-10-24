@@ -42,7 +42,7 @@ class AssetLibraryRepository {
    * @return \Drupal\Core\Asset\Collection\AssetLibrary
    *   The requested library.
    *
-   * @throws \InvalidArgumentException
+   * @throws \OutOfBoundsException
    *   Thrown if no library can be found with the given key.
    */
   public function get($key) {
@@ -54,7 +54,7 @@ class AssetLibraryRepository {
       $this->set($key, $library);
     }
     else {
-      throw new \InvalidArgumentException(sprintf('No library could be found with the key "%s".', $key));
+      throw new \OutOfBoundsException(sprintf('No library could be found with the key "%s".', $key));
     }
 
     return $this->libraries[$key];
