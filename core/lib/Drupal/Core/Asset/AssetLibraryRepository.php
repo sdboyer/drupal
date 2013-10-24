@@ -102,8 +102,9 @@ class AssetLibraryRepository {
     $dependencies = array();
 
     if ($asset->hasDependencies()) {
-      foreach ($asset->getDependencyInfo() as $info) {
-        $dependencies[] = $this->get($info[0], $info[1]);
+      foreach ($asset->getDependencyInfo() as $key) {
+        $dep = $this->get($key);
+        $dependencies = array_merge($dependencies, array($dep), $this->resolveDependencies($dep));
       }
     }
 

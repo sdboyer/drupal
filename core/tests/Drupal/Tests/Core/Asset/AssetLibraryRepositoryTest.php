@@ -153,6 +153,16 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
 
   /**
    * @depends testSet
+   * @covers ::get
+   * @expectedException \OutOfBoundsException
+   */
+  public function testGetMissing() {
+    $repository = $this->createAssetLibraryRepository();
+    $repository->get('foo/bar');
+  }
+
+  /**
+   * @depends testSet
    * @covers ::clear
    */
   public function testClear() {
@@ -167,6 +177,45 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
     $this->setExpectedException('\OutOfBoundsException');
     $repository->get('foo/bar');
   }
-}
 
+  /**
+   * @depends testSet
+   * @covers ::resolveDependencies
+   */
+  public function testResolveDependencies() {
+    $repository = $this->createAssetLibraryRepository();
+    $library1 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library1->expects($this->once())
+      ->method('hasDependencies')
+      ->will($this->returnValue(TRUE));
+    $library1->expects($this->once())
+      ->method('getDependencyInfo')
+      ->will($this->returnValue(array('foo/baz', 'qux/bing')));
+
+    $library2 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library2->expects($this->once())
+      ->method('hasDependencies')
+      ->will($this->returnValue(FALSE));
+
+    $library3 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library3->expects($this->once())
+      ->method('hasDependencies')
+      ->will($this->returnValue(TRUE));
+    $library3->expects($this->once())
+      ->method('getDependencyInfo')
+      ->will($this->returnValue(array('qux/quark')));
+
+    $library4 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library4->expects($this->once())
+      ->method('hasDependencies')
+      ->will($this->returnValue(FALSE));
+
+    $repository->set('foo/bar', $library1);
+    $repository->set('foo/baz', $library2);
+    $repository->set('qux/bing', $library3);
+    $repository->set('qux/quark', $library4);
+
+    $this->assertEquals(array($library2, $library3, $library4), $repository->resolveDependencies($library1));
+  }
+}
 
