@@ -6,6 +6,13 @@
 
 namespace Drupal\Core\Asset;
 
+/**
+ * Describes assets that can declare dependencies on asset libraries.
+ *
+ * "Dependency" expands the concept of positioning expressed by the parent
+ * interface RelativePositionInterface by ensuring the presence of another
+ * another asset.
+ */
 interface DependencyInterface extends RelativePositionInterface {
 
   /**

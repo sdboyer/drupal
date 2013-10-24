@@ -102,6 +102,7 @@ class AssetLibraryFactory {
 
     // Record dependencies on the library, if any.
     foreach ($info['dependencies'] as $dep) {
+      // TODO remove this, this is the wrong level at which to declare.
       $library->addDependency($dep[0], $dep[1]);
     }
 
@@ -118,7 +119,10 @@ class AssetLibraryFactory {
         $source_type = isset($options['type']) ? $options['type'] : 'file';
         unset($options['type']);
 
-        $this->collector->create($type, $source_type, $data, $options);
+        $asset = $this->collector->create($type, $source_type, $data, $options);
+        foreach ($info['dependencies'] as $dep) {
+          $asset->addDependency($dep[0], $dep[1]);
+        }
       }
     }
 
