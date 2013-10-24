@@ -89,22 +89,33 @@ class AssetLibraryRepository {
   }
 
   /**
-   * Retrieves the asset objects on which the passed asset depends.
+   * Resolves declared dependencies into an array of library objects.
    *
    * @param DependencyInterface $asset
-   *   The asset whose dependencies should be retrieved.
+   *   The asset whose dependencies should be resolved.
    *
-   * @return array
-   *   An array of AssetInterface objects if any dependencies were found;
+   * @param bool $attach
+   *   Whether to automatically attach resolved dependencies to the given asset.
+   *
+   * @return AssetLibrary[]
+   *   An array of AssetLibraryInterface objects if any dependencies were found;
    *   otherwise, an empty array.
    */
-  public function resolveDependencies(DependencyInterface $asset) {
+  public function resolveDependencies(DependencyInterface $asset, $attach = TRUE) {
     $dependencies = array();
 
     if ($asset->hasDependencies()) {
       foreach ($asset->getDependencyInfo() as $key) {
-        $dep = $this->get($key);
-        $dependencies = array_merge($dependencies, array($dep), $this->resolveDependencies($dep));
+        $dependencies[] = $library = $this->get($key);
+
+        // Only bother attaching if operating on an asset.
+        if ($attach && $asset instanceof AssetInterface) {
+          foreach ($library as $libasset) {
+            if ($asset->getAssetType() === $libasset->getAssetType()) {
+              $asset->after($libasset);
+            }
+          }
+        }
       }
     }
 

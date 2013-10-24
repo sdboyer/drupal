@@ -28,13 +28,12 @@ if (!defined('JS_THEME')) {
 }
 
 use Drupal\Core\Asset\AssetLibraryRepository;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\Core\Asset\AssetLibraryRepository
  * @group Asset
  */
-class AssetLibraryRepositoryTest extends UnitTestCase {
+class AssetLibraryRepositoryTest extends AssetUnitTest {
 
   /**
    * @var AssetLibraryRepository
@@ -184,6 +183,23 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
    */
   public function testResolveDependencies() {
     $repository = $this->createAssetLibraryRepository();
+
+    $compatible_dep = $this->createStubFileAsset();
+    $incompatible_dep = $this->createStubFileAsset('js');
+
+    $main_asset = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
+    $main_asset->expects($this->exactly(2))
+      ->method('getAssetType')
+      ->will($this->returnValue('css'));
+    $main_asset->expects($this->exactly(2))
+      ->method('hasDependencies')
+      ->will($this->returnValue(TRUE));
+    $main_asset->expects($this->exactly(2))
+      ->method('getDependencyInfo')
+      ->will($this->returnValue(array('foo/bar')));
+    $main_asset->expects($this->once())
+      ->method('after')->with($compatible_dep);
+
     $library1 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
     $library1->expects($this->once())
       ->method('hasDependencies')
@@ -192,30 +208,36 @@ class AssetLibraryRepositoryTest extends UnitTestCase {
       ->method('getDependencyInfo')
       ->will($this->returnValue(array('foo/baz', 'qux/bing')));
 
-    $library2 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $library2->expects($this->once())
-      ->method('hasDependencies')
-      ->will($this->returnValue(FALSE));
+    // The iterator is not the SUT, mocking it is focusing on the wrong thing.
+    $it = new \ArrayIterator(array($compatible_dep, $incompatible_dep));
 
+    $library1->expects($this->once())
+      ->method('getIterator')
+      ->will($this->returnValue($it));
+
+    $library2 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
     $library3 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $library3->expects($this->once())
-      ->method('hasDependencies')
-      ->will($this->returnValue(TRUE));
-    $library3->expects($this->once())
+    $library3->expects($this->never())
       ->method('getDependencyInfo')
       ->will($this->returnValue(array('qux/quark')));
 
     $library4 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $library4->expects($this->once())
-      ->method('hasDependencies')
-      ->will($this->returnValue(FALSE));
 
     $repository->set('foo/bar', $library1);
     $repository->set('foo/baz', $library2);
     $repository->set('qux/bing', $library3);
     $repository->set('qux/quark', $library4);
 
-    $this->assertEquals(array($library2, $library3, $library4), $repository->resolveDependencies($library1));
+    // Ensure no auto-attach when the second param turns it off.
+    $this->assertEquals(array($library1), $repository->resolveDependencies($main_asset, FALSE));
+
+    // Now, let it auto-attach.
+    $this->assertEquals(array($library1), $repository->resolveDependencies($main_asset));
+    // The correctness of $main_asset's predecessor data is guaranteed by the
+    // method counts on the mock; no direct validation is necessary.
+
+    // This ensures that dependency resolution is non-recursive.
+    $this->assertEquals(array($library2, $library3), $repository->resolveDependencies($library1));
   }
 }
 
