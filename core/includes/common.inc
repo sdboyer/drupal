@@ -1592,7 +1592,7 @@ function drupal_add_html_head_link($attributes, $header = FALSE) {
  *
  * @see drupal_get_css()
  */
-function drupal_add_css($data = NULL, $options = NULL) {
+function drupal_add_css($data = NULL, $options = NULL, $collect = FALSE) {
   $css = &drupal_static(__FUNCTION__, array());
 
   // Construct the options, taking the defaults into consideration.
@@ -1609,7 +1609,9 @@ function drupal_add_css($data = NULL, $options = NULL) {
   // to the browser differently.
   if (isset($data)) {
     $options['type'] = isset($options['type']) ? $options['type'] : 'file';
-    drupal_collect_assets($data, $options, 'css');
+    if ($collect) {
+      drupal_collect_assets($data, $options, 'css');
+    }
 
     $options += array(
       'type' => 'file',
@@ -2208,7 +2210,7 @@ function drupal_html_id($id) {
  *
  * @see drupal_get_js()
  */
-function drupal_add_js($data = NULL, $options = NULL) {
+function drupal_add_js($data = NULL, $options = NULL, $collect = FALSE) {
   $javascript = &drupal_static(__FUNCTION__, array());
 
   // Construct the options, taking the defaults into consideration.
@@ -2224,7 +2226,9 @@ function drupal_add_js($data = NULL, $options = NULL) {
 
   if (isset($data) && is_array($options)) {
     $options['type'] = isset($options['type']) ? $options['type'] : 'file';
-    drupal_collect_assets($data, $options, $options['type'] == 'setting' ? 'js-setting' : 'js');
+    if ($collect) {
+      drupal_collect_assets($data, $options, $options['type'] == 'setting' ? 'js-setting' : 'js');
+    }
   }
 
   // Preprocess can only be set if caching is enabled and no attributes are set.
@@ -2574,7 +2578,17 @@ function drupal_pre_render_scripts($elements) {
  * @see drupal_add_css()
  * @see drupal_render()
  */
-function drupal_process_attached($elements, $dependency_check = FALSE) {
+function drupal_process_attached($elements, $dependency_check = FALSE, $collect = TRUE) {
+  // TODO duplicates the start of drupal_collect_attached()...just for now.
+  $collection = &drupal_static('global_asset_collection', FALSE);
+  $collector = &drupal_static('global_asset_collector', FALSE);
+
+  $collection = ($collection instanceof \Drupal\Core\Asset\Collection\AssetCollection) ? $collection : new \Drupal\Core\Asset\Collection\AssetCollection();
+  if (!$collector instanceof \Drupal\Core\Asset\Factory\AssetCollector) {
+    $collector = new \Drupal\Core\Asset\Factory\AssetCollector();
+    $collector->setCollection($collection);
+  }
+
   // Add defaults to the special attached structures that should be processed differently.
   $elements['#attached'] += array(
     'library' => array(),
@@ -2595,6 +2609,9 @@ function drupal_process_attached($elements, $dependency_check = FALSE) {
   }
   unset($elements['#attached']['library']);
 
+  // Clear the last CSS before we start to avoid unintentional relative positioning
+  $collector->clearLastCss();
+
   // Add both the JavaScript and the CSS.
   // The parameters for drupal_add_js() and drupal_add_css() require special
   // handling.
@@ -2612,10 +2629,12 @@ function drupal_process_attached($elements, $dependency_check = FALSE) {
         $data = $options['data'];
         unset($options['data']);
       }
-      call_user_func('drupal_add_' . $type, $data, $options);
+      call_user_func('drupal_add_' . $type, $data, $options, $collect);
     }
     unset($elements['#attached'][$type]);
   }
+  // Clear the last CSS asset, ending the auto-predecessor-creation chain.
+  $collector->clearLastCss();
 
   // Add additional types of attachments specified in the render() structure.
   // Libraries, JavaScript and CSS have been added already, as they require
@@ -2808,7 +2827,7 @@ function drupal_add_library($module, $name, $every_page = NULL) {
         }
       }
 
-      $added[$module][$name] = drupal_process_attached($elements, TRUE);
+      $added[$module][$name] = drupal_process_attached($elements, TRUE, FALSE);
     }
     else {
       // Requested library does not exist.
