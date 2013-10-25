@@ -129,9 +129,14 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
   /**
    * {@inheritdoc}
    */
-  public function addDependency($module, $name) {
+  public function addDependency($key) {
     $this->attemptWrite();
-    $this->dependencies[] = array($module, $name);
+    if (!is_string($key)) {
+      throw new \InvalidArgumentException('Dependencies must be expressed as a string key identifying the depended-upon library.');
+    }
+
+    // The library key is stored as the key for cheap deduping.
+    $this->dependencies[$key] = TRUE;
   }
 
   /**
@@ -146,7 +151,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    * {@inheritdoc}
    */
   public function getDependencyInfo() {
-    return $this->dependencies;
+    return array_keys($this->dependencies);
   }
 
   /**

@@ -28,14 +28,14 @@ class AssetLibraryTest extends AssetUnitTest {
     $library->setTitle('foo')
       ->setVersion('1.2.3')
       ->setWebsite('http://foo.bar')
-      ->addDependency('foo', 'bar');
+      ->addDependency('foo/bar');
     return $library;
   }
 
   public function testAddDependency() {
     $library = $this->getLibraryFixture();
-    $library->addDependency('baz', 'bing');
-    $this->assertEquals($library->getDependencyInfo(), array(array('foo', 'bar'), array('baz', 'bing')), 'Dependencies added to library successfully.');
+    $library->addDependency('baz/bing');
+    $this->assertEquals($library->getDependencyInfo(), array('foo/bar', 'baz/bing'), 'Dependencies added to library successfully.');
   }
 
   public function testClearDependencies() {

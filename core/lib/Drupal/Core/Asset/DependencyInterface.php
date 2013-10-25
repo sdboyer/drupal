@@ -33,14 +33,14 @@ interface DependencyInterface extends RelativePositionInterface {
   /**
    * Add a dependency on a library for this asset.
    *
-   * @param string $module
-   *   The name of the module declaring the library.
-   * @param string $name
-   *   The name of the library.
-   *
+   * @param string $key
+   *   The string identifying the library. It should be two-part composite key,
+   *   slash-delimited, with the first part being the module owner and the
+   *   second part being the library name.
+
    * @return void
    */
-  public function addDependency($module, $name);
+  public function addDependency($key);
 
   /**
    * Clears (removes) all library dependencies for this asset.

@@ -74,12 +74,13 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   /**
    * {@inheritdoc}
    */
-  public function addDependency($module, $name) {
-    if (!(is_string($module) && is_string($name))) {
-      throw new \InvalidArgumentException('Dependencies must be expressed as 2-tuple with the first element being owner/module, and the second being name.');
+  public function addDependency($key) {
+    if (!is_string($key)) {
+      throw new \InvalidArgumentException('Dependencies must be expressed as a string key identifying the depended-upon library.');
     }
 
-    $this->dependencies[] = array($module, $name);
+    // The library key is stored as the key for cheap deduping.
+    $this->dependencies[$key] = TRUE;
   }
 
   /**
@@ -93,7 +94,7 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    * {@inheritdoc}
    */
   public function getDependencyInfo() {
-    return $this->dependencies;
+    return array_keys($this->dependencies);
   }
 
   /**

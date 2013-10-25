@@ -68,8 +68,8 @@ class BaseAssetTest extends AssetUnitTest {
   public function testDependencies() {
     $asset = $this->createBaseAsset();
 
-    $asset->addDependency('foo', 'bar');
-    $this->assertEquals(array(array('foo', 'bar')), $asset->getDependencyInfo());
+    $asset->addDependency('foo/bar');
+    $this->assertEquals(array('foo/bar'), $asset->getDependencyInfo());
     $this->assertTrue($asset->hasDependencies());
 
     $asset->clearDependencies();
