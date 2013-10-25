@@ -32,22 +32,6 @@ class AssetLibraryTest extends AssetUnitTest {
     return $library;
   }
 
-  public function testConstructorValueInjection() {
-    $values = array(
-      'title' => 'foo',
-      'version' => '1.2.3',
-      'website' => 'http://foo.bar',
-      'dependencies' => array(array('foo', 'bar')),
-    );
-    $library = new AssetLibrary($values);
-
-    $fixture = $this->getLibraryFixture();
-    $this->assertEquals($fixture->getTitle(), $library->getTitle(), 'Title passed correctly through the constructor.');
-    $this->assertEquals($fixture->getVersion(), $library->getVersion(), 'Version passed correctly through the constructor.');
-    $this->assertEquals($fixture->getWebsite(), $library->getWebsite(), 'Website passed correctly through the constructor.');
-    $this->assertEquals($fixture->getDependencyInfo(), $library->getDependencyInfo(), 'Dependencies information passed correctly through the constructor.');
-  }
-
   public function testAddDependency() {
     $library = $this->getLibraryFixture();
     $library->addDependency('baz', 'bing');
