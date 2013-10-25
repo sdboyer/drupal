@@ -208,7 +208,6 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
       ->method('getDependencyInfo')
       ->will($this->returnValue(array('foo/baz', 'qux/bing')));
 
-    // The iterator is not the SUT, mocking it is focusing on the wrong thing.
     $it = new \ArrayIterator(array($compatible_dep, $incompatible_dep));
 
     $library1->expects($this->once())
