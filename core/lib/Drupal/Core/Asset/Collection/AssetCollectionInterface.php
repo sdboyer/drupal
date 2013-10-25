@@ -85,14 +85,55 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
   public function ksort();
 
   /**
-   * Resolves all contained asset references and adds them to this collection.
+   * Adds a key identifying a library to this collection.
    *
-   * "References" refers to library ids. This includes both libraries added
+   * Resolving this key into a real AssetLibrary is the responsibility of the
+   * resolveLibraries() method.
+   *
+   * @param string $key
+   *   The string identifying the library. It should be two-part composite key,
+   *   slash-delimited, with the first part being the module owner and the
+   *   second part being the library name.
+   *
+   * @return void
+   *
+   * @see AssetCollectionInterface::resolveLibraries()
+   */
+  public function addUnresolvedLibrary($key);
+
+  /**
+   * Indicates whether the collection has any unresolved library keys.
+   *
+   * @return bool
+   *   TRUE if unresolved keys are present, FALSE otherwise.
+   */
+  public function hasUnresolvedLibraries();
+
+  /**
+   * Gets the unresolved library keys from this collection.
+   *
+   * @return array
+   *   An indexed array of library keys.
+   */
+  public function getUnresolvedLibraries();
+
+  /**
+   * Empties the collection of its unresolved library keys.
+   *
+   * @return void
+   */
+  public function clearUnresolvedLibraries();
+
+  /**
+   * Resolves all contained library references and adds them to this collection.
+   *
+   * "References" refers to library keys. This includes both libraries added
    * directly to this collection, as well as those libraries included indirectly
    * via a contained asset's declared dependencies.
    *
    * @param AssetLibraryRepository $repository
-   *   The AssetLibraryRepository against which to resolve dependencies.
+   *   The AssetLibraryRepository to use for resolving library keys into
+   *   AssetLibrary objects.
    *
    * @return void
    */

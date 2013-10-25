@@ -11,7 +11,9 @@ use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
+use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
+use Drupal\Core\Asset\RelativePositionInterface;
 
 /**
  * A container for assets.
@@ -23,7 +25,22 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  */
 class AssetCollection extends BasicAssetCollection implements AssetCollectionInterface {
 
+  /**
+   * State flag indicating whether or not this collection is frozen.
+   *
+   * @var bool
+   */
   protected $frozen = FALSE;
+
+  /**
+   * The list of unresolved library keys attached directly to this collection.
+   *
+   * Note that libraries declared in this way have no defined positioning
+   * relationship with respect to any of the collection's normal assets.
+   *
+   * @var array
+   */
+  protected $libraries = array();
 
   /**
    * {@inheritdoc}
@@ -123,14 +140,60 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
   /**
    * {@inheritdoc}
    */
+  public function addUnresolvedLibrary($key) {
+    $this->attemptWrite();
+    // The library key is stored as the key for cheap deduping.
+    $this->libraries[$key] = TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasUnresolvedLibraries() {
+    return !empty($this->libraries);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUnresolvedLibraries() {
+    return array_keys($this->libraries);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearUnresolvedLibraries() {
+    $this->attemptWrite();
+    $this->libraries = array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function resolveLibraries(AssetLibraryRepository $repository) {
     $this->attemptWrite();
 
+    // Resolving directly added libraries first ensures their contained assets
+    // are processed in the next loop.
+    foreach ($this->getUnresolvedLibraries() as $key) {
+      $library = $repository->get($key);
+      foreach ($library as $asset) {
+        $this->add($asset);
+      }
+    }
+
+    $this->clearUnresolvedLibraries();
+
+    // By iterating the assetStorage SPLOS, we guarantee that this loop won't
+    // finish until every added asset has been processed - including ones
+    // attached to the SPLOS during the loop. The alternative is a recursive
+    // closure - far more complex, and slower.
     foreach ($this->assetStorage as $asset) {
-      foreach ($repository->resolveDependencies($asset) as $dep) {
-        $this->add($dep);
-        if ($dep->getAssetType() == $asset->getAssetType()) {
-          $asset->after($dep);
+      foreach ($repository->resolveDependencies($asset) as $library) {
+        foreach ($library as $libasset) {
+          // The repository already attached positioning info for us; just add.
+          $this->add($libasset);
         }
       }
     }
