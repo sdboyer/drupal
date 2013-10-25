@@ -115,13 +115,13 @@ class AssetLibraryFactory {
           $options = array();
         }
 
-        // TODO research whether it's allowed to declare non-file libraries
         $source_type = isset($options['type']) ? $options['type'] : 'file';
-        if ($type == 'js' && $options['type'] == 'setting') {
+        unset($options['type']);
+
+        if ($type == 'js' && $source_type == 'setting') {
           // TODO temporarily continue/skip if it's a js setting, can't handle those yet
           continue;
         }
-        unset($options['type']);
 
         $asset = $this->collector->create($type, $source_type, $data, $options);
         foreach ($info['dependencies'] as $dep) {
