@@ -7,9 +7,6 @@
 
 namespace Drupal\field\Entity;
 
-use Drupal\Component\Utility\String;
-use Drupal\Core\Entity\Annotation\EntityType;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\field\FieldException;
@@ -422,7 +419,7 @@ class FieldInstance extends ConfigEntityBase implements FieldInstanceInterface {
    * Prepares the instance definition for saving.
    */
   protected function prepareSave() {
-    $field_type_info = \Drupal::service('plugin.manager.entity.field.field_type')->getDefinition($this->field->type);
+    $field_type_info = \Drupal::service('plugin.manager.field.field_type')->getDefinition($this->field->type);
 
     // Set the default instance settings.
     $this->settings += $field_type_info['instance_settings'];

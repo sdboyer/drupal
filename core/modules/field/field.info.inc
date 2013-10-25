@@ -5,10 +5,7 @@
  * Field Info API, providing information about available fields and field types.
  */
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Language\Language;
 use Drupal\field\Field;
-use Drupal\field\FieldInstanceInterface;
 
 /**
  * @defgroup field_info Field Info API
@@ -40,7 +37,7 @@ function field_info_cache_clear() {
 
   // Clear typed data definitions.
   \Drupal::typedData()->clearCachedDefinitions();
-  \Drupal::service('plugin.manager.entity.field.field_type')->clearCachedDefinitions();
+  \Drupal::service('plugin.manager.field.field_type')->clearCachedDefinitions();
 
   Field::fieldInfo()->flush();
 }

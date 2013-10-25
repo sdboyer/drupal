@@ -54,7 +54,7 @@ class FieldInstanceEditForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID() {
+  public function getFormId() {
     return 'field_ui_field_instance_edit_form';
   }
 
@@ -69,10 +69,11 @@ class FieldInstanceEditForm extends FormBase {
     $field = $this->instance->getField();
     $bundles = entity_get_bundles();
 
-    drupal_set_title($this->t('%instance settings for %bundle', array(
+    $form_title = $this->t('%instance settings for %bundle', array(
       '%instance' => $this->instance->getFieldLabel(),
       '%bundle' => $bundles[$entity_type][$bundle]['label'],
-    )), PASS_THROUGH);
+    ));
+    $form['#title'] = $form_title;
 
     $form['#field'] = $field;
     // Create an arbitrary entity object (used by the 'default value' widget).
@@ -201,7 +202,7 @@ class FieldInstanceEditForm extends FormBase {
       $destination = drupal_get_destination();
       $request->query->remove('destination');
     }
-    $form_state['redirect'] = array('admin/structure/types/manage/' . $this->instance['bundle'] . '/fields/' . $this->instance->id() . '/delete', array('query' => $destination));
+    $form_state['redirect'] = array('admin/structure/types/manage/' . $this->instance->bundle . '/fields/' . $this->instance->id() . '/delete', array('query' => $destination));
   }
 
   /**

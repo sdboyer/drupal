@@ -366,6 +366,13 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
   /**
    * {@inheritdoc}
    */
+  public function hasField($field_name) {
+    return (bool) $this->getPropertyDefinition($field_name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function get($property_name) {
     if (!isset($this->fields[$property_name][$this->activeLangcode])) {
       return $this->getTranslatedField($property_name, $this->activeLangcode);
@@ -376,7 +383,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
   /**
    * Gets a translated field.
    *
-   * @return \Drupal\Core\Entity\Field\FieldItemListInterface
+   * @return \Drupal\Core\Field\FieldItemListInterface
    */
   protected function getTranslatedField($property_name, $langcode) {
     if ($this->translations[$this->activeLangcode]['status'] == static::TRANSLATION_REMOVED) {
@@ -775,7 +782,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
   }
 
   /**
-   * Implements the magic method for setting object properties.
+   * Implements the magic method for getting object properties.
    *
    * @todo: A lot of code still uses non-fields (e.g. $entity->content in render
    *   controllers) by reference. Clean that up.
@@ -817,7 +824,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
     if (isset($this->fields[$name][$this->activeLangcode])) {
       $this->fields[$name][$this->activeLangcode]->setValue($value);
     }
-    elseif ($this->getPropertyDefinition($name)) {
+    elseif ($this->hasField($name)) {
       $this->getTranslatedField($name, $this->activeLangcode)->setValue($value);
     }
     // The translations array is unset when cloning the entity object, we just
@@ -836,7 +843,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
    * Implements the magic method for isset().
    */
   public function __isset($name) {
-    if ($this->getPropertyDefinition($name)) {
+    if ($this->hasField($name)) {
       return $this->get($name)->getValue() !== NULL;
     }
     else {
@@ -848,7 +855,7 @@ abstract class ContentEntityBase extends Entity implements \IteratorAggregate, C
    * Implements the magic method for unset.
    */
   public function __unset($name) {
-    if ($this->getPropertyDefinition($name)) {
+    if ($this->hasField($name)) {
       $this->get($name)->setValue(NULL);
     }
     else {

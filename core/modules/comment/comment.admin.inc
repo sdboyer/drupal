@@ -5,8 +5,6 @@
  * Admin page callbacks for the Comment module.
  */
 
-use Drupal\comment\Form\ConfirmDeleteMultiple;
-
 /**
  * Page callback: Presents an administrative comment listing.
  *
@@ -24,7 +22,7 @@ function comment_admin($type = 'new') {
   $edit = $request->request->all();
 
   if (isset($edit['operation']) && ($edit['operation'] == 'delete') && isset($edit['comments']) && $edit['comments']) {
-    return drupal_get_form(ConfirmDeleteMultiple::create(\Drupal::getContainer()), $request);
+    return drupal_get_form('Drupal\comment\Form\ConfirmDeleteMultiple');
   }
   else {
     return drupal_get_form('comment_admin_overview', $type);
@@ -123,10 +121,6 @@ function comment_admin_overview($form, &$form_state, $arg) {
     $entity_uri = $entity->uri();
     // Remove the first node title from the node_titles array and attach to
     // the comment.
-    $username = array(
-      '#theme' => 'username',
-      '#account' => comment_prepare_author($comment),
-    );
     $body = '';
     if (!empty($comment->comment_body->value)) {
       $body = $comment->comment_body->value;
@@ -141,7 +135,12 @@ function comment_admin_overview($form, &$form_state, $arg) {
           '#options' => array('attributes' => array('title' => truncate_utf8($body, 128)), 'fragment' => 'comment-' . $comment->id()),
         ),
       ),
-      'author' => drupal_render($username),
+      'author' => array(
+        'data' => array(
+          '#theme' => 'username',
+          '#account' => comment_prepare_author($comment),
+        ),
+      ),
       'posted_in' => array(
         'data' => array(
           '#type' => 'link',
@@ -213,7 +212,7 @@ function comment_admin_overview_submit($form, &$form_state) {
     entity_delete_multiple('comment', $cids);
   }
   else {
-    foreach ($cids as $cid => $value) {
+    foreach ($cids as $value) {
       $comment = comment_load($value);
 
       if ($operation == 'unpublish') {

@@ -1288,7 +1288,7 @@ class ViewExecutable {
    * @param string $display_id
    *   The machine name of the display, which should be rendered.
    *
-   * @return (string|NULL)
+   * @return string|null
    *   Return the output of the rendered view or NULL if something failed in the process.
    */
   public function render($display_id = NULL) {
@@ -1550,7 +1550,7 @@ class ViewExecutable {
     }
 
     if (!$account) {
-      $account = $GLOBALS['user'];
+      $account = \Drupal::currentUser();
     }
 
     // We can't use choose_display() here because that function

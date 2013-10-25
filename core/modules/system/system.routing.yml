@@ -324,6 +324,13 @@ system.theme_settings:
   requirements:
     _permission: 'administer themes'
 
+system.theme_settings_theme:
+  path: '/admin/appearance/settings/{theme}'
+  defaults:
+    _form: '\Drupal\system\Form\ThemeSettingsForm'
+  requirements:
+    _permission: 'administer themes'
+
 '<front>':
   path: '/'
   requirements:
@@ -344,9 +351,12 @@ system.modules_uninstall_confirm:
     _permission: 'administer modules'
 
 system.timezone:
-  path: '/system/timezone'
+  path: '/system/timezone/{abbreviation}/{offset}/{is_daylight_saving_time}'
   defaults:
     _controller: '\Drupal\system\Controller\TimezoneController::getTimezone'
+    abbreviation: ''
+    offset: -1
+    is_daylight_saving_time: NULL
   requirements:
     _access: 'TRUE'
 
@@ -372,3 +382,6 @@ system.localize_date_format:
     _title: 'Localize date formats'
   requirements:
     _permission: 'administer site configuration'
+
+system.update:
+  path: '/core/update.php'

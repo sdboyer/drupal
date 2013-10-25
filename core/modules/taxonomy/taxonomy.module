@@ -5,9 +5,9 @@
  * Enables the organization of content into categories.
  */
 
-use Drupal\Core\Entity\DatabaseStorageController;
+use Drupal\Core\Entity\FieldableDatabaseStorageController;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\field\FieldInterface;
 use Drupal\field\FieldInstanceInterface;
 use Drupal\file\FileInterface;
@@ -255,15 +255,11 @@ function taxonomy_menu() {
     'title arguments' => array(2),
     'route_name' => 'taxonomy.term_page',
   );
-  $items['taxonomy/term/%taxonomy_term/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
   $items['taxonomy/term/%taxonomy_term/edit'] = array(
     'title' => 'Edit',
     'route_name' => 'taxonomy.term_edit',
     'type' => MENU_LOCAL_TASK,
-    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'context' => MENU_CONTEXT_INLINE,
     'weight' => 10,
   );
   $items['taxonomy/term/%taxonomy_term/delete'] = array(
@@ -991,7 +987,7 @@ function taxonomy_field_is_empty($item, $field_type) {
 /**
  * Returns the set of valid terms for a taxonomy field.
  *
- * @param \Drupal\Core\Entity\Field\FieldDefinitionInterface $field_definition
+ * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
  *   The field definition.
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   The entity object the field is attached to.
@@ -1031,7 +1027,7 @@ function taxonomy_term_title(Term $term) {
  */
 function taxonomy_autocomplete_validate($element, &$form_state) {
   // Split the values into an array.
-  // @see \Drupal\taxonomy\Plugin\field\widget\TaxonomyAutocompleteWidget:massageFormValues()
+  // @see \Drupal\taxonomy\Plugin\Field\FieldWidget\TaxonomyAutocompleteWidget:massageFormValues()
   $typed_terms = array();
   if ($tags = $element['#value']) {
     $typed_terms = drupal_explode_tags($tags);
@@ -1124,7 +1120,7 @@ function taxonomy_node_insert(EntityInterface $node) {
 function taxonomy_build_node_index($node) {
   // We maintain a denormalized table of term/node relationships, containing
   // only data for current, published nodes.
-  if (!\Drupal::config('taxonomy.settings')->get('maintain_index_table') || !(\Drupal::entityManager()->getStorageController('node') instanceof DatabaseStorageController)) {
+  if (!\Drupal::config('taxonomy.settings')->get('maintain_index_table') || !(\Drupal::entityManager()->getStorageController('node') instanceof FieldableDatabaseStorageController)) {
     return;
   }
 

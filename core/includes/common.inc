@@ -2,6 +2,7 @@
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Json;
+use Drupal\Component\Utility\Number;
 use Drupal\Component\Utility\Settings;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\String;
@@ -260,9 +261,8 @@ function drupal_get_region_content($region = NULL, $delimiter = ' ') {
  *
  * When this function is called during Drupal's initial installation process,
  * the name of the profile that's about to be installed is stored in the global
- * installation state. At all other times, the standard Drupal systems variable
- * table contains the name of the current profile, and we can call
- * variable_get() to determine what one is active.
+ * installation state. At all other times, the "install_profile" setting will be
+ * available in settings.php.
  *
  * @return $profile
  *   The name of the installation profile.
@@ -635,47 +635,24 @@ function valid_url($url, $absolute = FALSE) {
 /**
  * Verifies that a number is a multiple of a given step.
  *
- * The implementation assumes it is dealing with IEEE 754 double precision
- * floating point numbers that are used by PHP on most systems.
+ * @see \Drupal\Component\Utility\Number::validStep()
  *
- * This is based on the number/range verification methods of webkit.
- *
- * @param $value
+ * @param numeric $value
  *   The value that needs to be checked.
- * @param $step
+ * @param numeric $step
  *   The step scale factor. Must be positive.
- * @param $offset
+ * @param numeric $offset
  *   (optional) An offset, to which the difference must be a multiple of the
  *   given step.
  *
  * @return bool
  *   TRUE if no step mismatch has occured, or FALSE otherwise.
  *
- * @see http://opensource.apple.com/source/WebCore/WebCore-1298/html/NumberInputType.cpp
+ * @deprecated as of Drupal 8.0. Use
+ *   \Drupal\Component\Utility\Number::validStep() directly instead
  */
 function valid_number_step($value, $step, $offset = 0.0) {
-  $double_value = (double) abs($value - $offset);
-
-  // The fractional part of a double has 53 bits. The greatest number that could
-  // be represented with that is 2^53. If the given value is even bigger than
-  // $step * 2^53, then dividing by $step will result in a very small remainder.
-  // Since that remainder can't even be represented with a single precision
-  // float the following computation of the remainder makes no sense and we can
-  // safely ignore it instead.
-  if ($double_value / pow(2.0, 53) > $step) {
-    return TRUE;
-  }
-
-  // Now compute that remainder of a division by $step.
-  $remainder = (double) abs($double_value - $step * round($double_value / $step));
-
-  // $remainder is a double precision floating point number. Remainders that
-  // can't be represented with single precision floats are acceptable. The
-  // fractional part of a float has 24 bits. That means remainders smaller than
-  // $step * 2^-24 are acceptable.
-  $computed_acceptable_error = (double)($step / pow(2.0, 24));
-
-  return $computed_acceptable_error >= $remainder || $remainder >= ($step - $computed_acceptable_error);
+  return Number::validStep($value, $step, $offset);
 }
 
 /**
@@ -1707,6 +1684,7 @@ function drupal_collect_assets($data, $options, $type = '') {
 
   if ($type == 'library') {
     $collection->addUnresolvedLibrary($data);
+    return;
   }
 
   $collector->create($type, $options['type'], $data, $options);
@@ -2499,6 +2477,21 @@ function drupal_merge_js_settings($settings_items) {
 }
 
 /**
+ * Merges two #attached arrays.
+ *
+ * @param array $a
+ *   An #attached array.
+ * @param array $b
+ *   Another #attached array.
+ *
+ * @return array
+ *   The merged #attached array.
+ */
+function drupal_merge_attached(array $a, array $b) {
+  return NestedArray::mergeDeep($a, $b);
+}
+
+/**
  * #pre_render callback to add the elements needed for JavaScript tags to be rendered.
  *
  * This function evaluates the aggregation enabled/disabled condition on a group
@@ -2761,10 +2754,7 @@ function drupal_process_attached($elements, $dependency_check = FALSE) {
  */
 function drupal_process_states(&$elements) {
   $elements['#attached']['library'][] = array('system', 'drupal.states');
-  $elements['#attached']['js'][] = array(
-    'type' => 'setting',
-    'data' => array('states' => array('#' . $elements['#id'] => $elements['#states'])),
-  );
+  $elements['#attributes']['data-drupal-states'] = JSON::encode($elements['#states']);
 }
 
 /**
@@ -3644,7 +3634,7 @@ function drupal_pre_render_link($element) {
  * properties of the parent are used.
  */
 function drupal_pre_render_links($element) {
-  $element += array('#links' => array());
+  $element += array('#links' => array(), '#attached' => array());
   foreach (element_children($element) as $key) {
     $child = &$element[$key];
     // If the child has links which have not been printed yet and the user has
@@ -3654,6 +3644,10 @@ function drupal_pre_render_links($element) {
       // Mark the child as having been printed already (so that its links
       // cannot be mistakenly rendered twice).
       $child['#printed'] = TRUE;
+    }
+    // Merge attachments.
+    if (isset($child['#attached'])) {
+      $element['#attached'] = drupal_merge_attached($element['#attached'], $child['#attached']);
     }
   }
   return $element;
@@ -3894,6 +3888,11 @@ function drupal_render(&$elements) {
     return '';
   }
 
+  // Add any JavaScript state information associated with the element.
+  if (!empty($elements['#states'])) {
+    drupal_process_states($elements);
+  }
+
   // Get the children of the element, sorted by weight.
   $children = element_children($elements, TRUE);
 
@@ -3937,11 +3936,6 @@ function drupal_render(&$elements) {
   // #children to be a single string as #children.
   if (!$theme_is_implemented && isset($elements['#markup'])) {
     $elements['#children'] = $elements['#markup'] . $elements['#children'];
-  }
-
-  // Add any JavaScript state information associated with the element.
-  if (!empty($elements['#states'])) {
-    drupal_process_states($elements);
   }
 
   // Add additional libraries, CSS, JavaScript an other custom
@@ -4203,12 +4197,7 @@ function drupal_render_collect_attached($elements, $return = FALSE) {
 
   // Collect all #attached for this element.
   if (isset($elements['#attached'])) {
-    foreach ($elements['#attached'] as $key => $value) {
-      if (!isset($attached[$key])) {
-        $attached[$key] = array();
-      }
-      $attached[$key] = array_merge($attached[$key], $value);
-    }
+    $attached = drupal_merge_attached($attached, $elements['#attached']);
   }
   if ($children = element_children($elements)) {
     foreach ($children as $child) {

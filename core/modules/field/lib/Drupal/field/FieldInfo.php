@@ -9,7 +9,7 @@ namespace Drupal\field;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Entity\Field\FieldTypePluginManager;
+use Drupal\Core\Field\FieldTypePluginManager;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\field\FieldInterface;
 use Drupal\field\FieldInstanceInterface;
@@ -50,7 +50,7 @@ class FieldInfo {
   /**
    * The field type manager to define field.
    *
-   * @var \Drupal\Core\Entity\Field\FieldTypePluginManager
+   * @var \Drupal\Core\Field\FieldTypePluginManager
    */
   protected $fieldTypeManager;
 
@@ -71,7 +71,7 @@ class FieldInfo {
   /**
    * List of $field structures keyed by ID. Includes deleted fields.
    *
-   * @var array
+   * @var \Drupal\field\FieldInterface[]
    */
   protected $fieldsById = array();
 
@@ -133,7 +133,7 @@ class FieldInfo {
    *   The configuration factory object to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler class to use for invoking hooks.
-   * @param \Drupal\Core\Entity\Field\FieldTypePluginManager $field_type_manager
+   * @param \Drupal\Core\Field\FieldTypePluginManager $field_type_manager
    *   The 'field type' plugin manager.
    */
   public function __construct(CacheBackendInterface $cache_backend, ConfigFactory $config, ModuleHandlerInterface $module_handler, FieldTypePluginManager $field_type_manager) {
@@ -166,7 +166,7 @@ class FieldInfo {
   /**
    * Collects a lightweight map of fields across bundles.
    *
-   * @return
+   * @return array
    *   An array keyed by entity type. Each value is an array which keys are
    *   field names and value is an array with two entries:
    *   - type: The field type.
@@ -201,8 +201,6 @@ class FieldInfo {
     foreach (config_get_storage_names_with_prefix('field.instance.') as $config_id) {
       $instance_config = $this->config->get($config_id)->get();
       $field_uuid = $instance_config['field_uuid'];
-      // Filter out instances of inactive fields, and instances on unknown
-      // entity types.
       if (isset($fields[$field_uuid])) {
         $field = $fields[$field_uuid];
         $map[$instance_config['entity_type']][$field['name']]['bundles'][] = $instance_config['bundle'];
@@ -220,8 +218,8 @@ class FieldInfo {
   /**
    * Returns all active fields, including deleted ones.
    *
-   * @return
-   *   An array of field definitions, keyed by field ID.
+   * @return \Drupal\field\FieldInterface[]
+   *   An array of field entities, keyed by field ID.
    */
   public function getFields() {
     // Read from the "static" cache.
@@ -258,10 +256,10 @@ class FieldInfo {
   /**
    * Retrieves all active, non-deleted instances definitions.
    *
-   * @param $entity_type
+   * @param string $entity_type
    *   (optional) The entity type.
    *
-   * @return
+   * @return array
    *   If $entity_type is not set, all instances keyed by entity type and bundle
    *   name. If $entity_type is set, all instances for that entity type, keyed
    *   by bundle name.
@@ -311,7 +309,7 @@ class FieldInfo {
    * @param string $field_name
    *   The field name.
    *
-   * @return
+   * @return \Drupal\field\FieldInterface|null
    *   The field definition, or NULL if no field was found.
    */
   public function getField($entity_type, $field_name) {
@@ -342,15 +340,15 @@ class FieldInfo {
   }
 
   /**
-   * Returns a field definition from a field ID.
+   * Returns a field entity from a field ID.
    *
    * This method only retrieves active fields, deleted or not.
    *
-   * @param $field_id
+   * @param string $field_id
    *   The field ID.
    *
-   * @return
-   *   The field definition, or NULL if no field was found.
+   * @return \Drupal\field\FieldInterface|null
+   *   The field entity, or NULL if no field was found.
    */
   public function getFieldById($field_id) {
     // Read from the "static" cache.
@@ -388,13 +386,13 @@ class FieldInfo {
    * The function also populates the corresponding field definitions in the
    * "static" cache.
    *
-   * @param $entity_type
+   * @param string $entity_type
    *   The entity type.
-   * @param $bundle
+   * @param string $bundle
    *   The bundle name.
    *
-   * @return
-   *   The array of instance definitions, keyed by field name.
+   * @return \Drupal\field\FieldInstanceInterface[]
+   *   An array of field instance entities, keyed by field name.
    */
   public function getBundleInstances($entity_type, $bundle) {
     // Read from the "static" cache.
@@ -498,7 +496,7 @@ class FieldInfo {
   }
 
   /**
-   * Returns an array of instance data for a specific field and bundle.
+   * Returns a field instance.
    *
    * @param string $entity_type
    *   The entity type for the instance.
@@ -507,9 +505,8 @@ class FieldInfo {
    * @param string $field_name
    *   The field name for the instance.
    *
-   * @return array
-   *   An associative array of instance data for the specific field and bundle;
-   *   NULL if the instance does not exist.
+   * @return \Drupal\field\FieldInstanceInterface|null
+   *   The field instance entity, or NULL if it does not exist.
    */
   function getInstance($entity_type, $bundle, $field_name) {
     $info = $this->getBundleInstances($entity_type, $bundle);
@@ -521,12 +518,12 @@ class FieldInfo {
   /**
    * Retrieves the "extra fields" for a bundle.
    *
-   * @param $entity_type
+   * @param string $entity_type
    *   The entity type.
-   * @param $bundle
+   * @param string $bundle
    *   The bundle name.
    *
-   * @return
+   * @return array
    *   The array of extra fields.
    */
   public function getBundleExtraFields($entity_type, $bundle) {
@@ -557,13 +554,13 @@ class FieldInfo {
   }
 
   /**
-   * Prepares a field definition for the current run-time context.
+   * Prepares a field for the current run-time context.
    *
-   * @param $field
-   *   The raw field structure as read from the database.
+   * @param \Drupal\field\FieldInterface $field
+   *   The field entity to update.
    *
-   * @return
-   *   The field definition completed for the current runtime context.
+   * @return \Drupal\field\FieldInterface
+   *   The field that was prepared.
    */
   public function prepareField(FieldInterface $field) {
     // Make sure all expected field settings are present.
@@ -573,13 +570,13 @@ class FieldInfo {
   }
 
   /**
-   * Prepares an instance definition for the current run-time context.
+   * Prepares a field instance for the current run-time context.
    *
    * @param \Drupal\field\FieldInstanceInterface $instance
-   *   The instance definition.
+   *   The field instance entity to prepare.
    *
-   * @return
-   *   The field instance array completed for the current runtime context.
+   * @return \Drupal\field\FieldInstanceInterface
+   *   The field instance that was prepared.
    */
   public function prepareInstance(FieldInstanceInterface $instance) {
     // Make sure all expected instance settings are present.

@@ -30,6 +30,7 @@ language.edit:
   path: '/admin/config/regional/language/edit/{language_entity}'
   defaults:
     _entity_form: 'language_entity.edit'
+    _title: 'Edit language'
   requirements:
     _entity_access: 'language_entity.update'
 
@@ -73,7 +74,7 @@ language.negotiation_browser_delete:
 language.content_settings_page:
   path: '/admin/config/regional/content-language'
   defaults:
-    _title: 'Content language settings'
+    _title: 'Content language'
     _content: '\Drupal\language\Controller\LanguageController::contentSettings'
   requirements:
     _permission: 'administer languages'

@@ -8,7 +8,7 @@
 namespace Drupal\comment;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\DatabaseStorageControllerNG;
+use Drupal\Core\Entity\FieldableDatabaseStorageController;
 use Drupal\Core\Entity\EntityChangedInterface;
 
 /**
@@ -17,7 +17,7 @@ use Drupal\Core\Entity\EntityChangedInterface;
  * This extends the Drupal\Core\Entity\DatabaseStorageController class, adding
  * required special handling for comment entities.
  */
-class CommentStorageController extends DatabaseStorageControllerNG implements CommentStorageControllerInterface {
+class CommentStorageController extends FieldableDatabaseStorageController implements CommentStorageControllerInterface {
 
   /**
    * The thread for which a lock was acquired.
@@ -108,7 +108,7 @@ class CommentStorageController extends DatabaseStorageControllerNG implements Co
           // @todo Use $entity->getAuthorId() after https://drupal.org/node/2078387
           // Get the user ID from the entity if it's set, or default to the
           // currently logged in user.
-          'last_comment_uid' => $entity->getPropertyDefinition('uid') ? $entity->get('uid')->value : \Drupal::currentUser()->id(),
+          'last_comment_uid' => $entity->hasField('uid') ? $entity->get('uid')->value : \Drupal::currentUser()->id(),
         ))
         ->condition('entity_id', $comment->entity_id->value)
         ->condition('entity_type', $comment->entity_type->value)

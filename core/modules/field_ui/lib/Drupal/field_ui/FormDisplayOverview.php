@@ -23,7 +23,7 @@ class FormDisplayOverview extends DisplayOverviewBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('plugin.manager.entity.field.field_type'),
+      $container->get('plugin.manager.field.field_type'),
       $container->get('plugin.manager.field.widget')
     );
   }
@@ -31,7 +31,7 @@ class FormDisplayOverview extends DisplayOverviewBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID() {
+  public function getFormId() {
     return 'field_ui_form_display_overview_form';
   }
 
@@ -80,6 +80,13 @@ class FormDisplayOverview extends DisplayOverviewBase {
     }
 
     return $plugin;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getPluginOptions($field_type) {
+    return parent::getPluginOptions($field_type) + array('hidden' => '- ' . t('Hidden') . ' -');
   }
 
   /**

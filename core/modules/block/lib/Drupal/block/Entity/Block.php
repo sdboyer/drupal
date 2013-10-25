@@ -71,7 +71,7 @@ class Block extends ConfigEntityBase implements BlockInterface {
    *
    * @var string
    */
-  protected $region = BLOCK_REGION_NONE;
+  protected $region = self::BLOCK_REGION_NONE;
 
   /**
    * The block weight.
@@ -126,23 +126,12 @@ class Block extends ConfigEntityBase implements BlockInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function get($property_name) {
-    // The theme is stored in the entity ID.
-    $value = parent::get($property_name);
-    if ($property_name == 'theme' && !$value) {
-      list($value) = explode('.', $this->id());
-    }
-    return $value;
-  }
-
-  /**
    * Overrides \Drupal\Core\Config\Entity\ConfigEntityBase::getExportProperties();
    */
   public function getExportProperties() {
     $properties = parent::getExportProperties();
     $names = array(
+      'theme',
       'region',
       'weight',
       'plugin',
@@ -174,7 +163,7 @@ class Block extends ConfigEntityBase implements BlockInterface {
       return $status;
     }
     // Sort by weight, unless disabled.
-    if ($a->get('region') != BLOCK_REGION_NONE) {
+    if ($a->get('region') != static::BLOCK_REGION_NONE) {
       $weight = $a->get('weight') - $b->get('weight');
       if ($weight) {
         return $weight;

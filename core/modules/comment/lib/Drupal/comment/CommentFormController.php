@@ -110,7 +110,6 @@ class CommentFormController extends ContentEntityFormController {
     if ($is_admin) {
       $author = $comment->name->value;
       $status = (isset($comment->status->value) ? $comment->status->value : COMMENT_NOT_PUBLISHED);
-      $date = (!empty($comment->date) ? $comment->date : DrupalDateTime::createFromTimestamp($comment->created->value));
       if (empty($form_state['comment_preview'])) {
         $form['#title'] = $this->t('Edit comment %title', array(
           '%title' => $comment->subject->value,
@@ -125,7 +124,11 @@ class CommentFormController extends ContentEntityFormController {
         $author = ($comment->name->value ? $comment->name->value : '');
       }
       $status = ($this->currentUser->hasPermission('skip comment approval') ? COMMENT_PUBLISHED : COMMENT_NOT_PUBLISHED);
-      $date = '';
+    }
+
+    $date = '';
+    if ($comment->id()) {
+      $date = !empty($comment->date) ? $comment->date : DrupalDateTime::createFromTimestamp($comment->created->value);
     }
 
     // Add the author name field depending on the current user.
@@ -145,11 +148,8 @@ class CommentFormController extends ContentEntityFormController {
     elseif ($this->currentUser->isAuthenticated()) {
       $form['author']['name']['#type'] = 'item';
       $form['author']['name']['#value'] = $form['author']['name']['#default_value'];
-      $username = array(
-        '#theme' => 'username',
-        '#account' => $this->currentUser,
-      );
-      $form['author']['name']['#markup'] = drupal_render($username);
+      $form['author']['name']['#theme'] = 'username';
+      $form['author']['name']['#account'] = $this->currentUser;
     }
 
     // Add author e-mail and homepage fields depending on the current user.
@@ -355,8 +355,8 @@ class CommentFormController extends ContentEntityFormController {
    */
   public function preview(array $form, array &$form_state) {
     $comment = $this->entity;
-    drupal_set_title(t('Preview comment'), PASS_THROUGH);
     $form_state['comment_preview'] = comment_preview($comment);
+    $form_state['comment_preview']['#title'] = $this->t('Preview comment');
     $form_state['rebuild'] = TRUE;
   }
 

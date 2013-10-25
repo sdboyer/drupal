@@ -7,9 +7,9 @@
 
 namespace Drupal\Core\Entity;
 
-use Drupal\Core\Entity\Field\FieldItemListInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Entity\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\AccountInterface;
 
@@ -100,7 +100,7 @@ class EntityAccessController implements EntityAccessControllerInterface {
    * @param array $access
    *   An array of access results of the fired access hook.
    *
-   * @return bool|NULL
+   * @return bool|null
    *   Returns FALSE if access should be denied, TRUE if access should be
    *   granted and NULL if no module denied access.
    */

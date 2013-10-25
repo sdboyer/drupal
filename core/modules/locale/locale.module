@@ -176,28 +176,7 @@ function locale_menu() {
     'route_name' => 'locale.translate_page',
     'weight' => -5,
   );
-  $items['admin/config/regional/translate/translate'] = array(
-    'title' => 'Translate',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-  $items['admin/config/regional/translate/import'] = array(
-    'title' => 'Import',
-    'route_name' => 'locale.translate_import',
-    'weight' => 20,
-    'type' => MENU_LOCAL_TASK,
-  );
-  $items['admin/config/regional/translate/export'] = array(
-    'title' => 'Export',
-    'route_name' => 'locale.translate_export',
-    'weight' => 30,
-    'type' => MENU_LOCAL_TASK,
-  );
-  $items['admin/config/regional/translate/settings'] = array(
-    'title' => 'Settings',
-    'route_name' => 'locale.settings',
-    'weight' => 100,
-    'type' => MENU_LOCAL_TASK,
-  );
+
   $items['admin/reports/translations'] = array(
     'title' => 'Available translation updates',
     'route_name' => 'locale.translate_status',
@@ -596,7 +575,7 @@ function locale_js_alter(&$javascript) {
  *
  * @param array $files
  *   An array of local file paths.
- * @return string|NULL
+ * @return string|null
  *   The filepath to the translation file or NULL if no translation is
  *   applicable.
  */
@@ -818,7 +797,7 @@ function locale_form_language_admin_edit_form_alter(&$form, &$form_state) {
  * Form submission handler for language_admin_edit_form().
  */
 function locale_form_language_admin_edit_form_alter_submit($form, $form_state) {
-  variable_set('locale_translate_english', $form_state['values']['locale_translate_english']);
+  \Drupal::config('locale.settings')->set('translate_english', intval($form_state['values']['locale_translate_english']))->save();
 }
 
 /**
@@ -828,7 +807,7 @@ function locale_form_language_admin_edit_form_alter_submit($form, $form_state) {
  *   Returns TRUE if content should be translated to English, FALSE otherwise.
  */
 function locale_translate_english() {
-  return variable_get('locale_translate_english', FALSE);
+  return \Drupal::config('locale.settings')->get('translate_english');
 }
 
 /**

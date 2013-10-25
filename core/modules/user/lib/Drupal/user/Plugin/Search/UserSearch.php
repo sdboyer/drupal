@@ -12,7 +12,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\TypedData\AccessibleInterface;
+use Drupal\Core\Access\AccessibleInterface;
 use Drupal\search\Annotation\SearchPlugin;
 use Drupal\search\Plugin\SearchPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -120,7 +120,7 @@ class UserSearch extends SearchPluginBase implements AccessibleInterface {
       ->select('users')
       ->extend('Drupal\Core\Database\Query\PagerSelectExtender');
     $query->fields('users', array('uid'));
-    $user_account = $this->currentUser();
+    $user_account = $this->request->attributes->get('_account');
     if ($user_account->hasPermission('administer users')) {
       // Administrators can also search in the otherwise private email field, and
       // they don't need to be restricted to only active users.

@@ -5,6 +5,7 @@
  * Allows entities to be translated into different languages.
  */
 
+use Drupal\content_translation\Plugin\Derivative\ContentTranslationLocalTasks;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFormControllerInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -127,6 +128,33 @@ function content_translation_entity_bundle_info_alter(&$bundles) {
 }
 
 /**
+ * Implements hook_entity_field_info_alter().
+ */
+function content_translation_entity_field_info_alter(&$info, $entity_type) {
+  $translation_settings = config('content_translation.settings')->get($entity_type);
+
+  if ($translation_settings) {
+    // Currently field translatability is defined per-field but we may want to
+    // make it per-instance instead, so leaving the possibility open for further
+    // easier refactoring.
+    $fields = array();
+    foreach ($translation_settings as $bundle => $settings) {
+      $fields += !empty($settings['content_translation']['fields']) ? $settings['content_translation']['fields'] : array();
+    }
+
+    $keys = array('definitions', 'optional');
+    foreach ($fields as $name => $translatable) {
+      foreach ($keys as $key) {
+        if (isset($info[$key][$name])) {
+          $info[$key][$name]['translatable'] = (bool) $translatable;
+          break;
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function content_translation_menu() {
@@ -202,6 +230,10 @@ function content_translation_menu() {
  * Implements hook_menu_alter().
  */
 function content_translation_menu_alter(array &$items) {
+  // Clarify where translation settings are located.
+  $items['admin/config/regional/content-language']['title'] = 'Content language and translation';
+  $items['admin/config/regional/content-language']['description'] = 'Configure language and translation support for content.';
+
   // Check that the declared menu base paths are actually valid.
   foreach (entity_get_info() as $entity_type => $info) {
     if (content_translation_enabled($entity_type)) {
@@ -243,6 +275,15 @@ function content_translation_menu_alter(array &$items) {
       }
     }
   }
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function content_translation_local_tasks_alter(&$local_tasks) {
+  // Alters in tab_root_id onto the content translation local task.
+  $derivative = ContentTranslationLocalTasks::create(\Drupal::getContainer(), 'content_translation.local_tasks');
+  $derivative->alterLocalTasks($local_tasks);
 }
 
 /**
@@ -986,6 +1027,11 @@ function content_translation_save_settings($settings) {
       if (isset($bundle_settings['translatable'])) {
         // Store whether a bundle has translation enabled or not.
         content_translation_set_config($entity_type, $bundle, 'enabled', $bundle_settings['translatable']);
+
+        // Store whether fields are translatable or not.
+        if (!empty($bundle_settings['fields'])) {
+          content_translation_set_config($entity_type, $bundle, 'fields', $bundle_settings['fields']);
+        }
 
         // Store whether fields have translation enabled or not.
         if (!empty($bundle_settings['columns'])) {

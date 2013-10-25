@@ -7,7 +7,6 @@
 
 namespace Drupal\field_ui\Form;
 
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\TypedData\TypedDataManager;
@@ -52,7 +51,7 @@ class FieldEditForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID() {
+  public function getFormId() {
     return 'field_ui_field_edit_form';
   }
 
@@ -91,8 +90,6 @@ class FieldEditForm extends FormBase {
 
     $field = $this->instance->getField();
     $form['#field'] = $field;
-
-    drupal_set_title($this->instance->label());
 
     $description = '<p>' . $this->t('These settings apply to the %field field everywhere it is used. These settings impact the way that data is stored in the database and cannot be changed once data has been created.', array('%field' => $this->instance->label())) . '</p>';
 

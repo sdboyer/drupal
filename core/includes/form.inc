@@ -7,6 +7,7 @@
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Utility\Number;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Url;
 use Drupal\Core\Form\FormInterface;
@@ -123,6 +124,16 @@ use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
  *   The unique string identifying the desired form.
  */
 function _drupal_form_id($form_arg, &$form_state) {
+  // If the $form_arg is the name of a class, instantiate it.
+  if (is_string($form_arg) && class_exists($form_arg)) {
+    if (in_array('Drupal\Core\DependencyInjection\ContainerInjectionInterface', class_implements($form_arg))) {
+      $form_arg = $form_arg::create(\Drupal::getContainer());
+    }
+    else {
+      $form_arg = new $form_arg();
+    }
+  }
+
   // If the $form_arg implements \Drupal\Core\Form\FormInterface, add that as
   // the callback object and determine the form ID.
   if (is_object($form_arg) && $form_arg instanceof FormInterface) {
@@ -130,7 +141,7 @@ function _drupal_form_id($form_arg, &$form_state) {
     if ($form_arg instanceof BaseFormIdInterface) {
       $form_state['build_info']['base_form_id'] = $form_arg->getBaseFormID();
     }
-    return $form_arg->getFormID();
+    return $form_arg->getFormId();
   }
 
   // Otherwise, the $form_arg is the form ID.
@@ -4069,21 +4080,18 @@ function form_pre_render_vertical_tabs($element) {
  */
 function theme_vertical_tabs($variables) {
   $element = $variables['element'];
-  return '<div data-vertical-tabs-panes>' . $element['#children'] . '</div>';
+  return '<div data-vertical-tabs-panes ' . new Attribute($element['#attributes']) . '>' . $element['#children'] . '</div>';
 }
 
 /**
- * Adds autocomplete functionality to elements with a valid #autocomplete_path.
+ * Adds autocomplete functionality to elements with a valid
+ * #autocomplete_route_name.
  *
- * Suppose your autocomplete path in the menu system is 'mymodule_autocomplete.'
+ * Suppose your autocomplete route name is 'mymodule.autocomplete' and its path
+ * is: '/mymodule/autocomplete/{a}/{b}'
  * In your form you have:
  * @code
- * '#autocomplete_path' => 'mymodule_autocomplete/' . $some_key . '/' . $some_id,
- * @endcode
- * Or if your route is called 'mymodule_autocomplete' with the path of
- * '/mymodule-autocomplete/{a}/{b}':
- * @code
- * '#autocomplete_route_name' => 'mymodule_autocomplete',
+ * '#autocomplete_route_name' => 'mymodule.autocomplete',
  * '#autocomplete_route_parameters' => array('a' => $some_key, 'b' => $some_id),
  * @endcode
  * The user types in "keywords" so the full path called is:
@@ -4091,8 +4099,6 @@ function theme_vertical_tabs($variables) {
  *
  * @param array $element
  *   The form element to process. Properties used:
- *   - #autocomplete_path: A system path to be used as callback URL by the
- *     autocomplete JavaScript library.
  *   - #autocomplete_route_name: A route to be used as callback URL by the
  *     autocomplete JavaScript library.
  *   - #autocomplete_route_parameters: The parameters to be used in conjunction
@@ -4110,10 +4116,6 @@ function form_process_autocomplete($element, &$form_state) {
 
     $path = \Drupal::urlGenerator()->generate($element['#autocomplete_route_name'], $parameters);
     $access = \Drupal::service('access_manager')->checkNamedRoute($element['#autocomplete_route_name'], $parameters);
-  }
-  elseif (!empty($element['#autocomplete_path'])) {
-    $path = url($element['#autocomplete_path'], array('absolute' => TRUE));
-    $access = drupal_valid_path($element['#autocomplete_path']);
   }
   if ($access) {
     $element['#attributes']['class'][] = 'form-autocomplete';
@@ -4394,7 +4396,7 @@ function form_validate_number(&$element, &$form_state) {
     // #min is set).
     $offset = isset($element['#min']) ? $element['#min'] : 0.0;
 
-    if (!valid_number_step($value, $element['#step'], $offset)) {
+    if (!Number::validStep($value, $element['#step'], $offset)) {
       form_error($element, t('%name is not a valid number.', array('%name' => $name)));
     }
   }
