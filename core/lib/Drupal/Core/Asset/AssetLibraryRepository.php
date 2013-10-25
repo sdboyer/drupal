@@ -61,7 +61,7 @@ class AssetLibraryRepository {
   }
 
   public function set($key, AssetLibrary $library) {
-    if (preg_match('/[^0-9A-Za-z\/_-]/', $key)) {
+    if (preg_match('/[^0-9A-Za-z\/._-]/', $key)) {
       throw new \InvalidArgumentException(sprintf('The name "%s" is invalid.', $key));
     }
     elseif (substr_count($key, '/') !== 1) {

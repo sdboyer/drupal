@@ -66,7 +66,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
   public function testSet() {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $repository->set('foo/bar', $library);
+    $repository->set('foo/bar0.baz', $library);
 
     $this->assertAttributeContains($library, 'libraries', $repository);
   }
@@ -79,7 +79,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
 
-    $repository->set('foobar', $library);
+    $repository->set('foobar0.baz', $library);
   }
 
   /**
@@ -90,7 +90,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
     $repository = $this->createAssetLibraryRepository();
     $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
 
-    $repository->set('foo//bar', $library);
+    $repository->set('foo//bar0.baz', $library);
   }
 
   /**
