@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset;
+use Drupal\Core\Asset\Collection\AssetCollection;
 use Gliph\Visitor\DepthFirstVisitorInterface;
 
 /**
@@ -40,10 +41,20 @@ class OptimallyGroupedTSLVisitor implements DepthFirstVisitorInterface {
    *   A map of vertices to the group in which they reside, if any.
    */
   public function __construct($groups, \SplObjectStorage $vertex_map) {
-    $this->tsl = array();
+    $this->tsl = new AssetCollection();
     $this->groups = $groups;
     $this->vertexMap = $vertex_map;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function beginTraversal() {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function endTraversal() {}
 
   /**
    * {@inheritdoc}
@@ -53,16 +64,12 @@ class OptimallyGroupedTSLVisitor implements DepthFirstVisitorInterface {
   /**
    * {@inheritdoc}
    */
-  public function onBackEdge($vertex, \Closure $visit) {
-    // TODO: Implement onBackEdge() method.
-  }
+  public function onBackEdge($vertex, \Closure $visit) {}
 
   /**
    * {@inheritdoc}
    */
   public function onStartVertex($vertex, \Closure $visit) {
-    $this->active->attach($vertex);
-
     // If there's a record in the vertex map, it means this vertex has an
     // optimal group. Remove it from that group, as it being here means it's
     // been visited.
@@ -89,14 +96,13 @@ class OptimallyGroupedTSLVisitor implements DepthFirstVisitorInterface {
    *
    */
   public function onFinishVertex($vertex, \Closure $visit) {
-    // TODO this still isn't quite optimal; it can split groups unnecessarily. tweak a little more.
     // TODO explore risk of hitting the 100 call stack limit
     if ($this->vertexMap->contains($vertex)) {
       foreach ($this->vertexMap[$vertex] as $vertex) {
         $visit($vertex);
       }
     }
-    $this->tsl[] = $vertex;
+    $this->tsl->add($vertex);
   }
 
   /**
