@@ -1686,7 +1686,7 @@ function drupal_add_css($data = NULL, $options = NULL) {
 }
 
 function drupal_collect_assets($data, $options, $type = '') {
-  $collection = &drupal_static('global_asset_bag', FALSE);
+  $collection = &drupal_static('global_asset_collection', FALSE);
   $collector = &drupal_static('global_asset_collector', FALSE);
 
   $collection = ($collection instanceof \Drupal\Core\Asset\Collection\AssetCollection) ? $collection : new \Drupal\Core\Asset\Collection\AssetCollection();
@@ -1703,6 +1703,10 @@ function drupal_collect_assets($data, $options, $type = '') {
   if ($type == 'js-setting') {
     // TODO handle js settings
     return;
+  }
+
+  if ($type == 'library') {
+    $collection->addUnresolvedLibrary($data);
   }
 
   $collector->create($type, $options['type'], $data, $options);
@@ -1887,6 +1891,8 @@ function drupal_sort_css_js($a, $b) {
  */
 function drupal_pre_render_styles($elements) {
   $css_assets = $elements['#items'];
+  $collection = &drupal_static('global_asset_collection', FALSE);
+  $collection->resolveLibraries(\Drupal::service('asset.library_repository'));
 
   // Aggregate the CSS if necessary, but only during normal site operation.
   if (!defined('MAINTENANCE_MODE') && \Drupal::config('system.performance')->get('css.preprocess')) {
@@ -2788,6 +2794,7 @@ function drupal_process_states(&$elements) {
  */
 function drupal_add_library($module, $name, $every_page = NULL) {
   $added = &drupal_static(__FUNCTION__, array());
+  drupal_collect_assets("$module/$name", NULL, 'library');
 
   // Only process the library if it exists and it was not added already.
   if (!isset($added[$module][$name])) {
