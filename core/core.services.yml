@@ -650,6 +650,10 @@ services:
     class: Drupal\Core\Asset\JsCollectionGrouper
   asset.js.dumper:
     class: Drupal\Core\Asset\AssetDumper
+  asset.library_factory:
+    class: Drupal\Core\Asset\Factory\AssetLibraryFactory
+    arguments: ['@module_handler']
   asset.library_repository:
     class: Drupal\Core\Asset\AssetLibraryRepository
-    arguments: ['@module_handler']
+    arguments: ['@asset.library_factory']
+
