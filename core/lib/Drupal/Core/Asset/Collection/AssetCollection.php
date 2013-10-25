@@ -12,13 +12,13 @@ use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
 use Drupal\Core\Asset\DependencyInterface;
+use Drupal\Core\Asset\Exception\FrozenObjectException;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Core\Asset\RelativePositionInterface;
 
 /**
  * A container for assets.
  *
- * TODO allow direct adding of libraries
  * TODO js settings...
  *
  * TODO With PHP5.4, refactor out AssetCollectionBasicInterface into a trait.
@@ -46,7 +46,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function add(AsseticAssetInterface $asset) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     return parent::add($asset);
   }
 
@@ -54,7 +54,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function mergeCollection(AssetCollectionInterface $collection, $freeze = TRUE) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
 
     foreach ($collection as $asset) {
       if (!$this->contains($asset)) {
@@ -73,7 +73,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function remove($needle, $graceful = FALSE) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     return parent::remove($needle, $graceful);
   }
 
@@ -81,7 +81,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function replace($needle, AssetInterface $replacement, $graceful = FALSE) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     return parent::replace($needle, $replacement, $graceful);
   }
 
@@ -127,6 +127,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function uksort($callback) {
+    $this->attemptWrite(__METHOD__);
     uksort($this->assetIdMap, $callback);
   }
 
@@ -134,6 +135,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function ksort() {
+    $this->attemptWrite(__METHOD__);
     ksort($this->assetIdMap);
   }
 
@@ -141,7 +143,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function addUnresolvedLibrary($key) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     // The library key is stored as the key for cheap deduping.
     $this->libraries[$key] = TRUE;
   }
@@ -164,7 +166,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function clearUnresolvedLibraries() {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     $this->libraries = array();
   }
 
@@ -172,7 +174,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    * {@inheritdoc}
    */
   public function resolveLibraries(AssetLibraryRepository $repository) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
 
     // Resolving directly added libraries first ensures their contained assets
     // are processed in the next loop.
@@ -201,10 +203,15 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
 
   /**
    * Checks if the asset library is frozen, throws an exception if it is.
+   *
+   * @param string $method
+   *   The name of the method that was originally called.
+   *
+   * @throws FrozenObjectException
    */
-  protected function attemptWrite() {
+  protected function attemptWrite($method) {
     if ($this->isFrozen()) {
-      throw new \LogicException('Cannot write to a frozen AssetCollection.');
+      throw new FrozenObjectException(sprintf('AssetCollectionInterface::%s was called; writes cannot be performed on a frozen collection.', $method));
     }
   }
 }

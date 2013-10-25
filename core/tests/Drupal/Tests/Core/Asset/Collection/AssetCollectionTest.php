@@ -9,6 +9,7 @@ namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
+use Drupal\Core\Asset\Exception\FrozenObjectException;
 
 /**
  * @coversDefaultClass \Drupal\Core\Asset\Collection\AssetCollection
@@ -229,30 +230,30 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
   }
 
   /**
-   * Tests that all methods should be disabled by freezing the collection
+   * Tests that all methods that should be disabled by freezing the collection
    * correctly trigger an exception.
    */
   public function testExceptionOnWriteWhenFrozen() {
     $stub = $this->createStubFileAsset();
     $write_protected = array(
-      'add' => $stub,
-      'remove' => $stub,
-      'mergeCollection' => $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetCollection'),
+      'add' => array($stub),
+      'remove' => array($stub),
+      'replace' => array($stub, $this->createStubFileAsset()),
+      'mergeCollection' => array($this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetCollection')),
+      'uksort' => array(function() {}),
+      'ksort' => array(),
+      'addUnresolvedLibrary' => array('foo/bar'),
+      'clearUnresolvedLibraries' => array(),
+      'resolveLibraries' => array($this->getMock('Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE)),
     );
 
     $this->collection->freeze();
-    foreach ($write_protected as $method => $arg) {
+    foreach ($write_protected as $method => $args) {
       try {
-        $this->collection->$method($arg);
+        call_user_func_array(array($this->collection, $method), $args);
         $this->fail(sprintf('Was able to run write method "%s" on frozen AssetCollection', $method));
-      } catch (\LogicException $e) {}
+      } catch (FrozenObjectException $e) {}
     }
-
-    // Do replace method separately, it needs more args
-    try {
-      $this->collection->replace($stub, $this->createStubFileAsset());
-      $this->fail('Was able to run write method "replace" on frozen AssetCollection');
-    } catch (\LogicException $e) {}
   }
 
   /**

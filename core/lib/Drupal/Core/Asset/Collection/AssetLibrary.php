@@ -9,6 +9,7 @@ namespace Drupal\Core\Asset\Collection;
 
 use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Collection\AssetCollection;
+use Drupal\Core\Asset\Exception\FrozenObjectException;
 
 class AssetLibrary extends AssetCollection implements DependencyInterface {
 
@@ -54,7 +55,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    *   The asset library, to allow for chaining.
    */
   public function setTitle($title) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     $this->title = $title;
     return $this;
   }
@@ -79,7 +80,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    *   The asset library, to allow for chaining.
    */
   public function setWebsite($website) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     $this->website = $website;
     return $this;
   }
@@ -104,7 +105,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    *   The asset library, to allow for chaining.
    */
   public function setVersion($version) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     $this->version = $version;
     return $this;
   }
@@ -130,7 +131,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    * {@inheritdoc}
    */
   public function addDependency($key) {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     if (!is_string($key)) {
       throw new \InvalidArgumentException('Dependencies must be expressed as a string key identifying the depended-upon library.');
     }
@@ -143,7 +144,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    * {@inheritdoc}
    */
   public function clearDependencies() {
-    $this->attemptWrite();
+    $this->attemptWrite(__METHOD__);
     $this->dependencies = array();
   }
 
@@ -199,9 +200,9 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
   /**
    * Checks if the asset library is frozen, throws an exception if it is.
    */
-  protected function attemptWrite() {
+  protected function attemptWrite($method) {
     if ($this->isFrozen()) {
-      throw new \LogicException('Metadata cannot be modified on a frozen AssetLibrary.');
+      throw new FrozenObjectException('Metadata cannot be modified on a frozen AssetLibrary.');
     }
   }
 }
