@@ -192,10 +192,12 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
     // attached to the SPLOS during the loop. The alternative is a recursive
     // closure - far more complex, and slower.
     foreach ($this->assetStorage as $asset) {
-      foreach ($repository->resolveDependencies($asset) as $library) {
-        foreach ($library as $libasset) {
-          // The repository already attached positioning info for us; just add.
-          $this->add($libasset);
+      if ($asset instanceof DependencyInterface) {
+        foreach ($repository->resolveDependencies($asset) as $library) {
+          foreach ($library as $libasset) {
+            // The repository already attached positioning info for us; just add.
+            $this->add($libasset);
+          }
         }
       }
     }

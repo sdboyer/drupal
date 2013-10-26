@@ -382,122 +382,114 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
    * @depends testGetUnresolvedLibraries
    * @covers ::resolveLibraries
    */
-  public function testResolveLibraries() {
-    $coll_asset1 = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
+  public function testResolveLibrariesDirectLibraries() {
+    $lib_asset1 = $this->getMockBuilder('Drupal\\Core\\Asset\\AssetInterface')
       ->disableOriginalConstructor()
-      ->setMethods(array('getAssetType', 'id'))
-      ->setMockClassName('coll_asset_mock1')
-      ->getMockForAbstractClass();
-    $coll_asset1->expects($this->any())
-      ->method('getAssetType')
-      ->will($this->returnValue('css'));
-    $coll_asset1->expects($this->any())
-      ->method('id')
-      ->will($this->returnValue($this->randomName()));
-
-    $coll_asset2 = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
-      ->disableOriginalConstructor()
-      ->setMethods(array('getAssetType', 'id'))
-      ->setMockClassName('coll_asset_mock2')
-      ->getMockForAbstractClass();
-    $coll_asset2->expects($this->any())
-      ->method('getAssetType')
-      ->will($this->returnValue('js'));
-    $coll_asset2->expects($this->any())
-      ->method('id')
-      ->will($this->returnValue($this->randomName()));
-
-    $lib_asset1 = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
-      ->disableOriginalConstructor()
-      ->setMethods(array('getAssetType', 'id'))
+      ->setMethods(array('id'))
       ->setMockClassName('lib_asset_mock1')
       ->getMockForAbstractClass();
     $lib_asset1->expects($this->any())
-      ->method('getAssetType')
-      ->will($this->returnValue('css'));
-    $lib_asset1->expects($this->any())
       ->method('id')
       ->will($this->returnValue($this->randomName()));
 
-    $it1 = new \ArrayIterator(array($lib_asset1));
-    $direct_lib = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $direct_lib->expects($this->once())
-      ->method('getIterator')
-      ->will($this->returnValue($it1));
-
-    $lib_asset2 = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
+    $lib_asset2 = $this->getMockBuilder('Drupal\\Core\\Asset\\AssetInterface')
       ->disableOriginalConstructor()
-      ->setMethods(array('getAssetType', 'id'))
+      ->setMethods(array('id'))
       ->setMockClassName('lib_asset_mock2')
       ->getMockForAbstractClass();
     $lib_asset2->expects($this->any())
-      ->method('getAssetType')
-      ->will($this->returnValue('css'));
-    $lib_asset2->expects($this->any())
       ->method('id')
       ->will($this->returnValue($this->randomName()));
 
-    $it2 = new \ArrayIterator(array($lib_asset2));
-    $contained_asset_dep_lib = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $contained_asset_dep_lib->expects($this->once())
+    $it1 = new \ArrayIterator(array($lib_asset1, $lib_asset2));
+    $lib1 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $lib1->expects($this->once())
       ->method('getIterator')
-      ->will($this->returnValue($it2));
+      ->will($this->returnValue($it1));
 
-    $lib_asset3 = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
+    $repository = $this->getMock('Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE);
+    $repository->expects($this->once())
+      ->method('get')->with('foo/bar')
+      ->will($this->returnValue($lib1));
+
+    $this->collection->addUnresolvedLibrary('foo/bar');
+    $this->collection->resolveLibraries($repository);
+
+    $expected = array(
+      $lib_asset1->id() => $lib_asset1,
+      $lib_asset2->id() => $lib_asset2,
+    );
+    $this->assertEquals($expected, $this->collection->all());
+    $this->assertFalse($this->collection->hasUnresolvedLibraries());
+  }
+
+  /**
+   * @depends testAdd
+   * @depends testAll
+   * @depends testAddUnresolvedLibrary
+   * @depends testClearUnresolvedLibraries
+   * @depends testGetUnresolvedLibraries
+   * @covers ::resolveLibraries
+   */
+  public function testResolveLibrariesAgain() {
+    $coll_asset = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
       ->disableOriginalConstructor()
-      ->setMethods(array('getAssetType', 'id'))
-      ->setMockClassName('lib_asset_mock3')
+      ->setMethods(array('id'))
+      ->setMockClassName('coll_asset')
       ->getMockForAbstractClass();
-    $lib_asset3->expects($this->any())
-      ->method('getAssetType')
-      ->will($this->returnValue('css'));
-    $lib_asset3->expects($this->any())
+    $coll_asset->expects($this->any())
       ->method('id')
       ->will($this->returnValue($this->randomName()));
 
-    $it3 = new \ArrayIterator(array($lib_asset3));
-    $direct_and_contained_lib = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $direct_and_contained_lib->expects($this->exactly(2))
+    $direct_lib_asset = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
+      ->disableOriginalConstructor()
+      ->setMethods(array('id'))
+      ->setMockClassName('direct_lib_asset')
+      ->getMockForAbstractClass();
+    $direct_lib_asset->expects($this->any())
+      ->method('id')
+      ->will($this->returnValue($this->randomName()));
+
+    $indirect_lib_asset = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
+      ->disableOriginalConstructor()
+      ->setMethods(array('id'))
+      ->setMockClassName('indirect_lib_asset')
+      ->getMockForAbstractClass();
+    $indirect_lib_asset->expects($this->any())
+      ->method('id')
+      ->will($this->returnValue($this->randomName()));
+
+    $direct_lib = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $direct_lib->expects($this->once())
       ->method('getIterator')
-      ->will($this->returnValue($it3));
+      ->will($this->returnValue(new \ArrayIterator(array($direct_lib_asset))));
+
+    $indirect_lib = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $indirect_lib->expects($this->once())
+      ->method('getIterator')
+      ->will($this->returnValue(new \ArrayIterator(array($indirect_lib_asset))));
 
     $repository = $this->getMock('Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE);
     $repository->expects($this->at(0))
-      ->method('get')->with('foo/bar')
-      ->will($this->returnValue($direct_lib));
+      ->method('resolveDependencies')->with($coll_asset)
+      ->will($this->returnValue(array($direct_lib)));
     $repository->expects($this->at(1))
-      ->method('get')->with('foo/baz')
-      ->will($this->returnValue($direct_and_contained_lib));
-
-    // TODO specifying the sequencing like this *SUCKS*, but we have no choice when we mock this way. Consider providing a more-real AssetLibraryRepository mock instead.
+      ->method('resolveDependencies')->with($direct_lib_asset)
+      ->will($this->returnValue(array($indirect_lib)));
     $repository->expects($this->at(2))
-      ->method('resolveDependencies')->with($coll_asset1)
-      ->will($this->returnValue(array($contained_asset_dep_lib)));
-    $repository->expects($this->at(3))
-      ->method('resolveDependencies')->with($coll_asset2)
-      ->will($this->returnValue(array($direct_and_contained_lib)));
-    $repository->expects($this->at(4))
-      ->method('resolveDependencies')->with($lib_asset1)
-      ->will($this->returnValue(array()));
-    $repository->expects($this->at(5))
-      ->method('resolveDependencies')->with($lib_asset3)
-      ->will($this->returnValue(array()));
-    $repository->expects($this->at(6))
-      ->method('resolveDependencies')->with($lib_asset2)
+      ->method('resolveDependencies')->with($indirect_lib_asset)
       ->will($this->returnValue(array()));
 
-    $this->collection->addUnresolvedLibrary('foo/bar');
-    $this->collection->addUnresolvedLibrary('foo/baz');
-
-    $this->collection->add($coll_asset1);
-    $this->collection->add($coll_asset2);
-
+    $this->collection->add($coll_asset);
     $this->collection->resolveLibraries($repository);
 
-    $this->assertContains($lib_asset1, $this->collection);
-    $this->assertContains($lib_asset2, $this->collection);
-    $this->assertContains($lib_asset3, $this->collection);
-    $this->assertFalse($this->collection->hasUnresolvedLibraries());
+    $expected = array(
+      $coll_asset->id() => $coll_asset,
+      $direct_lib_asset->id() => $direct_lib_asset,
+      $indirect_lib_asset->id() => $indirect_lib_asset,
+    );
+
+    $this->assertEquals($expected, $this->collection->all());
   }
 }
 
