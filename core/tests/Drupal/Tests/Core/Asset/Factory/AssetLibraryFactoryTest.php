@@ -88,6 +88,10 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
 
     $this->assertInstanceOf('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary', $lib2);
     $this->assertEquals(array('stub1/solo-nodeps-js'), $lib2->getDependencyInfo());
+
+    foreach ($lib2 as $asset) {
+      $this->assertEquals(array('stub1/solo-nodeps-js'), $asset->getDependencyInfo());
+    }
   }
 
   /**
