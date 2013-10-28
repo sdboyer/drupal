@@ -69,9 +69,11 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
       ->will($this->returnValue(TRUE));
 
     $collector = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetCollector');
-    $collector->expects($this->any())
+    $collector->expects($this->exactly(2))
       ->method('create')
       ->will($this->returnCallback(array($this, 'createStubFileAsset')));
+    $collector->expects($this->exactly(2))
+      ->method('clearLastCss');
     $factory = new AssetLibraryFactory($module_handler, $collector);
 
     $this->assertFalse($factory->getLibrary('stub1/foo'));

@@ -126,12 +126,13 @@ class AssetCollector implements AssetCollectorInterface {
       $this->add($asset);
     }
 
-    if ($asset_type == 'css' && !empty($this->lastCss)) {
-      $asset->after($this->lastCss);
-    }
-
-    if ($keep_last) {
-      $this->lastCss = $asset;
+    if ($asset_type == 'css') {
+      if (!empty($this->lastCss)) {
+        $asset->after($this->lastCss);
+      }
+      if ($keep_last) {
+        $this->lastCss = $asset;
+      }
     }
 
     return $asset;

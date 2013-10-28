@@ -130,6 +130,9 @@ class AssetLibraryFactory {
       }
     }
 
+    // Ensure that auto-aftering of CSS doesn't bleed across libraries.
+    $this->collector->clearLastCss();
+
     $library->freeze();
     return $library;
   }

@@ -262,13 +262,17 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   public function testLastCssAutoAfter() {
+    $js = $this->collector->create('js', 'file', 'foo.js');
     $css1 = $this->collector->create('css', 'file', 'foo.css');
-    $css2 = $this->collector->create('css', 'file', 'foo2.css');
+    $css2 = $this->collector->create('css', 'file', 'foo2.css', array(), array(), FALSE);
     $this->assertEquals(array($css1), $css2->getPredecessors());
 
-    $this->collector->clearLastCss();
     $css3 = $this->collector->create('css', 'file', 'foo3.css');
-    $this->assertEmpty($css3->getPredecessors());
+    $this->assertEquals(array($css1), $css3->getPredecessors());
+
+    $this->collector->clearLastCss();
+    $css4 = $this->collector->create('css', 'file', 'foo4.css');
+    $this->assertEmpty($css4->getPredecessors());
   }
 
   /**

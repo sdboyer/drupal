@@ -108,7 +108,7 @@ class OptimallyGroupedTSLVisitor implements DepthFirstVisitorInterface {
   /**
    * Returns the TSL produced by a depth-first traversal.
    *
-   * @return array
+   * @return AssetCollection
    *   A topologically sorted list of vertices.
    */
   public function getTSL() {
