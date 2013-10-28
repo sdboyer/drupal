@@ -85,6 +85,13 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
   public function ksort();
 
   /**
+   * Reverses the sort order of the contained assets.
+   *
+   * @return void
+   */
+  public function reverse();
+
+  /**
    * Adds a key identifying a library to this collection.
    *
    * Resolving this key into a real AssetLibrary is the responsibility of the

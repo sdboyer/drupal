@@ -141,6 +141,16 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
 
   /**
    * {@inheritdoc}
+   *
+   * TODO deal with nested assets - should they also be reversed?
+   */
+  public function reverse() {
+    $this->attemptWrite(__METHOD__);
+    $this->assetIdMap = array_reverse($this->assetIdMap);
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function addUnresolvedLibrary($key) {
     $this->attemptWrite(__METHOD__);

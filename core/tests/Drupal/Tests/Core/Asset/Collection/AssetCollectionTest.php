@@ -242,6 +242,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
       'mergeCollection' => array($this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetCollection')),
       'uksort' => array(function() {}),
       'ksort' => array(),
+      'reverse' => array(),
       'addUnresolvedLibrary' => array('foo/bar'),
       'clearUnresolvedLibraries' => array(),
       'resolveLibraries' => array($this->getMock('Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE)),
@@ -328,6 +329,29 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
     $this->collection->ksort();
     ksort($assets);
+    $this->assertEquals($assets, $this->collection->all());
+  }
+
+  /**
+   * @depends testAdd
+   * @covers ::reverse
+   */
+  public function testReverse() {
+    $stub1 = $this->createStubFileAsset();
+    $stub2 = $this->createStubFileAsset();
+    $stub3 = $this->createStubFileAsset();
+
+    $this->collection->add($stub1);
+    $this->collection->add($stub2);
+    $this->collection->add($stub3);
+
+    $assets = array(
+      $stub3->id() => $stub3,
+      $stub2->id() => $stub2,
+      $stub1->id() => $stub1,
+    );
+
+    $this->collection->reverse();
     $this->assertEquals($assets, $this->collection->all());
   }
 
