@@ -5,7 +5,7 @@
  * Contains \Drupal\Core\Asset\OptimallyGroupedTSLVisitor.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\GroupSort;
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Gliph\Visitor\DepthFirstVisitorInterface;
 

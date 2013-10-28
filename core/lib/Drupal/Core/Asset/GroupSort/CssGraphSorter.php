@@ -7,7 +7,7 @@
 
 namespace Drupal\Core\Asset\GroupSort;
 
-use Drupal\Core\Asset\OptimallyGroupedTSLVisitor;
+use Drupal\Core\Asset\GroupSort\OptimallyGroupedTSLVisitor;
 use Drupal\Core\Asset\ExternalAsset;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\FileAsset;
