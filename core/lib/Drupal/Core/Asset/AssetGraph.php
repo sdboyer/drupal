@@ -154,8 +154,12 @@ class AssetGraph extends DirectedAdjacencyList {
    */
   public function transpose() {
     $graph = new self(FALSE);
-    $this->eachEdge(function($edge) use (&$graph) {
-        $graph->addDirectedEdge($edge[1], $edge[0]);
+    $this->eachVertex(function($v, $adjacent) use (&$graph) {
+      $graph->addVertex($v);
+
+      foreach ($adjacent as $adj) {
+        $graph->addDirectedEdge($adj, $v);
+      }
     });
 
     return $graph;
