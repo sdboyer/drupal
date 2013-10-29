@@ -19,20 +19,20 @@ abstract class AssetGraphSorter implements AssetGroupSorterInterface {
   /**
    * Creates a queue of starting vertices that will facilitate an ideal TSL.
    *
-   * @param AssetGraph $original
-   * @param AssetGraph $transpose
+   * @param AssetGraph $graph
+   *   The graph from which to create a starting queue.
    *
    * @return \SplQueue $queue
-   *   A queue of vertices
+   *   A queue of vertices for traversal.
    */
-  protected function createSourceQueue(AssetGraph $original, AssetGraph $transpose) {
+  protected function createSourceQueue(AssetGraph $graph) {
     $reach_visitor = new DepthFirstBasicVisitor();
 
-    // Find source vertices (outdegree 0) in the original graph
-    $sources = DepthFirst::find_sources($original, $reach_visitor);
+    // Find source vertices (outdegree 0) in the graph
+    $sources = DepthFirst::find_sources($graph, $reach_visitor);
 
     // Traverse the transposed graph to get reachability data on each vertex
-    DepthFirst::traverse($transpose, $reach_visitor, clone $sources);
+    DepthFirst::traverse($graph, $reach_visitor, clone $sources);
 
     // Sort vertices via a PriorityQueue based on total reach
     $pq = new \SplPriorityQueue();

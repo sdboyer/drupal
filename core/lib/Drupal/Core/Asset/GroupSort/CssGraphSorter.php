@@ -98,12 +98,14 @@ class CssGraphSorter extends AssetGraphSorter {
     $transpose = $graph->transpose();
 
     // Create a queue of start vertices to prime the traversal.
-    $queue = $this->createSourceQueue($graph, $transpose);
+    $queue = $this->createSourceQueue($transpose);
 
     // Now, create the visitor and walk the graph to get an optimal TSL.
     $visitor = new OptimallyGroupedTSLVisitor($optimal, $optimal_lookup);
     DepthFirst::traverse($transpose, $visitor, $queue);
 
-    return $visitor->getTSL();
+    $final = $visitor->getTSL();
+    $final->reverse();
+    return $final;
   }
 }
