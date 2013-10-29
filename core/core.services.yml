@@ -632,6 +632,14 @@ services:
   asset.css.collection_optimizer:
     class: Drupal\Core\Asset\CssCollectionOptimizer
     arguments: [ '@asset.css.collection_grouper', '@asset.css.optimizer', '@asset.css.dumper', '@state' ]
+  asset.css.collection_optimizer_nv:
+    class: Drupal\Core\Asset\CssCollectionOptimizerNouveaux
+    arguments: [ '@asset.css.collection_aggregator', '@asset.css.optimizer', '@asset.css.dumper', '@state' ]
+  asset.css.collection_aggregator:
+    class: Drupal\Core\Asset\CssCollectionAggregator
+    arguments: [ '@asset.css.graph_sorter' ]
+  asset.css.graph_sorter:
+    class: Drupal\Core\Asset\GroupSort\CssGraphSorter
   asset.css.optimizer:
     class: Drupal\Core\Asset\CssOptimizer
   asset.css.collection_grouper:

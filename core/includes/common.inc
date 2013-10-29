@@ -9,6 +9,7 @@ use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Tags;
 use Drupal\Component\Utility\Url;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Asset\CssCollectionOptimizerNouveaux;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\Language;
 use Symfony\Component\Yaml\Parser;
@@ -1592,7 +1593,7 @@ function drupal_add_html_head_link($attributes, $header = FALSE) {
  *
  * @see drupal_get_css()
  */
-function drupal_add_css($data = NULL, $options = NULL, $collect = FALSE) {
+function drupal_add_css($data = NULL, $options = NULL, $collect = TRUE) {
   $css = &drupal_static(__FUNCTION__, array());
 
   // Construct the options, taking the defaults into consideration.
@@ -1871,8 +1872,14 @@ function drupal_sort_css_js($a, $b) {
  */
 function drupal_pre_render_styles($elements) {
   $css_assets = $elements['#items'];
+
   $collection = &drupal_static('global_asset_collection', FALSE);
+
   $collection->resolveLibraries(\Drupal::service('asset.library_repository'));
+  $collection->ksort();
+
+  $sorter = \Drupal::service('asset.css.graph_sorter');
+  $sorted_css = $sorter->groupAndSort($collection);
 
   // Aggregate the CSS if necessary, but only during normal site operation.
   if (!defined('MAINTENANCE_MODE') && \Drupal::config('system.performance')->get('css.preprocess')) {
@@ -2210,7 +2217,7 @@ function drupal_html_id($id) {
  *
  * @see drupal_get_js()
  */
-function drupal_add_js($data = NULL, $options = NULL, $collect = FALSE) {
+function drupal_add_js($data = NULL, $options = NULL, $collect = TRUE) {
   $javascript = &drupal_static(__FUNCTION__, array());
 
   // Construct the options, taking the defaults into consideration.
