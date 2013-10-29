@@ -71,8 +71,8 @@ class OptimallyGroupedTSLVisitor implements DepthFirstVisitorInterface {
    */
   public function onStartVertex($vertex, \Closure $visit) {
     // If there's a record in the vertex map, it means this vertex has an
-    // optimal group. Remove it from that group, as it being here means it's
-    // been visited.
+    // optimal group. Remove it from that group, as being provided to this
+    // visitor method indicates the vertex is being visited.
     if ($this->vertexMap->contains($vertex)) {
       $this->vertexMap[$vertex]->detach($vertex);
     }
@@ -96,10 +96,9 @@ class OptimallyGroupedTSLVisitor implements DepthFirstVisitorInterface {
    *
    */
   public function onFinishVertex($vertex, \Closure $visit) {
-    // TODO explore risk of hitting the 100 call stack limit
     if ($this->vertexMap->contains($vertex)) {
-      foreach ($this->vertexMap[$vertex] as $vertex) {
-        $visit($vertex);
+      foreach ($this->vertexMap[$vertex] as $adjacent) {
+        $visit($adjacent);
       }
     }
     $this->tsl->add($vertex);
