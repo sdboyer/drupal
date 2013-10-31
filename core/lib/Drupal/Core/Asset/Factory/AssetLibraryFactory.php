@@ -79,7 +79,9 @@ class AssetLibraryFactory {
       return FALSE;
     }
 
-    $declarations = call_user_func($module . '_library_info');
+    $declarations = call_user_func($module . '_library_info') ?: array();
+
+    $this->moduleHandler->alter('library_info', $declarations, $module);
 
     if (!isset($declarations[$name])) {
       // No library by the given name.

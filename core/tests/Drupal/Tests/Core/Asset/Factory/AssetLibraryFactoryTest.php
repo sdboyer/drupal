@@ -67,6 +67,10 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
       ->method('implementsHook')
       ->with('stub1', 'library_info')
       ->will($this->returnValue(TRUE));
+    $module_handler->expects($this->exactly(3))
+      ->method('alter')
+      ->with('library_info') // matching more args is unnecessary and annoying
+      ->will($this->returnArgument(1));
 
     $collector = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetCollector');
     $collector->expects($this->exactly(2))
