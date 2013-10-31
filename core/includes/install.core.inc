@@ -470,10 +470,16 @@ function install_begin_request(&$install_state) {
     CoreServiceProvider::registerUuid($container);
 
     // Register the CSS and JavaScript asset collection renderers.
-    $container->register('asset.css.collection_renderer', 'Drupal\Core\Asset\CssCollectionRenderer')
-      ->addArgument(new Reference('state'));
     $container->register('asset.js.collection_renderer', 'Drupal\Core\Asset\JsCollectionRenderer')
       ->addArgument(new Reference('state'));
+    $container->register('asset.library_factory', 'Drupal\Core\Asset\Factory\AssetLibraryFactory')
+      ->addArgument(new Reference('module_handler'));
+    $container->register('asset.library_repository', 'Drupal\Core\Asset\AssetLibraryRepository')
+      ->addArgument(new Reference('asset.library_factory'));
+    $container->register('asset.css.graph_sorter', 'Drupal\Core\Asset\GroupSort\CssGraphSorter');
+    $container->register('asset.css.collection_renderer_nv', 'Drupal\Core\Asset\CssCollectionRendererNouveaux')
+      ->addArgument(new Reference('state'))
+      ->addArgument(new Reference('asset.css.graph_sorter'));
 
     // Register the info parser.
     $container->register('info_parser', 'Drupal\Core\Extension\InfoParser');
