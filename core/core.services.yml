@@ -669,5 +669,8 @@ services:
   asset.library_repository:
     class: Drupal\Core\Asset\AssetLibraryRepository
     arguments: ['@asset.library_factory']
+  asset.css.collection_renderer_nv:
+    class: Drupal\Core\Asset\CssCollectionRendererNouveaux
+    arguments: [ '@state', '@asset.css.graph_sorter' ]
   info_parser:
     class: Drupal\Core\Extension\InfoParser

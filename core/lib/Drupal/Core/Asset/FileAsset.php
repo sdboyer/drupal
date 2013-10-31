@@ -45,6 +45,7 @@ class FileAsset extends BaseAsset {
     $sourceRoot = dirname($source);
     $sourcePath = basename($source);
     $this->source = $source;
+    $this->setTargetPath($source); // TODO do this immediately...for now.
 
     parent::__construct($metadata, $filters, $sourceRoot, $sourcePath);
   }

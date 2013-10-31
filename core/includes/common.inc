@@ -1879,12 +1879,15 @@ function drupal_pre_render_styles($elements) {
 
   $sorter = \Drupal::service('asset.css.graph_sorter');
   $sorted_css = $sorter->groupAndSort($collection);
+  $rendered = \Drupal::service('asset.css.collection_renderer_nv')->render($sorted_css);
 
   // Aggregate the CSS if necessary, but only during normal site operation.
   if (!defined('MAINTENANCE_MODE') && \Drupal::config('system.performance')->get('css.preprocess')) {
     $css_assets = \Drupal::service('asset.css.collection_optimizer')->optimize($css_assets);
+    return \Drupal::service('asset.css.collection_renderer')->render($css_assets);
   }
-  return \Drupal::service('asset.css.collection_renderer')->render($css_assets);
+
+  return $rendered;
 }
 
 /**

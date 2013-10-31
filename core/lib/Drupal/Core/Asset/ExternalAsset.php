@@ -35,6 +35,7 @@ class ExternalAsset extends BaseAsset {
     }
 
     $this->sourceUrl = $sourceUrl;
+    $this->setTargetPath($sourceUrl); // TODO do this immediately...for now.
 
     list($scheme, $url) = explode('://', $sourceUrl, 2);
     list($host, $path) = explode('/', $url, 2);
