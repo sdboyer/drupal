@@ -186,6 +186,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
 
     $compatible_dep = $this->createStubFileAsset();
     $incompatible_dep = $this->createStubFileAsset('js');
+    $lib_dep = $this->createStubFileAsset();
 
     $main_asset = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
     $main_asset->expects($this->exactly(2))
@@ -207,6 +208,8 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
     $library1->expects($this->once())
       ->method('getDependencyInfo')
       ->will($this->returnValue(array('foo/baz', 'qux/bing')));
+    $library1->expects($this->once())
+      ->method('after')->with($lib_dep);
 
     $it = new \ArrayIterator(array($compatible_dep, $incompatible_dep));
 
@@ -215,9 +218,18 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
       ->will($this->returnValue($it));
 
     $library2 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library2->expects($this->once())
+      ->method('getIterator')
+      ->will($this->returnValue(new \ArrayIterator(array())));
+    $library2->expects($this->never())
+      ->method('hasDependencies');
+
     $library3 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library3->expects($this->once())
+      ->method('getIterator')
+      ->will($this->returnValue(new \ArrayIterator(array($lib_dep))));
     $library3->expects($this->never())
-      ->method('getDependencyInfo')
+      ->method('hasDependencies')
       ->will($this->returnValue(array('qux/quark')));
 
     $library4 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');

@@ -11,6 +11,7 @@ use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Exception\FrozenObjectException;
+use Drupal\Core\Asset\RelativePositionInterface;
 
 /**
  * An asset library is a named collection of assets.
@@ -18,7 +19,7 @@ use Drupal\Core\Asset\Exception\FrozenObjectException;
  * The primary role of an asset library is to be declared as a dependency by
  * other assets (including assets declared by other libraries).
  */
-class AssetLibrary extends AssetCollection implements DependencyInterface {
+class AssetLibrary extends AssetCollection implements DependencyInterface, RelativePositionInterface {
 
   /**
    * The asset library's title.

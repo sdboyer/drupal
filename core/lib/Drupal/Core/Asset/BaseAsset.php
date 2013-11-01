@@ -20,7 +20,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
  * The methods load() and getLastModified() are left undefined, although a
  * reusable doLoad() method is available to child classes.
  */
-abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, DependencyInterface {
+abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, DependencyInterface, RelativePositionInterface {
 
   /**
    * @var AssetMetadataInterface
