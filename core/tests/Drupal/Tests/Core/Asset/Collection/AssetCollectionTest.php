@@ -50,34 +50,36 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
     $asset1 = $this->createStubFileAsset();
     $asset2 = $this->createStubFileAsset();
 
-    $this->assertTrue($this->collection->add($asset1));
-    $this->assertTrue($this->collection->add($asset2));
+    // test fluency
+    $this->assertSame($this->collection, $this->collection->add($asset1));
+    $this->assertSame($this->collection, $this->collection->add($asset2));
 
     $this->assertContains($asset1, $this->collection);
     $this->assertContains($asset2, $this->collection);
   }
 
   /**
-   * Tests that adding the same asset twice is disallowed.
+   * Tests that adding the same asset twice results in just one asset.
    *
    * @depends testAdd
    * @covers ::add
    */
   public function testDoubleAdd() {
     $asset = $this->createStubFileAsset();
-    $this->assertTrue($this->collection->add($asset));
-
-    $this->assertTrue($this->collection->contains($asset));
+    $this->collection->add($asset);
 
     // Test by object identity
-    $this->assertFalse($this->collection->add($asset));
+    $this->collection->add($asset);
+    $this->assertCount(1, $this->collection);
+
     // Test by id
     $asset2 = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
     $asset2->expects($this->once())
       ->method('id')
       ->will($this->returnValue($asset->id()));
 
-    $this->assertFalse($this->collection->add($asset2));
+    $this->collection->add($asset2);
+    $this->assertCount(1, $this->collection);
   }
 
   /**
@@ -185,6 +187,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
   /**
    * @expectedException \OutOfBoundsException
+   * @covers ::remove
    */
   public function testRemoveNonexistentId() {
     $this->assertFalse($this->collection->remove('foo', TRUE));
@@ -193,6 +196,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
   /**
    * @expectedException \OutOfBoundsException
+   * @covers ::remove
    */
   public function testRemoveNonexistentAsset() {
     $stub = $this->createStubFileAsset();
@@ -210,7 +214,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
     $stub2 = $this->createStubFileAsset();
 
     $coll2->add($stub1);
-    $this->collection->mergeCollection($coll2);
+    $this->assertSame($this->collection, $this->collection->mergeCollection($coll2));
 
     $this->assertContains($stub1, $this->collection);
     $this->assertTrue($coll2->isFrozen());
@@ -219,7 +223,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
     $coll3->add($stub1);
     $coll3->add($stub2);
     // Ensure no duplicates, and don't freeze merged bag
-    $this->collection->mergeCollection($coll3, FALSE);
+    $this->assertSame($this->collection, $this->collection->mergeCollection($coll3, FALSE));
 
     $contained = array(
       $stub1->id() => $stub1,
@@ -230,8 +234,20 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
   }
 
   /**
+   * @covers ::freeze
+   */
+  public function testFreeze() {
+    $this->assertSame($this->collection, $this->collection->freeze());
+    $this->assertAttributeEquals(TRUE, 'frozen', $this->collection);
+  }
+
+  /**
    * Tests that all methods that should be disabled by freezing the collection
    * correctly trigger an exception.
+   *
+   * @depends testFreeze
+   * @covers ::isFrozen
+   * @covers ::attemptWrite
    */
   public function testExceptionOnWriteWhenFrozen() {
     $stub = $this->createStubFileAsset();
@@ -262,7 +278,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
    * @covers ::find
    * @expectedException OutOfBoundsException
    */
-  public function testGetById() {
+  public function testFind() {
     $metamock = $this->createStubAssetMetadata();
 
     $asset = $this->getMock('\\Drupal\\Core\\Asset\\FileAsset', array(), array($metamock, 'foo'));
@@ -303,7 +319,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
       return strnatcasecmp($a, $b);
     };
 
-    $this->collection->uksort($dummysort);
+    $this->assertSame($this->collection, $this->collection->uksort($dummysort));
     uksort($assets, $dummysort);
     $this->assertEquals($assets, $this->collection->all());
   }
@@ -327,7 +343,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
       $stub3->id() => $stub3,
     );
 
-    $this->collection->ksort();
+    $this->assertSame($this->collection, $this->collection->ksort());
     ksort($assets);
     $this->assertEquals($assets, $this->collection->all());
   }
@@ -351,7 +367,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
       $stub1->id() => $stub1,
     );
 
-    $this->collection->reverse();
+    $this->assertSame($this->collection, $this->collection->reverse());
     $this->assertEquals($assets, $this->collection->all());
   }
 
@@ -359,7 +375,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
    * @covers ::addUnresolvedLibrary
    */
   public function testAddUnresolvedLibrary() {
-    $this->collection->addUnresolvedLibrary('foo/bar');
+    $this->assertSame($this->collection, $this->collection->addUnresolvedLibrary('foo/bar'));
 
     $this->assertAttributeContains('foo/bar', 'libraries', $this->collection);
   }
@@ -383,7 +399,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
    */
   public function testClearUnresolvedLibraries() {
     $this->collection->addUnresolvedLibrary('foo/bar');
-    $this->collection->clearUnresolvedLibraries();
+    $this->assertSame($this->collection, $this->collection->clearUnresolvedLibraries());
 
     $this->assertFalse($this->collection->hasUnresolvedLibraries());
   }
@@ -505,7 +521,7 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
       ->will($this->returnValue(array()));
 
     $this->collection->add($coll_asset);
-    $this->collection->resolveLibraries($repository);
+    $this->assertSame($this->collection, $this->collection->resolveLibraries($repository));
 
     $expected = array(
       $coll_asset->id() => $coll_asset,

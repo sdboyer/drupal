@@ -138,6 +138,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
 
     // The library key is stored as the key for cheap deduping.
     $this->dependencies[$key] = TRUE;
+    return $this;
   }
 
   /**
@@ -146,6 +147,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
   public function clearDependencies() {
     $this->attemptWrite(__METHOD__);
     $this->dependencies = array();
+    return $this;
   }
 
   /**
@@ -160,6 +162,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    */
   public function before($asset) {
     $this->successors[] = $asset;
+    return $this;
   }
 
   /**
@@ -167,6 +170,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    */
   public function after($asset) {
     $this->predecessors[] = $asset;
+    return $this;
   }
 
   /**
@@ -188,6 +192,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    */
   public function clearSuccessors() {
     $this->successors = array();
+    return $this;
   }
 
   /**
@@ -195,6 +200,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    */
   public function clearPredecessors() {
     $this->predecessors = array();
+    return $this;
   }
 
   /**

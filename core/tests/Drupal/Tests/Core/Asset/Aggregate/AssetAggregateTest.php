@@ -81,7 +81,7 @@ class AssetAggregateTest extends BasicAssetCollectionTest {
   public function testAdd() {
     $aggregate = $this->getAggregate();
     $asset = $this->createStubFileAsset();
-    $this->assertTrue($aggregate->add($asset));
+    $this->assertSame($aggregate, $aggregate->add($asset));
 
     $this->assertAttributeContains($asset, 'assetStorage', $aggregate);
     $this->assertAttributeContains($asset, 'assetIdMap', $aggregate);

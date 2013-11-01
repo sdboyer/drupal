@@ -90,6 +90,8 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    */
   public function freeze() {
     $this->frozen = TRUE;
+
+    return $this;
   }
 
   /**
@@ -129,6 +131,8 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
   public function uksort($callback) {
     $this->attemptWrite(__METHOD__);
     uksort($this->assetIdMap, $callback);
+
+    return $this;
   }
 
   /**
@@ -137,6 +141,8 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
   public function ksort() {
     $this->attemptWrite(__METHOD__);
     ksort($this->assetIdMap);
+
+    return $this;
   }
 
   /**
@@ -147,6 +153,8 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
   public function reverse() {
     $this->attemptWrite(__METHOD__);
     $this->assetIdMap = array_reverse($this->assetIdMap);
+
+    return $this;
   }
 
   /**
@@ -156,6 +164,8 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
     $this->attemptWrite(__METHOD__);
     // The library key is stored as the key for cheap deduping.
     $this->libraries[$key] = TRUE;
+
+    return $this;
   }
 
   /**
@@ -178,6 +188,8 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
   public function clearUnresolvedLibraries() {
     $this->attemptWrite(__METHOD__);
     $this->libraries = array();
+
+    return $this;
   }
 
   /**
@@ -211,6 +223,8 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
         }
       }
     }
+
+    return $this;
   }
 
   /**

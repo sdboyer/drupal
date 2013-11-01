@@ -73,7 +73,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
   public function testAdd() {
     $collection = $this->getCollection();
     $asset = $this->createStubFileAsset();
-    $this->assertTrue($collection->add($asset));
+    $this->assertSame($collection, $collection->add($asset));
 
     $this->assertAttributeContains($asset, 'assetStorage', $collection);
     $this->assertAttributeContains($asset, 'assetIdMap', $collection);
@@ -145,19 +145,24 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * Tests that adding the same asset twice is disallowed.
    *
    * @depends testAdd
+   * @depends testCount
    * @covers ::add
    */
   public function testDoubleAdd() {
     $collection = $this->getCollection();
     $asset = $this->createStubFileAsset();
-    $this->assertTrue($collection->add($asset));
+
+    $collection->add($asset);
 
     // Test by object identity
-    $this->assertFalse($collection->add($asset));
+    $collection->add($asset);
+    $this->assertCount(1, $collection);
+
     // Test by id
     $asset2 = $this->createStubFileAsset('css', $asset->id());
 
-    $this->assertFalse($collection->add($asset2));
+    $collection->add($asset2);
+    $this->assertCount(1, $collection);
   }
 
   /**
@@ -185,7 +190,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::find
    * @expectedException \OutOfBoundsException
    */
-  public function testGetById() {
+  public function testFind() {
     $collection = $this->getCollection();
 
     $asset = $this->createStubFileAsset();

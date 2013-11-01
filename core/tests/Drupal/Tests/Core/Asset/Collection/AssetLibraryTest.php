@@ -34,13 +34,13 @@ class AssetLibraryTest extends AssetUnitTest {
 
   public function testAddDependency() {
     $library = $this->getLibraryFixture();
-    $library->addDependency('baz/bing');
+    $this->assertSame($library, $library->addDependency('baz/bing'));
     $this->assertEquals($library->getDependencyInfo(), array('foo/bar', 'baz/bing'), 'Dependencies added to library successfully.');
   }
 
   public function testClearDependencies() {
     $library = $this->getLibraryFixture();
-    $library->clearDependencies();
+    $this->assertSame($library, $library->clearDependencies());
     $this->assertEmpty($library->getDependencyInfo(), 'Dependencies recorded in the library were cleared correctly.');
   }
 

@@ -37,8 +37,9 @@ interface DependencyInterface extends RelativePositionInterface {
    *   The string identifying the library. It should be two-part composite key,
    *   slash-delimited, with the first part being the module owner and the
    *   second part being the library name.
-
-   * @return void
+   *
+   * @return DependencyInterface
+   *   The current DependencyInterface object.
    */
   public function addDependency($key);
 
@@ -47,8 +48,9 @@ interface DependencyInterface extends RelativePositionInterface {
    *
    * This does not affect ordering data.
    *
-   * @return void
+   * @return DependencyInterface
+   *   The current DependencyInterface object.
    */
   public function clearDependencies();
-
 }
+

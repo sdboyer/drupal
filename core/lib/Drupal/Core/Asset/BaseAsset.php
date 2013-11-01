@@ -81,6 +81,7 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
 
     // The library key is stored as the key for cheap deduping.
     $this->dependencies[$key] = TRUE;
+    return $this;
   }
 
   /**
@@ -88,6 +89,7 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    */
   public function clearDependencies() {
     $this->dependencies = array();
+    return $this;
   }
 
   /**
@@ -106,6 +108,7 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
     }
 
     $this->successors[] = $asset;
+    return $this;
   }
 
   /**
@@ -117,6 +120,7 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
     }
 
     $this->predecessors[] = $asset;
+    return $this;
   }
 
   /**
@@ -138,6 +142,7 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    */
   public function clearSuccessors() {
     $this->successors = array();
+    return $this;
   }
 
   /**
@@ -145,5 +150,6 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    */
   public function clearPredecessors() {
     $this->predecessors = array();
+    return $this;
   }
 }

@@ -72,6 +72,7 @@ interface AssetCollectorInterface {
    * @see clearLastCss().
    *
    * @return \Drupal\Core\Asset\AssetInterface
+   *   The created AssetInterface object.
    *
    * @throws \InvalidArgumentException
    *   Thrown if an invalid asset type or source type is passed.
@@ -91,8 +92,8 @@ interface AssetCollectorInterface {
    * end of such a contiguous series is reached, or by the asset creator
    * themselves if they want to avoid the creation of the ordering relationship.
    *
-   * @return AssetCollector
-   *   The current AssetCollector instance, for easy chaining.
+   * @return AssetCollectorInterface
+   *   The current asset collector.
    */
   public function clearLastCss();
 
@@ -103,8 +104,10 @@ interface AssetCollectorInterface {
    * all assets generated via its create() method to the collection.
    *
    * @param AssetCollectionInterface $collection
+   *   The collection the collector should use internally.
    *
-   * @return void
+   * @return AssetCollectorInterface
+   *   The current asset collector.
    *
    * @throws LockedObjectException
    *   Thrown if the collector is locked when this method is called.
@@ -114,7 +117,8 @@ interface AssetCollectorInterface {
   /**
    * Clears the internal collection for this collector.
    *
-   * @return void
+   * @return AssetCollectorInterface
+   *   The current asset collector.
    *
    * @throws LockedObjectException
    *   Thrown if the collector is locked when this method is called.
@@ -138,7 +142,8 @@ interface AssetCollectorInterface {
    * @param mixed $key
    *   The key used to lock the collector.
    *
-   * @return void
+   * @return AssetCollectorInterface
+   *   The current asset collector.
    *
    * @throws LockedObjectException
    *   Thrown if the collector is already locked.
@@ -153,7 +158,8 @@ interface AssetCollectorInterface {
    * @param mixed $key
    *   The key with which to unlock the collector.
    *
-   * @return void
+   * @return AssetCollectorInterface
+   *   The current asset collector.
    *
    * @throws LockedObjectException
    *   Thrown if the incorrect key is provided, or if the collector is not
@@ -174,7 +180,8 @@ interface AssetCollectorInterface {
    * @param MetadataFactoryInterface $factory
    *   The factory to use.
    *
-   * @return void
+   * @return AssetCollectorInterface
+   *   The current asset collector.
    *
    * @throws LockedObjectException
    *   Thrown if the collector is locked when this method is called.

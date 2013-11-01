@@ -11,11 +11,12 @@ namespace Drupal\Core\Asset;
  */
 interface RelativePositionInterface {
   /**
-   * Clears (removes) all ordering info declared by after() for this asset.
+   * Clears all ordering info declared by after() for this asset.
    *
    * This does not affect dependency data.
    *
-   * @return void
+   * @return RelativePositionInterface
+   *   The current RelativePositionInterface object.
    */
   public function clearPredecessors();
 
@@ -37,7 +38,8 @@ interface RelativePositionInterface {
    * @param string|AssetInterface $asset
    *   The asset to succeed the current asset.
    *
-   * @return void
+   * @return RelativePositionInterface
+   *   The current RelativePositionInterface object.
    */
   public function before($asset);
 
@@ -55,7 +57,8 @@ interface RelativePositionInterface {
    *
    * This does not affect dependency data.
    *
-   * @return void
+   * @return RelativePositionInterface
+   *   The current RelativePositionInterface object.
    */
   public function clearSuccessors();
 
@@ -68,7 +71,9 @@ interface RelativePositionInterface {
    * @param string|AssetInterface $asset
    *   The asset to precede the current asset.
    *
-   * @return void
+   * @return RelativePositionInterface
+   *   The current RelativePositionInterface object.
    */
   public function after($asset);
 }
+

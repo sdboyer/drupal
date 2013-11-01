@@ -12,8 +12,6 @@ use Drupal\Core\Asset\AssetLibraryRepository;
 /**
  * Describes an asset collection.
  *
- * TODO we need a few more methods here to deal with library resolution
- *
  * @see \Drupal\Core\Asset\Collection\AssetCollectionBasicInterface
  */
 interface AssetCollectionInterface extends AssetCollectionBasicInterface {
@@ -31,7 +29,8 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    * @param bool $freeze
    *   Whether to freeze the provided collection after merging. Defaults to TRUE.
    *
-   * @return void
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    */
   public function mergeCollection(AssetCollectionInterface $collection, $freeze = TRUE);
 
@@ -43,7 +42,8 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *
    * TODO put this on the basic interface so aggregates have it, too?
    *
-   * @return void
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    */
   public function freeze();
 
@@ -73,21 +73,24 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *
    * @param $callback
    *
-   * @return void
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    */
   public function uksort($callback);
 
   /**
    * Sorts contained assets via ksort() on their ids.
    *
-   * @return void
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    */
   public function ksort();
 
   /**
    * Reverses the sort order of the contained assets.
    *
-   * @return void
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    */
   public function reverse();
 
@@ -102,7 +105,8 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *   slash-delimited, with the first part being the module owner and the
    *   second part being the library name.
    *
-   * @return void
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    *
    * @see AssetCollectionInterface::resolveLibraries()
    */
@@ -127,7 +131,8 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
   /**
    * Empties the collection of its unresolved library keys.
    *
-   * @return void
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    */
   public function clearUnresolvedLibraries();
 
@@ -142,7 +147,8 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *   The AssetLibraryRepository to use for resolving library keys into
    *   AssetLibrary objects.
    *
-   * @return void
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    */
   public function resolveLibraries(AssetLibraryRepository $repository);
 }

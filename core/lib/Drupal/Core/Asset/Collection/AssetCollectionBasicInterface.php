@@ -33,9 +33,8 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
    *   The asset to add. Note that, despite the type requirements, it must
    *   conform to Drupal's AssetInterface.
    *
-   * @return bool
-   *   TRUE if the asset was added successfully, FALSE if it was already present
-   *   in the aggregate.
+   * @return AssetCollectionInterface
+   *   The current asset collection.
    *
    * @throws UnsupportedAsseticBehaviorException
    *   Thrown if a vanilla Assetic asset is provided.

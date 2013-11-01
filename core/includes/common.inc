@@ -1874,6 +1874,7 @@ function drupal_pre_render_styles($elements) {
 
   $collection = &drupal_static('global_asset_collection', FALSE);
 
+  /** @var $collection \Drupal\Core\Asset\Collection\AssetCollectionInterface */
   $collection->resolveLibraries(\Drupal::service('asset.library_repository'));
   $collection->ksort();
 

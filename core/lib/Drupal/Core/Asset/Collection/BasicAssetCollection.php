@@ -68,18 +68,16 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
     }
     $this->ensureCorrectType($asset);
 
-    if ($this->contains($asset) || $this->find($asset->id())) {
-      return FALSE;
+    if (!($this->contains($asset) || $this->find($asset->id()))) {
+      $this->assetStorage->attach($asset);
+      $this->assetIdMap[$asset->id()] = $asset;
+
+      if ($asset instanceof AssetCollectionBasicInterface) {
+        $this->nestedStorage->attach($asset);
+      }
     }
 
-    $this->assetStorage->attach($asset);
-    $this->assetIdMap[$asset->id()] = $asset;
-
-    if ($asset instanceof AssetCollectionBasicInterface) {
-      $this->nestedStorage->attach($asset);
-    }
-
-    return TRUE;
+    return $this;
   }
 
   /**

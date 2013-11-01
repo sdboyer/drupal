@@ -68,11 +68,11 @@ class BaseAssetTest extends AssetUnitTest {
   public function testDependencies() {
     $asset = $this->createBaseAsset();
 
-    $asset->addDependency('foo/bar');
+    $this->assertSame($asset, $asset->addDependency('foo/bar'));
     $this->assertEquals(array('foo/bar'), $asset->getDependencyInfo());
     $this->assertTrue($asset->hasDependencies());
 
-    $asset->clearDependencies();
+    $this->assertSame($asset, $asset->clearDependencies());
     $this->assertEmpty($asset->getDependencyInfo());
 
     $invalid = array(0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
@@ -89,12 +89,12 @@ class BaseAssetTest extends AssetUnitTest {
     $asset = $this->createBaseAsset();
     $dep = $this->createBaseAsset();
 
-    $asset->before('foo');
-    $asset->before($dep);
+    $this->assertSame($asset, $asset->before('foo'));
+    $this->assertSame($asset, $asset->before($dep));
 
     $this->assertEquals(array('foo', $dep), $asset->getSuccessors());
 
-    $asset->clearSuccessors();
+    $this->assertSame($asset, $asset->clearSuccessors());
     $this->assertEmpty($asset->getSuccessors());
 
     $invalid = array(0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
@@ -111,11 +111,12 @@ class BaseAssetTest extends AssetUnitTest {
     $asset = $this->createBaseAsset();
     $dep = $this->createBaseAsset();
 
-    $asset->after('foo');
-    $asset->after($dep);
+    $this->assertSame($asset, $asset->after('foo'));
+    $this->assertSame($asset, $asset->after($dep));
+
     $this->assertEquals(array('foo', $dep), $asset->getPredecessors());
 
-    $asset->clearPredecessors();
+    $this->assertSame($asset, $asset->clearPredecessors());
     $this->assertEmpty($asset->getPredecessors());
 
     $invalid = array(0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
