@@ -56,18 +56,18 @@ class AssetAggregateTest extends AssetUnitTest {
   }
 
   public function testGetAssetType() {
-    $mockmeta = $this->getMock('\\Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag', array(), array(), '', FALSE);
+    $mockmeta = $this->getMock('Drupal\Core\Asset\Metadata\AssetMetadataBag', array(), array(), '', FALSE);
     $mockmeta->expects($this->once())
       ->method('getType')
       ->will($this->returnValue('unicorns'));
-    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\AssetAggregate', array($mockmeta));
+    $aggregate = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AssetAggregate', array($mockmeta));
 
     $this->assertEquals('unicorns', $aggregate->getAssetType());
   }
 
   public function testGetMetadata() {
     $mockmeta = $this->createStubAssetMetadata();
-    $aggregate = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\AssetAggregate', array($mockmeta));
+    $aggregate = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AssetAggregate', array($mockmeta));
 
     $this->assertSame($mockmeta, $aggregate->getMetadata());
   }
@@ -131,7 +131,7 @@ class AssetAggregateTest extends AssetUnitTest {
     $asset1 = $this->createStubFileAsset();
     $asset2 = $this->createStubFileAsset();
     $meta = $this->createStubAssetMetadata();
-    $collection = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\AssetAggregate', array($meta, array($asset1, $asset2)));
+    $collection = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AssetAggregate', array($meta, array($asset1, $asset2)));
 
     $this->assertContains($asset1, $collection);
     $this->assertContains($asset2, $collection);
@@ -188,7 +188,7 @@ class AssetAggregateTest extends AssetUnitTest {
    */
   public function testRemoveLeafVanillaAsseticAsset() {
     $aggregate = $this->getAggregate();
-    $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
+    $vanilla = $this->getMock('\Assetic\Asset\BaseAsset', array(), array(), '', FALSE);
     $aggregate->removeLeaf($vanilla);
   }
 
@@ -266,7 +266,7 @@ class AssetAggregateTest extends AssetUnitTest {
    */
   public function testReplaceLeafVanillaAsseticAsset() {
     $aggregate = $this->getAggregate();
-    $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
+    $vanilla = $this->getMock('\Assetic\Asset\BaseAsset', array(), array(), '', FALSE);
     $drupally = $this->createStubFileAsset();
 
     try {

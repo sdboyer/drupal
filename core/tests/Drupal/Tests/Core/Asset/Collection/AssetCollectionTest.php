@@ -223,13 +223,13 @@ class AssetCollectionTest extends AssetUnitTest {
       'add' => array($stub),
       'remove' => array($stub),
       'replace' => array($stub, $this->createStubFileAsset()),
-      'mergeCollection' => array($this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetCollection')),
+      'mergeCollection' => array($this->getMock('Drupal\Core\Asset\Collection\AssetCollection')),
       'uksort' => array(function() {}),
       'ksort' => array(),
       'reverse' => array(),
       'addUnresolvedLibrary' => array('foo/bar'),
       'clearUnresolvedLibraries' => array(),
-      'resolveLibraries' => array($this->getMock('Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE)),
+      'resolveLibraries' => array($this->getMock('Drupal\Core\Asset\AssetLibraryRepository', array(), array(), '', FALSE)),
     );
 
     // No exception before freeze
@@ -253,7 +253,7 @@ class AssetCollectionTest extends AssetUnitTest {
   public function testFind() {
     $metamock = $this->createStubAssetMetadata();
 
-    $asset = $this->getMock('\\Drupal\\Core\\Asset\\FileAsset', array(), array($metamock, 'foo'));
+    $asset = $this->getMock('Drupal\Core\Asset\FileAsset', array(), array($metamock, 'foo'));
     $asset->expects($this->exactly(2)) // once on add, once on searching
       ->method('id')
       ->will($this->returnValue('foo'));
@@ -395,7 +395,7 @@ class AssetCollectionTest extends AssetUnitTest {
    * @covers ::resolveLibraries
    */
   public function testResolveLibrariesDirectLibraries() {
-    $lib_asset1 = $this->getMockBuilder('Drupal\\Core\\Asset\\AssetInterface')
+    $lib_asset1 = $this->getMockBuilder('Drupal\Core\Asset\AssetInterface')
       ->disableOriginalConstructor()
       ->setMethods(array('id'))
       ->setMockClassName('lib_asset_mock1')
@@ -404,7 +404,7 @@ class AssetCollectionTest extends AssetUnitTest {
       ->method('id')
       ->will($this->returnValue($this->randomName()));
 
-    $lib_asset2 = $this->getMockBuilder('Drupal\\Core\\Asset\\AssetInterface')
+    $lib_asset2 = $this->getMockBuilder('Drupal\Core\Asset\AssetInterface')
       ->disableOriginalConstructor()
       ->setMethods(array('id'))
       ->setMockClassName('lib_asset_mock2')
@@ -414,12 +414,12 @@ class AssetCollectionTest extends AssetUnitTest {
       ->will($this->returnValue($this->randomName()));
 
     $it1 = new \ArrayIterator(array($lib_asset1, $lib_asset2));
-    $lib1 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $lib1 = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
     $lib1->expects($this->once())
       ->method('getIterator')
       ->will($this->returnValue($it1));
 
-    $repository = $this->getMock('Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE);
+    $repository = $this->getMock('Drupal\Core\Asset\AssetLibraryRepository', array(), array(), '', FALSE);
     $repository->expects($this->once())
       ->method('get')->with('foo/bar')
       ->will($this->returnValue($lib1));
@@ -444,7 +444,7 @@ class AssetCollectionTest extends AssetUnitTest {
    * @covers ::resolveLibraries
    */
   public function testResolveLibrariesAgain() {
-    $coll_asset = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
+    $coll_asset = $this->getMockBuilder('Drupal\Core\Asset\BaseAsset')
       ->disableOriginalConstructor()
       ->setMethods(array('id'))
       ->setMockClassName('coll_asset')
@@ -453,7 +453,7 @@ class AssetCollectionTest extends AssetUnitTest {
       ->method('id')
       ->will($this->returnValue($this->randomName()));
 
-    $direct_lib_asset = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
+    $direct_lib_asset = $this->getMockBuilder('Drupal\Core\Asset\BaseAsset')
       ->disableOriginalConstructor()
       ->setMethods(array('id'))
       ->setMockClassName('direct_lib_asset')
@@ -462,7 +462,7 @@ class AssetCollectionTest extends AssetUnitTest {
       ->method('id')
       ->will($this->returnValue($this->randomName()));
 
-    $indirect_lib_asset = $this->getMockBuilder('Drupal\\Core\\Asset\\BaseAsset')
+    $indirect_lib_asset = $this->getMockBuilder('Drupal\Core\Asset\BaseAsset')
       ->disableOriginalConstructor()
       ->setMethods(array('id'))
       ->setMockClassName('indirect_lib_asset')
@@ -471,17 +471,17 @@ class AssetCollectionTest extends AssetUnitTest {
       ->method('id')
       ->will($this->returnValue($this->randomName()));
 
-    $direct_lib = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $direct_lib = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
     $direct_lib->expects($this->once())
       ->method('getIterator')
       ->will($this->returnValue(new \ArrayIterator(array($direct_lib_asset))));
 
-    $indirect_lib = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $indirect_lib = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
     $indirect_lib->expects($this->once())
       ->method('getIterator')
       ->will($this->returnValue(new \ArrayIterator(array($indirect_lib_asset))));
 
-    $repository = $this->getMock('Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE);
+    $repository = $this->getMock('Drupal\Core\Asset\AssetLibraryRepository', array(), array(), '', FALSE);
     $repository->expects($this->at(0))
       ->method('resolveDependencies')->with($coll_asset)
       ->will($this->returnValue(array($direct_lib)));

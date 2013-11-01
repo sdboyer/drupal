@@ -10,7 +10,6 @@ namespace Drupal\Tests\Core\Asset\GroupSort;
 use Drupal\Core\Asset\GroupSort\AssetGraph;
 use Drupal\Core\Asset\GroupSort\OptimallyGroupedTSLVisitor;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
-use Drupal\Tests\UnitTestCase;
 use Gliph\Traversal\DepthFirst;
 use Gliph\Visitor\DepthFirstBasicVisitor;
 

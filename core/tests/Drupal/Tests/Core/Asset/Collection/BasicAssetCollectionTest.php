@@ -32,7 +32,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @return BasicAssetCollection
    */
   public function getBasicCollection() {
-    return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Collection\\BasicAssetCollection');
+    return $this->getMockForAbstractClass('Drupal\Core\Asset\Collection\BasicAssetCollection');
   }
 
   /**
@@ -96,7 +96,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    * @covers ::add
    */
   public function testVanillaAsseticAdd() {
-    $vanilla = $this->getMock('\\Assetic\\Asset\\BaseAsset', array(), array(), '', FALSE);
+    $vanilla = $this->getMock('\Assetic\Asset\BaseAsset', array(), array(), '', FALSE);
     $this->getCollection()->add($vanilla);
   }
 
@@ -124,7 +124,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
   public function testCreateWithAssets() {
     $asset1 = $this->createStubFileAsset();
     $asset2 = $this->createStubFileAsset();
-    $collection = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Collection\\BasicAssetCollection', array(array($asset1, $asset2)));
+    $collection = $this->getMockForAbstractClass('Drupal\Core\Asset\Collection\BasicAssetCollection', array(array($asset1, $asset2)));
 
     $this->assertContains($asset1, $collection);
     $this->assertContains($asset2, $collection);

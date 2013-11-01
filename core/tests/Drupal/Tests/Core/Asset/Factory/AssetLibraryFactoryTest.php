@@ -28,13 +28,13 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
    * @covers ::__construct
    */
   public function testCreateFactory() {
-    $module_handler = $this->getMock('Drupal\\Core\\Extension\\ModuleHandlerInterface');
-    $collector = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetCollector');
+    $module_handler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
+    $collector = $this->getMock('Drupal\Core\Asset\Factory\AssetCollector');
 
     $factory = new AssetLibraryFactory($module_handler, $collector);
     $this->assertAttributeSame($collector, 'collector', $factory);
 
-    $metadata_factory = $this->getMock('\\Drupal\\Core\\Asset\\Metadata\\MetadataFactoryInterface');
+    $metadata_factory = $this->getMock('Drupal\Core\Asset\Metadata\MetadataFactoryInterface');
 
     $factory = new AssetLibraryFactory($module_handler, NULL, $metadata_factory);
     $prop = new \ReflectionProperty($factory, 'collector');
@@ -49,8 +49,8 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
    * @expectedException \RuntimeException
    */
   public function testCreateFactoryWithLockedCollector() {
-    $module_handler = $this->getMock('Drupal\\Core\\Extension\\ModuleHandlerInterface');
-    $collector = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetCollector');
+    $module_handler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
+    $collector = $this->getMock('Drupal\Core\Asset\Factory\AssetCollector');
     $collector->expects($this->once())
       ->method('isLocked')
       ->will($this->returnValue(TRUE));
@@ -62,7 +62,7 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
    * @covers ::getLibrary
    */
   public function testGetLibrary() {
-    $module_handler = $this->getMock('Drupal\\Core\\Extension\\ModuleHandlerInterface');
+    $module_handler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
     $module_handler->expects($this->exactly(3))
       ->method('implementsHook')
       ->with('stub1', 'library_info')
@@ -72,7 +72,7 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
       ->with('library_info') // matching more args is unnecessary and annoying
       ->will($this->returnArgument(1));
 
-    $collector = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetCollector');
+    $collector = $this->getMock('Drupal\Core\Asset\Factory\AssetCollector');
     $collector->expects($this->exactly(2))
       ->method('create')
       ->will($this->returnCallback(array($this, 'createStubFileAsset')));
@@ -84,7 +84,7 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
 
     $lib1 = $factory->getLibrary('stub1/solo-nodeps-js');
 
-    $this->assertInstanceOf('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary', $lib1);
+    $this->assertInstanceOf('Drupal\Core\Asset\Collection\AssetLibrary', $lib1);
     $this->assertEquals('solo-nodeps-js', $lib1->getTitle());
     $this->assertEquals('1.2.3', $lib1->getVersion());
     $this->assertEquals('http://foo.bar', $lib1->getWebsite());
@@ -92,7 +92,7 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
 
     $lib2 = $factory->getLibrary('stub1/solo-onedep-same');
 
-    $this->assertInstanceOf('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary', $lib2);
+    $this->assertInstanceOf('Drupal\Core\Asset\Collection\AssetLibrary', $lib2);
     $this->assertEquals(array('stub1/solo-nodeps-js'), $lib2->getDependencyInfo());
 
     foreach ($lib2 as $asset) {
@@ -104,13 +104,13 @@ class AssetLibraryFactoryTest extends AssetUnitTest {
    * @covers ::getLibrary
    */
   public function testGetLibraryModuleDoesNotImplementHook() {
-    $module_handler = $this->getMock('Drupal\\Core\\Extension\\ModuleHandlerInterface');
+    $module_handler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
     $module_handler->expects($this->once())
       ->method('implementsHook')
       ->with('foo', 'library_info')
       ->will($this->returnValue(FALSE));
 
-    $collector = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetCollector');
+    $collector = $this->getMock('Drupal\Core\Asset\Factory\AssetCollector');
     $factory = new AssetLibraryFactory($module_handler, $collector);
 
     $this->assertFalse($factory->getLibrary('foo/bar'));

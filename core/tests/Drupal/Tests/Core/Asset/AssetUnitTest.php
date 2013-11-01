@@ -33,7 +33,7 @@ abstract class AssetUnitTest extends UnitTestCase {
    * @return FileAsset
    */
   public function createStubFileAsset($type = 'css', $id = '') {
-    $asset = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
+    $asset = $this->getMock('Drupal\Core\Asset\FileAsset', array(), array(), '', FALSE);
     $asset->expects($this->any())
       ->method('getAssetType')
       ->will($this->returnValue($type));
@@ -54,7 +54,7 @@ abstract class AssetUnitTest extends UnitTestCase {
    * @return AssetMetadataBag
    */
   public function createStubAssetMetadata($type = 'css', $values = array()) {
-    $stub = $this->getMockBuilder('Drupal\\Core\\Asset\\Metadata\\AssetMetadataBag')
+    $stub = $this->getMockBuilder('Drupal\Core\Asset\Metadata\AssetMetadataBag')
       ->setConstructorArgs(array($type, $values))
       ->getMock();
 
@@ -76,7 +76,7 @@ abstract class AssetUnitTest extends UnitTestCase {
    */
   public function getAggregate($defaults = array()) {
     $mockmeta = $this->createStubAssetMetadata();
-    return $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Aggregate\\AssetAggregate', array($mockmeta));
+    return $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AssetAggregate', array($mockmeta));
   }
 
 }

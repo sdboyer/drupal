@@ -53,8 +53,8 @@ class AssetCollectorTest extends AssetUnitTest {
    * Tests that constructor-injected params end up in the right place.
    */
   public function testConstructorInjection() {
-    $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
-    $collection = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetCollection');
+    $factory = $this->getMock('Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory');
+    $collection = $this->getMock('Drupal\Core\Asset\Collection\AssetCollection');
 
     $collector = new AssetCollector($collection, $factory);
 
@@ -74,7 +74,7 @@ class AssetCollectorTest extends AssetUnitTest {
   public function testDefaultPropagation() {
     // Test that defaults are correctly applied by the factory.
     $meta = new AssetMetadataBag('css', array('every_page' => TRUE, 'group' => CSS_AGGREGATE_THEME));
-    $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
+    $factory = $this->getMock('Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory');
     $factory->expects($this->once())
       ->method('createCssMetadata')
       ->will($this->returnValue($meta));
@@ -168,7 +168,7 @@ class AssetCollectorTest extends AssetUnitTest {
    */
   public function testLockingPreventsSettingDefaults() {
     $this->collector->lock($this);
-    $this->collector->setMetadataFactory($this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory'));
+    $this->collector->setMetadataFactory($this->getMock('Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory'));
   }
 
   /**
@@ -202,7 +202,7 @@ class AssetCollectorTest extends AssetUnitTest {
     $this->assertEquals($default_factory->createCssMetadata('file', 'foo/bar.css'), $this->collector->getMetadataDefaults('css', 'file', 'foo/bar.css'));
 
     $changed_css = new AssetMetadataBag('css', array('foo' => 'bar', 'every_page' => TRUE));
-    $factory = $this->getMock('Drupal\\Core\\Asset\\Metadata\\DefaultAssetMetadataFactory');
+    $factory = $this->getMock('Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory');
     $factory->expects($this->exactly(2))
       ->method('createCssMetadata')
       ->will($this->returnValue(clone $changed_css));

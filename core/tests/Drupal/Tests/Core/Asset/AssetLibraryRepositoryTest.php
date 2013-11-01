@@ -55,7 +55,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
       ->with('library_info')
       ->will($this->returnValue(array('stub1', 'stub2')));
 
-    $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryFactory', array(), array($module_handler));
+    $factory = $this->getMock('Drupal\Core\Asset\Factory\AssetLibraryFactory', array(), array($module_handler));
     return new AssetLibraryRepository($factory);
   }
 
@@ -65,7 +65,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
    */
   public function testSet() {
     $repository = $this->createAssetLibraryRepository();
-    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
     $repository->set('foo0_qux/bar0.baz', $library);
 
     $this->assertAttributeContains($library, 'libraries', $repository);
@@ -77,7 +77,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
    */
   public function testSetNoSlash() {
     $repository = $this->createAssetLibraryRepository();
-    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
 
     $repository->set('foo0_quxbar0.baz', $library);
   }
@@ -88,7 +88,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
    */
   public function testSetTooManySlashes() {
     $repository = $this->createAssetLibraryRepository();
-    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
 
     $repository->set('foo0_qux//bar0.baz', $library);
   }
@@ -99,7 +99,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
    */
   public function testSetInvalidKeyChars() {
     $repository = $this->createAssetLibraryRepository();
-    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
 
     $repository->set("\$∫≤:ˆ\"'\n\t\r", $library);
   }
@@ -110,7 +110,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
    */
   public function testHas() {
     $repository = $this->createAssetLibraryRepository();
-    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
 
     $this->assertFalse($repository->has('foo/bar'));
 
@@ -124,7 +124,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
    */
   public function testGetNames() {
     $repository = $this->createAssetLibraryRepository();
-    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
 
     $repository->set('foo/bar', $library);
     $repository->set('baz/bing', $library);
@@ -137,8 +137,8 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
    * @covers ::get
    */
   public function testGet() {
-    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
-    $factory = $this->getMock('\\Drupal\\Core\\Asset\\Factory\\AssetLibraryFactory', array(), array(), '', FALSE);
+    $library = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
+    $factory = $this->getMock('Drupal\Core\Asset\Factory\AssetLibraryFactory', array(), array(), '', FALSE);
     $factory->expects($this->once())
       ->method('getLibrary')
       ->with($this->equalTo('foo/bar'))
@@ -166,7 +166,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
    */
   public function testClear() {
     $repository = $this->createAssetLibraryRepository();
-    $library = $this->getMock('\\Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
 
     $repository->set('foo/bar', $library);
     $this->assertAttributeContains($library, 'libraries', $repository);
@@ -188,7 +188,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
     $incompatible_dep = $this->createStubFileAsset('js');
     $lib_dep = $this->createStubFileAsset();
 
-    $main_asset = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
+    $main_asset = $this->getMock('Drupal\Core\Asset\FileAsset', array(), array(), '', FALSE);
     $main_asset->expects($this->exactly(2))
       ->method('getAssetType')
       ->will($this->returnValue('css'));
@@ -201,7 +201,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
     $main_asset->expects($this->once())
       ->method('after')->with($compatible_dep);
 
-    $library1 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library1 = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
     $library1->expects($this->once())
       ->method('hasDependencies')
       ->will($this->returnValue(TRUE));
@@ -217,14 +217,14 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
       ->method('getIterator')
       ->will($this->returnValue($it));
 
-    $library2 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library2 = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
     $library2->expects($this->once())
       ->method('getIterator')
       ->will($this->returnValue(new \ArrayIterator(array())));
     $library2->expects($this->never())
       ->method('hasDependencies');
 
-    $library3 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library3 = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
     $library3->expects($this->once())
       ->method('getIterator')
       ->will($this->returnValue(new \ArrayIterator(array($lib_dep))));
@@ -232,7 +232,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
       ->method('hasDependencies')
       ->will($this->returnValue(array('qux/quark')));
 
-    $library4 = $this->getMock('Drupal\\Core\\Asset\\Collection\\AssetLibrary');
+    $library4 = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
 
     $repository->set('foo/bar', $library1);
     $repository->set('foo/baz', $library2);

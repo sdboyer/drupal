@@ -32,7 +32,7 @@ class AsseticAdapterAssetTest extends UnitTestCase {
   }
 
   public function setUp() {
-    $this->mock = $this->getMockForAbstractClass('Drupal\\Core\\Asset\\AsseticAdapterAsset');
+    $this->mock = $this->getMockForAbstractClass('Drupal\Core\Asset\AsseticAdapterAsset');
   }
 
   /**

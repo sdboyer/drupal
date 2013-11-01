@@ -48,7 +48,7 @@ class AssetGraphTest extends AssetUnitTest {
    */
   public function createBasicAssetMock($id = 'foo') {
     $mockmeta = $this->createStubAssetMetadata();
-    $mock = $this->getMockBuilder('\\Drupal\\Core\\Asset\\BaseAsset')
+    $mock = $this->getMockBuilder('Drupal\Core\Asset\BaseAsset')
       ->setConstructorArgs(array($mockmeta))
       ->getMock();
 
@@ -133,7 +133,7 @@ class AssetGraphTest extends AssetUnitTest {
    */
   public function testAddConnectedVertices() {
     $mockmeta = $this->createStubAssetMetadata();
-    $foo = $this->getMockBuilder('\\Drupal\\Core\\Asset\\BaseAsset')
+    $foo = $this->getMockBuilder('Drupal\Core\Asset\BaseAsset')
       ->setConstructorArgs(array($mockmeta))
       ->getMock();
 
@@ -177,7 +177,7 @@ class AssetGraphTest extends AssetUnitTest {
     // Now add another vertex with sequencing info that targets already-inserted
     // vertices.
 
-    $qux = $this->getMockBuilder('\\Drupal\\Core\\Asset\\BaseAsset')
+    $qux = $this->getMockBuilder('Drupal\Core\Asset\BaseAsset')
       ->setConstructorArgs(array($mockmeta))
       ->getMock();
 
@@ -213,7 +213,7 @@ class AssetGraphTest extends AssetUnitTest {
 
   public function testTranspose() {
     $mockmeta = $this->createStubAssetMetadata();
-    $foo = $this->getMockBuilder('\\Drupal\\Core\\Asset\\BaseAsset')
+    $foo = $this->getMockBuilder('Drupal\Core\Asset\BaseAsset')
       ->setConstructorArgs(array($mockmeta))
       ->getMock();
 
