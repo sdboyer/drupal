@@ -18,7 +18,7 @@ interface DependencyInterface extends RelativePositionInterface {
   /**
    * Indicates whether this asset has one or more library dependencies.
    *
-   * @return boolean
+   * @return bool
    */
   public function hasDependencies();
 

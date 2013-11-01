@@ -7,10 +7,17 @@
 
 namespace Drupal\Core\Asset\Collection;
 
+use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Exception\FrozenObjectException;
 
+/**
+ * An asset library is a named collection of assets.
+ *
+ * The primary role of an asset library is to be declared as a dependency by
+ * other assets (including assets declared by other libraries).
+ */
 class AssetLibrary extends AssetCollection implements DependencyInterface {
 
   /**
@@ -123,6 +130,20 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
   /**
    * {@inheritdoc}
    */
+  public function addDependency($key) {
+    $this->attemptWrite(__METHOD__);
+    if (!is_string($key) || substr_count($key, '/') !== 1) {
+      throw new \InvalidArgumentException('Dependencies must be expressed as a string key identifying the depended-upon library.');
+    }
+
+    // The library key is stored as the key for cheap deduping.
+    $this->dependencies[$key] = TRUE;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasDependencies() {
     return !empty($this->dependencies);
   }
@@ -130,15 +151,8 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
   /**
    * {@inheritdoc}
    */
-  public function addDependency($key) {
-    $this->attemptWrite(__METHOD__);
-    if (!is_string($key)) {
-      throw new \InvalidArgumentException('Dependencies must be expressed as a string key identifying the depended-upon library.');
-    }
-
-    // The library key is stored as the key for cheap deduping.
-    $this->dependencies[$key] = TRUE;
-    return $this;
+  public function getDependencyInfo() {
+    return array_keys($this->dependencies);
   }
 
   /**
@@ -153,22 +167,12 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDependencyInfo() {
-    return array_keys($this->dependencies);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function before($asset) {
-    $this->successors[] = $asset;
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function after($asset) {
+    $this->attemptWrite(__METHOD__);
+    if (!($asset instanceof AssetInterface || is_string($asset))) {
+      throw new \InvalidArgumentException('Ordering information must be declared using either an asset string id or the full AssetInterface object.');
+    }
+
     $this->predecessors[] = $asset;
     return $this;
   }
@@ -176,8 +180,44 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
   /**
    * {@inheritdoc}
    */
+  public function hasPredecessors() {
+    return !empty($this->predecessors);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPredecessors() {
     return $this->predecessors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearPredecessors() {
+    $this->attemptWrite(__METHOD__);
+    $this->predecessors = array();
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function before($asset) {
+    $this->attemptWrite(__METHOD__);
+    if (!($asset instanceof AssetInterface || is_string($asset))) {
+      throw new \InvalidArgumentException('Ordering information must be declared using either an asset string id or the full AssetInterface object.');
+    }
+
+    $this->successors[] = $asset;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasSuccessors() {
+    return !empty($this->successors);
   }
 
   /**
@@ -191,15 +231,8 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    * {@inheritdoc}
    */
   public function clearSuccessors() {
+    $this->attemptWrite(__METHOD__);
     $this->successors = array();
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function clearPredecessors() {
-    $this->predecessors = array();
     return $this;
   }
 

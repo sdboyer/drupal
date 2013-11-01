@@ -67,15 +67,8 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   /**
    * {@inheritdoc}
    */
-  public function hasDependencies() {
-    return !empty($this->dependencies);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function addDependency($key) {
-    if (!is_string($key)) {
+    if (!is_string($key) || substr_count($key, '/') !== 1) {
       throw new \InvalidArgumentException('Dependencies must be expressed as a string key identifying the depended-upon library.');
     }
 
@@ -87,9 +80,8 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   /**
    * {@inheritdoc}
    */
-  public function clearDependencies() {
-    $this->dependencies = array();
-    return $this;
+  public function hasDependencies() {
+    return !empty($this->dependencies);
   }
 
   /**
@@ -102,12 +94,8 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   /**
    * {@inheritdoc}
    */
-  public function before($asset) {
-    if (!($asset instanceof AssetInterface || is_string($asset))) {
-      throw new \InvalidArgumentException('Ordering information must be declared using either an asset string id or the full AssetInterface object.');
-    }
-
-    $this->successors[] = $asset;
+  public function clearDependencies() {
+    $this->dependencies = array();
     return $this;
   }
 
@@ -126,8 +114,42 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
   /**
    * {@inheritdoc}
    */
+  public function hasPredecessors() {
+    return !empty($this->predecessors);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPredecessors() {
     return $this->predecessors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearPredecessors() {
+    $this->predecessors = array();
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function before($asset) {
+    if (!($asset instanceof AssetInterface || is_string($asset))) {
+      throw new \InvalidArgumentException('Ordering information must be declared using either an asset string id or the full AssetInterface object.');
+    }
+
+    $this->successors[] = $asset;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasSuccessors() {
+    return !empty($this->successors);
   }
 
   /**
@@ -145,11 +167,5 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
     return $this;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function clearPredecessors() {
-    $this->predecessors = array();
-    return $this;
-  }
 }
+
