@@ -12,7 +12,7 @@ use Drupal\Core\Asset\ExternalAsset;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\FileAsset;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
-use Drupal\Core\Asset\AssetGraph;
+use Drupal\Core\Asset\GroupSort\AssetGraph;
 use Gliph\Traversal\DepthFirst;
 use Drupal\Core\Asset\StringAsset;
 

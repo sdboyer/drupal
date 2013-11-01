@@ -5,12 +5,13 @@
  * Contains \Drupal\Core\Asset\CssCollectionAggregator.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Optimize;
 
 use Drupal\Core\Asset\Aggregate\AssetAggregate;
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\GroupSort\AssetGroupSorterInterface;
+use Drupal\Core\Asset\Optimize\AssetCollectionAggregatorInterface;
 
 /**
  * Aggregates CSS assets.

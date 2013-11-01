@@ -2,23 +2,27 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\CssCollectionOptimizerNouveaux.
+ * Contains \Drupal\Core\Asset\CssCollectionOptimizer.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Optimize;
 
+use Drupal\Core\Asset\Optimize\AssetCollectionAggregatorInterface;
+use Drupal\Core\Asset\AssetDumperInterface;
+use Drupal\Core\Asset\AssetOptimizerInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
+use Drupal\Core\Asset\Optimize\AssetCollectionOptimizerInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 
 /**
  * Optimizes a collection of CSS assets.
  */
-class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerNouveauxInterface {
+class CssCollectionOptimizer implements AssetCollectionOptimizerInterface {
 
   /**
    * A CSS asset aggregator.
    *
-   * @var \Drupal\Core\Asset\AssetCollectionAggregatorInterface
+   * @var \Drupal\Core\Asset\Optimize\AssetCollectionAggregatorInterface
    */
   protected $aggregator;
 
@@ -44,7 +48,7 @@ class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerNouveaux
   protected $state;
 
   /**
-   * Constructs a CssCollectionOptimizerNouveaux.
+   * Constructs a CssCollectionOptimizer.
    *
    * @param \Drupal\Core\Asset\AssetCollectionAggregatorInterface
    *   The aggregator for CSS assets.
@@ -79,6 +83,8 @@ class CssCollectionOptimizerNouveaux implements AssetCollectionOptimizerNouveaux
           $this->optimizer->optimize($asset);
           // TODO refactor dumper to not need second param
           $this->dumper->dump($asset, 'css');
+
+          $map[$id] = $asset->getTargetPath();
         }
       }
     }

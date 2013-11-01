@@ -7,7 +7,7 @@
 
 namespace Drupal\Core\Asset\GroupSort;
 
-use Drupal\Core\Asset\AssetGraph;
+use Drupal\Core\Asset\GroupSort\AssetGraph;
 use Gliph\Traversal\DepthFirst;
 use Gliph\Visitor\DepthFirstBasicVisitor;
 

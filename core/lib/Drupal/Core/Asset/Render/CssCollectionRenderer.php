@@ -2,16 +2,17 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\CssCollectionRendererNouveaux.
+ * Contains \Drupal\Core\Asset\CssCollectionRenderer.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Render;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Asset\Aggregate\AssetAggregate;
 use Drupal\Core\Asset\Aggregate\AssetAggregateInterface;
-use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
+use Drupal\Core\Asset\ExternalAsset;
+use Drupal\Core\Asset\FileAsset;
 use Drupal\Core\Asset\GroupSort\AssetGroupSorterInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\Core\Asset\StringAsset;
@@ -19,7 +20,7 @@ use Drupal\Core\Asset\StringAsset;
 /**
  * Renders a collection of CSS assets into a set of HTML tags.
  */
-class CssCollectionRendererNouveaux {
+class CssCollectionRenderer implements AssetCollectionRendererInterface {
 
   /**
    * The state key/value store.

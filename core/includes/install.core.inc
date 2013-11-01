@@ -477,7 +477,7 @@ function install_begin_request(&$install_state) {
     $container->register('asset.library_repository', 'Drupal\Core\Asset\AssetLibraryRepository')
       ->addArgument(new Reference('asset.library_factory'));
     $container->register('asset.css.graph_sorter', 'Drupal\Core\Asset\GroupSort\CssGraphSorter');
-    $container->register('asset.css.collection_renderer_nv', 'Drupal\Core\Asset\CssCollectionRendererNouveaux')
+    $container->register('asset.css.collection_renderer_nv', 'Drupal\Core\Asset\Optimize\CssCollectionRenderer')
       ->addArgument(new Reference('state'))
       ->addArgument(new Reference('asset.css.graph_sorter'));
 

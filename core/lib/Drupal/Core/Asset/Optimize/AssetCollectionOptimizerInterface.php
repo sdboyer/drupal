@@ -2,16 +2,16 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\AssetCollectionOptimizerNouveauxInterface.
+ * Contains \Drupal\Core\Asset\AssetCollectionOptimizerInterface.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Optimize;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 
 /**
  * Interface for a service that optimizes an asset collection.
  */
-interface AssetCollectionOptimizerNouveauxInterface {
+interface AssetCollectionOptimizerInterface {
 
   /**
    * Optimizes a collection of assets.

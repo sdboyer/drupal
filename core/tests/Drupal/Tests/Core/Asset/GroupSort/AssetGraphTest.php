@@ -5,10 +5,11 @@
  * Contains \Drupal\Tests\Core\Asset\AssetGraphTest.
  */
 
-namespace Drupal\Tests\Core\Asset;
+namespace Drupal\Tests\Core\Asset\GroupSort;
 
-use Drupal\Core\Asset\AssetGraph;
+use Drupal\Core\Asset\GroupSort\AssetGraph;
 use Drupal\Core\Asset\BaseAsset;
+use Drupal\Tests\Core\Asset\AssetUnitTest;
 use Drupal\Tests\UnitTestCase;
 
 /**

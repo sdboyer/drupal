@@ -5,7 +5,7 @@
  * Contains \Drupal\Core\Asset\AssetCollectionAggregatorInterface.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\Optimize;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 
 /**

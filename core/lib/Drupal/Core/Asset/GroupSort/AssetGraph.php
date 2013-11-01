@@ -5,7 +5,9 @@
  * Contains \Drupal\Core\Asset\AssetGraph.
  */
 
-namespace Drupal\Core\Asset;
+namespace Drupal\Core\Asset\GroupSort;
+use Drupal\Core\Asset\AssetInterface;
+use Drupal\Core\Asset\RelativePositionInterface;
 use Gliph\Exception\InvalidVertexTypeException;
 use Gliph\Graph\DirectedAdjacencyList;
 

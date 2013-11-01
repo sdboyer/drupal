@@ -9,7 +9,7 @@ use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Tags;
 use Drupal\Component\Utility\Url;
 use Drupal\Component\Utility\Xss;
-use Drupal\Core\Asset\CssCollectionOptimizerNouveaux;
+use Drupal\Core\Asset\Optimize\CssCollectionOptimizer;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\Language;
 use Symfony\Component\HttpFoundation\Response;
