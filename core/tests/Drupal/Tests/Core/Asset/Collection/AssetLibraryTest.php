@@ -7,6 +7,7 @@
 namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetLibrary;
+use Drupal\Core\Asset\Exception\FrozenObjectException;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
@@ -29,6 +30,24 @@ class AssetLibraryTest extends AssetUnitTest {
       ->setVersion('1.2.3')
       ->setWebsite('http://foo.bar');
     return $library;
+  }
+
+  /**
+   * These simply don't merit individual tests.
+   *
+   * @covers ::setWebsite
+   * @covers ::getWebsite
+   * @covers ::setVersion
+   * @covers ::getVersion
+   * @covers ::setTitle
+   * @covers ::getTitle
+   */
+  public function testMetadataProps() {
+    $library = $this->getLibraryFixture();
+
+    $this->assertEquals('foo', $library->getTitle());
+    $this->assertEquals('1.2.3', $library->getVersion());
+    $this->assertEquals('http://foo.bar', $library->getWebsite());
   }
 
   /**
@@ -205,40 +224,37 @@ class AssetLibraryTest extends AssetUnitTest {
   }
 
   /**
+   * Tests that all methods that should be disabled by freezing the collection
+   * correctly trigger an exception.
+   *
    * @covers ::freeze
    * @covers ::isFrozen
+   * @covers ::attemptWrite
    */
-  public function testFrozenNonwriteability() {
-    $library = $this->getLibraryFixture();
+  public function testExceptionOnWriteWhenFrozen() {
+    $library = new AssetLibrary();
+    $write_protected = array(
+      'setTitle' => array('foo'),
+      'setVersion' => array('foo'),
+      'setWebsite' => array('foo'),
+      'addDependency' => array('foo/bar'),
+      'clearDependencies' => array(function() {}),
+      'after' => array('foo'),
+      'clearPredecessors' => array(),
+      'before' => array('foo'),
+      'clearSuccessors' => array(),
+    );
+
+    // No exception before freeze
+    list($method, $args) = each($write_protected);
+    call_user_func_array(array($library, $method), $args);
+
     $library->freeze();
-    try {
-      $library->setTitle('bar');
-      $this->fail('No exception thrown when attempting to set a new title on a frozen library.');
+    foreach ($write_protected as $method => $args) {
+      try {
+        call_user_func_array(array($library, $method), $args);
+        $this->fail(sprintf('Was able to run write method "%s" on frozen AssetLibrary', $method));
+      } catch (FrozenObjectException $e) {}
     }
-    catch (\LogicException $e) {}
-
-    try {
-      $library->setVersion('2.3.4');
-      $this->fail('No exception thrown when attempting to set a new version on a frozen library.');
-    }
-    catch (\LogicException $e) {}
-
-    try {
-      $library->setWebsite('http://bar.baz');
-      $this->fail('No exception thrown when attempting to set a new website on a frozen library.');
-    }
-    catch (\LogicException $e) {}
-
-    try {
-      $library->addDependency('bing', 'bang');
-      $this->fail('No exception thrown when attempting to add a new dependency on a frozen library.');
-    }
-    catch (\LogicException $e) {}
-
-    try {
-      $library->clearDependencies();
-      $this->fail('No exception thrown when attempting to clear dependencies from a frozen library.');
-    }
-    catch (\LogicException $e) {}
   }
 }

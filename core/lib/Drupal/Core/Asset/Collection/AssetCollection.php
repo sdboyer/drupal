@@ -14,7 +14,6 @@ use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
 use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Exception\FrozenObjectException;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
-use Drupal\Core\Asset\RelativePositionInterface;
 
 /**
  * A container for assets.

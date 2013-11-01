@@ -4,7 +4,6 @@
  * Contains Drupal\Tests\Core\Asset\AssetCollectionTest.
  */
 
-
 namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetCollection;
@@ -211,18 +210,10 @@ class AssetCollectionTest extends AssetUnitTest {
   }
 
   /**
-   * @covers ::freeze
-   */
-  public function testFreeze() {
-    $this->assertSame($this->collection, $this->collection->freeze());
-    $this->assertAttributeEquals(TRUE, 'frozen', $this->collection);
-  }
-
-  /**
    * Tests that all methods that should be disabled by freezing the collection
    * correctly trigger an exception.
    *
-   * @depends testFreeze
+   * @covers ::freeze
    * @covers ::isFrozen
    * @covers ::attemptWrite
    */
@@ -240,6 +231,10 @@ class AssetCollectionTest extends AssetUnitTest {
       'clearUnresolvedLibraries' => array(),
       'resolveLibraries' => array($this->getMock('Drupal\\Core\\Asset\\AssetLibraryRepository', array(), array(), '', FALSE)),
     );
+
+    // No exception before freeze
+    list($method, $args) = each($write_protected);
+    call_user_func_array(array($this->collection, $method), $args);
 
     $this->collection->freeze();
     foreach ($write_protected as $method => $args) {
