@@ -38,6 +38,10 @@ class BasicAssetCollectionTest extends AssetUnitTest {
   /**
    * Method to return the appropriate collection type for the current test.
    *
+   * If demonstrating adherence to Liskov is desired, this test class can be
+   * extended and this method swapped out to provide the correct
+   * AssetCollectionBasicInterface object for testing.
+   *
    * @return AssetCollectionBasicInterface
    */
   public function getCollection() {
@@ -88,20 +92,6 @@ class BasicAssetCollectionTest extends AssetUnitTest {
   }
 
   /**
-   * @depends testAdd
-   * @depends testEach
-   * @covers ::__construct
-   */
-  public function testCreateWithAssets() {
-    $asset1 = $this->createStubFileAsset();
-    $asset2 = $this->createStubFileAsset();
-    $collection = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Collection\\BasicAssetCollection', array(array($asset1, $asset2)));
-
-    $this->assertContains($asset1, $collection);
-    $this->assertContains($asset2, $collection);
-  }
-
-  /**
    * @expectedException \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
    * @covers ::add
    */
@@ -128,6 +118,20 @@ class BasicAssetCollectionTest extends AssetUnitTest {
 
   /**
    * @depends testAdd
+   * @depends testEach
+   * @covers ::__construct
+   */
+  public function testCreateWithAssets() {
+    $asset1 = $this->createStubFileAsset();
+    $asset2 = $this->createStubFileAsset();
+    $collection = $this->getMockForAbstractClass('\\Drupal\\Core\\Asset\\Collection\\BasicAssetCollection', array(array($asset1, $asset2)));
+
+    $this->assertContains($asset1, $collection);
+    $this->assertContains($asset2, $collection);
+  }
+
+  /**
+   * @depends testAdd
    * @covers ::eachLeaf
    * @covers \Drupal\Core\Asset\Collection\Iterator\RecursiveBasicCollectionIterator
    */
@@ -139,30 +143,6 @@ class BasicAssetCollectionTest extends AssetUnitTest {
       $contained[] = $leaf;
     }
     $this->assertEquals(array($foo, $bar, $baz), $contained);
-  }
-
-  /**
-   * Tests that adding the same asset twice is disallowed.
-   *
-   * @depends testAdd
-   * @depends testCount
-   * @covers ::add
-   */
-  public function testDoubleAdd() {
-    $collection = $this->getCollection();
-    $asset = $this->createStubFileAsset();
-
-    $collection->add($asset);
-
-    // Test by object identity
-    $collection->add($asset);
-    $this->assertCount(1, $collection);
-
-    // Test by id
-    $asset2 = $this->createStubFileAsset('css', $asset->id());
-
-    $collection->add($asset2);
-    $this->assertCount(1, $collection);
   }
 
   /**
@@ -261,6 +241,58 @@ class BasicAssetCollectionTest extends AssetUnitTest {
 
     $this->assertTrue($collection->remove($nested_aggregate));
     $this->assertNotContains($nested_aggregate, $collection);
+  }
+
+  /**
+   * @depends testAdd
+   * @depends testRemove
+   * @covers ::count
+   */
+  public function testCount() {
+    $collection = $this->getCollection();
+    $this->assertCount(0, $collection);
+
+    $collection->add($this->getAggregate());
+    $this->assertCount(0, $collection);
+
+    $aggregate = $this->getAggregate();
+    $asset = $this->createStubFileAsset();
+    $aggregate->add($asset);
+    $collection->add($aggregate);
+    $this->assertCount(1, $collection);
+
+    $collection->remove($aggregate);
+    $this->assertCount(0, $collection);
+
+    $collection->add($asset);
+    $this->assertCount(1, $collection);
+
+    $collection->remove($asset);
+    $this->assertCount(0, $collection);
+  }
+
+  /**
+   * Tests that adding the same asset twice results in just one asset.
+   *
+   * @depends testAdd
+   * @depends testCount
+   * @covers ::add
+   */
+  public function testDoubleAdd() {
+    $collection = $this->getCollection();
+    $asset = $this->createStubFileAsset();
+
+    $collection->add($asset);
+
+    // Test by object identity
+    $collection->add($asset);
+    $this->assertCount(1, $collection);
+
+    // Test by id
+    $asset2 = $this->createStubFileAsset('css', $asset->id());
+
+    $collection->add($asset2);
+    $this->assertCount(1, $collection);
   }
 
   /**
@@ -398,34 +430,6 @@ class BasicAssetCollectionTest extends AssetUnitTest {
 
     $collection->remove($asset);
     $this->assertTrue($collection->isEmpty());
-  }
-
-  /**
-   * @depends testAdd
-   * @depends testRemove
-   * @covers ::count
-   */
-  public function testCount() {
-    $collection = $this->getCollection();
-    $this->assertCount(0, $collection);
-
-    $collection->add($this->getAggregate());
-    $this->assertCount(0, $collection);
-
-    $aggregate = $this->getAggregate();
-    $asset = $this->createStubFileAsset();
-    $aggregate->add($asset);
-    $collection->add($aggregate);
-    $this->assertCount(1, $collection);
-
-    $collection->remove($aggregate);
-    $this->assertCount(0, $collection);
-
-    $collection->add($asset);
-    $this->assertCount(1, $collection);
-
-    $collection->remove($asset);
-    $this->assertCount(0, $collection);
   }
 
   /**

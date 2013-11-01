@@ -10,12 +10,13 @@ namespace Drupal\Tests\Core\Asset\Collection;
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
 use Drupal\Core\Asset\Exception\FrozenObjectException;
+use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
  * @coversDefaultClass \Drupal\Core\Asset\Collection\AssetCollection
  * @group Asset
  */
-class AssetCollectionTest extends BasicAssetCollectionTest {
+class AssetCollectionTest extends AssetUnitTest {
 
   /**
    * @var AssetCollection
@@ -56,30 +57,6 @@ class AssetCollectionTest extends BasicAssetCollectionTest {
 
     $this->assertContains($asset1, $this->collection);
     $this->assertContains($asset2, $this->collection);
-  }
-
-  /**
-   * Tests that adding the same asset twice results in just one asset.
-   *
-   * @depends testAdd
-   * @covers ::add
-   */
-  public function testDoubleAdd() {
-    $asset = $this->createStubFileAsset();
-    $this->collection->add($asset);
-
-    // Test by object identity
-    $this->collection->add($asset);
-    $this->assertCount(1, $this->collection);
-
-    // Test by id
-    $asset2 = $this->getMock('Drupal\\Core\\Asset\\FileAsset', array(), array(), '', FALSE);
-    $asset2->expects($this->once())
-      ->method('id')
-      ->will($this->returnValue($asset->id()));
-
-    $this->collection->add($asset2);
-    $this->assertCount(1, $this->collection);
   }
 
   /**

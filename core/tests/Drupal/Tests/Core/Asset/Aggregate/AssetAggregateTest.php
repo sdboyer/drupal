@@ -10,13 +10,14 @@ namespace Drupal\Tests\Core\Asset\Aggregate;
 use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
 use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
+use Drupal\Tests\Core\Asset\AssetUnitTest;
 use Drupal\Tests\Core\Asset\Collection\BasicAssetCollectionTest;
 
 /**
  * @coversDefaultClass \Drupal\Core\Asset\Aggregate\AssetAggregate
  * @group Asset
  */
-class AssetAggregateTest extends BasicAssetCollectionTest {
+class AssetAggregateTest extends AssetUnitTest {
 
   public static function getInfo() {
     return array(
