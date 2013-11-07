@@ -197,7 +197,7 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
       ->will($this->returnValue(TRUE));
     $main_asset->expects($this->exactly(2))
       ->method('getDependencyInfo')
-      ->will($this->returnValue(array('foo/bar')));
+      ->will($this->returnValue(array('foo/bar', 'foo/baz')));
     $main_asset->expects($this->once())
       ->method('after')->with($compatible_dep);
 
@@ -208,12 +208,10 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
     $library1->expects($this->once())
       ->method('getDependencyInfo')
       ->will($this->returnValue(array('foo/baz', 'qux/bing')));
-    $library1->expects($this->once())
-      ->method('after')->with($lib_dep);
 
     $it = new \ArrayIterator(array($compatible_dep, $incompatible_dep));
 
-    $library1->expects($this->once())
+    $library1->expects($this->any())
       ->method('getIterator')
       ->will($this->returnValue($it));
 
@@ -221,29 +219,30 @@ class AssetLibraryRepositoryTest extends AssetUnitTest {
     $library2->expects($this->once())
       ->method('getIterator')
       ->will($this->returnValue(new \ArrayIterator(array())));
+    // Never to ensure resolution is non-recursive
     $library2->expects($this->never())
       ->method('hasDependencies');
 
     $library3 = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
-    $library3->expects($this->once())
+    // Never because !$library1 instanceof RelativePositionInterface
+    $library3->expects($this->never())
       ->method('getIterator')
       ->will($this->returnValue(new \ArrayIterator(array($lib_dep))));
+    // Never to ensure resolution is non-recursive
     $library3->expects($this->never())
       ->method('hasDependencies')
       ->will($this->returnValue(array('qux/quark')));
 
-    $library4 = $this->getMock('Drupal\Core\Asset\Collection\AssetLibrary');
 
     $repository->set('foo/bar', $library1);
     $repository->set('foo/baz', $library2);
     $repository->set('qux/bing', $library3);
-    $repository->set('qux/quark', $library4);
 
     // Ensure no auto-attach when the second param turns it off.
-    $this->assertEquals(array($library1), $repository->resolveDependencies($main_asset, FALSE));
+    $this->assertEquals(array($library1, $library2), $repository->resolveDependencies($main_asset, FALSE));
 
     // Now, let it auto-attach.
-    $this->assertEquals(array($library1), $repository->resolveDependencies($main_asset));
+    $this->assertEquals(array($library1, $library2), $repository->resolveDependencies($main_asset));
     // The correctness of $main_asset's predecessor data is guaranteed by the
     // method counts on the mock; no direct validation is necessary.
 

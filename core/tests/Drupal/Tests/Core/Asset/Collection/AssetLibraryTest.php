@@ -107,123 +107,6 @@ class AssetLibraryTest extends AssetUnitTest {
   }
 
   /**
-   * @covers ::after
-   */
-  public function testAfter() {
-    $library = $this->getLibraryFixture();
-    $dep = $this->createStubFileAsset();
-
-    $this->assertSame($library, $library->after('foo'));
-    $this->assertSame($library, $library->after($dep));
-
-    $this->assertAttributeContains($dep, 'predecessors', $library);
-
-    $invalid = array(0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
-
-    try {
-      foreach ($invalid as $val) {
-        $library->after($val);
-        $this->fail('Was able to create an ordering relationship with an inappropriate value.');
-      }
-    } catch (\InvalidArgumentException $e) {}
-  }
-
-  /**
-   * @depends testAfter
-   * @covers ::hasPredecessors
-   */
-  public function testHasPredecessors() {
-    $library = $this->getLibraryFixture();
-    $this->assertFalse($library->hasPredecessors());
-
-    $library->after('foo');
-    $this->assertTrue($library->hasPredecessors());
-  }
-
-  /**
-   * @depends testAfter
-   * @covers ::getPredecessors
-   */
-  public function testGetPredecessors() {
-    $library = $this->getLibraryFixture();
-    $this->assertEmpty($library->getPredecessors());
-
-    $library->after('foo');
-    $this->assertEquals(array('foo'), $library->getPredecessors());
-  }
-
-  /**
-   * @depends testAfter
-   * @depends testHasPredecessors
-   * @covers ::clearPredecessors
-   */
-  public function testClearPredecessors() {
-    $library = $this->getLibraryFixture();
-    $library->after('foo');
-
-    $this->assertSame($library, $library->clearPredecessors());
-    $this->assertFalse($library->hasPredecessors());
-  }
-
-  /**
-   * @covers ::before
-   */
-  public function testBefore() {
-    $library = $this->getLibraryFixture();
-    $dep = $this->createStubFileAsset();
-
-    $this->assertSame($library, $library->before('foo'));
-    $this->assertSame($library, $library->before($dep));
-
-    $this->assertAttributeContains($dep, 'successors', $library);
-
-    $invalid = array(0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
-
-    try {
-      foreach ($invalid as $val) {
-        $library->after($val);
-        $this->fail('Was able to create an ordering relationship with an inappropriate value.');
-      }
-    } catch (\InvalidArgumentException $e) {}
-  }
-
-  /**
-   * @depends testBefore
-   * @covers ::hasSuccessors
-   */
-  public function testHasSuccessors() {
-    $library = $this->getLibraryFixture();
-    $this->assertFalse($library->hasSuccessors());
-
-    $library->before('foo');
-    $this->assertTrue($library->hasSuccessors());
-  }
-
-  /**
-   * @depends testBefore
-   * @covers ::getSuccessors
-   */
-  public function testGetSuccessors() {
-    $library = $this->getLibraryFixture();
-    $this->assertEmpty($library->getSuccessors());
-
-    $library->before('foo');
-    $this->assertEquals(array('foo'), $library->getSuccessors());
-  }
-
-   /**
-   * @depends testBefore
-   * @covers ::clearSuccessors
-   */
-  public function testClearSuccessors() {
-    $library = $this->getLibraryFixture();
-    $library->before('foo');
-
-    $this->assertSame($library, $library->clearSuccessors());
-    $this->assertFalse($library->hasSuccessors());
-  }
-
-  /**
    * Tests that all methods that should be disabled by freezing the collection
    * correctly trigger an exception.
    *
@@ -239,10 +122,6 @@ class AssetLibraryTest extends AssetUnitTest {
       'setWebsite' => array('foo'),
       'addDependency' => array('foo/bar'),
       'clearDependencies' => array(function() {}),
-      'after' => array('foo'),
-      'clearPredecessors' => array(),
-      'before' => array('foo'),
-      'clearSuccessors' => array(),
     );
 
     // No exception before freeze
