@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset\GroupSort;
+
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\RelativePositionInterface;
 use Gliph\Exception\InvalidVertexTypeException;
@@ -28,7 +29,7 @@ use Gliph\Graph\DirectedAdjacencyList;
  *
  * For ordering, however, the full set must be inspected to determine whether or
  * not the other asset is already present. If it is, a directed edge can be
- * declared; if it is not.
+ * declared; if it is not, then ….
  *
  * This class eases the process of determining what to do with ordering
  * declarations by implementing a more sophisticated addVertex() mechanism,
@@ -36,6 +37,7 @@ use Gliph\Graph\DirectedAdjacencyList;
  * declarations that have not yet been realized.
  *
  * TODO add stuff that tracks data about unresolved successors/predecessors
+ * TODO finish the ordering paragraph
  */
 class AssetGraph extends DirectedAdjacencyList {
 
@@ -47,13 +49,13 @@ class AssetGraph extends DirectedAdjacencyList {
   /**
    * Creates a new AssetGraph object.
    *
-   * AssetGraphs are a specialization of DirectedAdjacencyGraph that is tailored
+   * AssetGraphs are a specialization of DirectedAdjacencyList that is tailored
    * to handling the ordering information carried by RelativePositionInterface
    * instances.
    *
    * @param bool $process
    *   Whether or not to automatically process positioning metadata as vertices
-   *   are added. This should be left as TRUE in most every user-facing case;
+   *   are added. This should be left as TRUE in almost every user-facing case;
    *   the primary use case for setting FALSE is the creation of a graph
    *   transpose.
    */
@@ -109,6 +111,9 @@ class AssetGraph extends DirectedAdjacencyList {
         // Normalize to id string.
         $predecessor = is_string($predecessor) ? $predecessor : $predecessor->id();
 
+        // Add a directed edge indicating that this asset vertex succeeds
+        // another asset vertex. Or, if that other asset does not yet have a
+        // vertex in the AssetGraph, set up a watch for it.
         if (isset($this->verticesById[$predecessor])) {
           $this->addDirectedEdge($vertex, $this->verticesById[$predecessor]);
         }
@@ -124,6 +129,9 @@ class AssetGraph extends DirectedAdjacencyList {
         // Normalize to id string.
         $successor = is_string($successor) ? $successor : $successor->id();
 
+        // Add a directed edge indicating that this asset vertex preceeds
+        // another asset vertex. Or, if that other asset does not yet have a
+        // vertex in the AssetGraph, set up a watch for it.
         if (isset($this->verticesById[$successor])) {
           $this->addDirectedEdge($this->verticesById[$successor], $vertex);
         }
@@ -166,4 +174,5 @@ class AssetGraph extends DirectedAdjacencyList {
 
     return $graph;
   }
+
 }

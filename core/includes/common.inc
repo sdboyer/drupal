@@ -1670,8 +1670,7 @@ function drupal_collect_assets($data, $options, $type = '') {
 
   $collection = ($collection instanceof \Drupal\Core\Asset\Collection\AssetCollection) ? $collection : new \Drupal\Core\Asset\Collection\AssetCollection();
   if (!$collector instanceof \Drupal\Core\Asset\Factory\AssetCollector) {
-    $collector = new \Drupal\Core\Asset\Factory\AssetCollector();
-    $collector->setCollection($collection);
+    $collector = new \Drupal\Core\Asset\Factory\AssetCollector($collection);
   }
 
   if ($data instanceof \Drupal\Core\Asset\AssetInterface) {
@@ -1689,6 +1688,8 @@ function drupal_collect_assets($data, $options, $type = '') {
     return;
   }
 
+  // TODO: simplify
+  // $type is 'css' or 'js', $options['type'] is 'file', 'external' or 'inline'.
   $collector->create($type, $options['type'], $data, $options);
 }
 
@@ -2589,7 +2590,7 @@ function drupal_pre_render_scripts($elements) {
  * @see drupal_render()
  */
 function drupal_process_attached($elements, $dependency_check = FALSE, $collect = TRUE) {
-  // TODO duplicates the start of drupal_collect_attached()...just for now.
+  // TODO duplicates the start of drupal_collect_assets()...just for now.
   $collection = &drupal_static('global_asset_collection', FALSE);
   $collector = &drupal_static('global_asset_collector', FALSE);
 

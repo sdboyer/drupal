@@ -19,11 +19,18 @@ abstract class AssetGraphSorter implements AssetGroupSorterInterface {
   /**
    * Creates a queue of starting vertices that will facilitate an ideal TSL.
    *
-   * @param AssetGraph $graph
+   * As a strategy, we assume that the source vertices (tops of the trees
+   * embedded in the graph) that have the greatest reach (and hence would result
+   * in the largest "asset groups") will be the best starting points for
+   * building asset groups: we assume they are more stable and yield the minimal
+   * number of asset groups overall.
+   *
+   * @param \Drupal\Core\Asset\AssetGraph $graph
    *   The graph from which to create a starting queue.
    *
    * @return \SplQueue $queue
-   *   A queue of vertices for traversal.
+   *   A queue of vertices for traversal, the first one being the one with the
+   *   greatest reach.
    */
   protected function createSourceQueue(AssetGraph $graph) {
     $reach_visitor = new DepthFirstBasicVisitor();

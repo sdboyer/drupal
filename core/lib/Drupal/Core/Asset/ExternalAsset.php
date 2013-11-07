@@ -14,22 +14,29 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 class ExternalAsset extends BaseAsset {
 
+  /**
+   * The URL of the asset.
+   *
+   * @var string
+   */
   protected $sourceUrl;
 
   /**
    * Creates a new external asset object.
    *
-   * @param AssetMetadataInterface $metadata
+   * @param \Drupal\Core\Asset\Metadata\AssetMetadataInterface $metadata
    *   The metadata object for the new external asset.
    * @param array $sourceUrl
    *   The URL at which the external asset lives.
-   * @param FilterInterface[] $filters
+   * @param \Assetic\Filter\FilterInterface[] $filters
    *   (optional) An array of FilterInterface objects to apply to this asset.
    *
    * @throws \InvalidArgumentException
    *   Thrown if an invalid URL is provided for $sourceUrl.
    */
   public function __construct(AssetMetadataInterface $metadata, $sourceUrl, $filters = array()) {
+    // Protocol- and root-relative URLs are not acceptable, because such an
+    // asset would not actually be external to this Drupal site.
     if (FALSE === strpos($sourceUrl, '://')) {
       throw new \InvalidArgumentException(sprintf('"%s" is not a valid URL.', $sourceUrl));
     }

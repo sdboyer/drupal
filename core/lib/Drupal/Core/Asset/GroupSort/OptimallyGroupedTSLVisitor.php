@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset\GroupSort;
+
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Gliph\Visitor\DepthFirstVisitorInterface;
 
@@ -107,10 +108,11 @@ class OptimallyGroupedTSLVisitor implements DepthFirstVisitorInterface {
   /**
    * Returns the TSL produced by a depth-first traversal.
    *
-   * @return AssetCollection
+   * @return \Drupal\Core\Asset\Collection\AssetCollection
    *   A topologically sorted list of vertices.
    */
   public function getTSL() {
     return $this->tsl;
   }
+
 }

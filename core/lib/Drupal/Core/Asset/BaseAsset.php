@@ -15,7 +15,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
  *
  * This is an amalgam of Assetic\Asset\BaseAsset (copied directly) with
  * implementations of the additional methods specified by Drupal's own
- * Drupal\Core\Asset\AssetInterface.
+ * \Drupal\Core\Asset\AssetInterface.
  *
  * The methods load() and getLastModified() are left undefined, although a
  * reusable doLoad() method is available to child classes.
@@ -27,11 +27,26 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    */
   protected $metadata;
 
+  /**
+   * The asset library's dependencies (on other asset libraries).
+   *
+   * @var array
+   */
   protected $dependencies = array();
 
-  protected $successors = array();
-
+  /**
+   * The asset library's predecing assets (not asset libraries!).
+   *
+   * @var array
+   */
   protected $predecessors = array();
+
+  /**
+   * The asset library's succeeding assets (not asset libraries!).
+   *
+   * @var array
+   */
+  protected $successors = array();
 
   public function __construct(AssetMetadataInterface $metadata, $filters = array(), $sourceRoot = NULL, $sourcePath = NULL) {
     $this->metadata = $metadata;

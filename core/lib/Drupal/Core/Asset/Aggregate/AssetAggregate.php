@@ -290,4 +290,5 @@ class AssetAggregate extends BasicAssetCollection implements \IteratorAggregate,
   public final function getValues() {
     throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'values' concept.");
   }
+
 }

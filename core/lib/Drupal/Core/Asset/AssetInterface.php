@@ -11,7 +11,7 @@ use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 
 /**
- * Represents a CSS or Javascript asset.
+ * Represents a CSS or JavaScript asset.
  *
  * This interface extends the AssetInterface provided by Assetic to facilitate
  * different behaviors by individual assets.
@@ -21,7 +21,7 @@ interface AssetInterface extends AsseticAssetInterface {
   /**
    * Returns the metadata bag for this asset.
    *
-   * @return AssetMetadataInterface
+   * @return \Drupal\Core\Asset\Metadata\AssetMetadataInterface
    */
   public function getMetadata();
 
@@ -29,9 +29,7 @@ interface AssetInterface extends AsseticAssetInterface {
    * Indicates whether or not this asset is eligible for preprocessing.
    *
    * Assets that are marked as not preprocessable will always be passed directly
-   * to the browser without aggregation or minification. Assets that are marked
-   * as eligible for preprocessing will be included in any broader aggregation
-   * logic that has been configured.
+   * to the browser without aggregation or minification.
    *
    * @return bool
    */
@@ -56,4 +54,5 @@ interface AssetInterface extends AsseticAssetInterface {
    * @return string
    */
   public function getAssetType();
+
 }

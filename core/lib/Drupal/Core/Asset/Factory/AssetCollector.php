@@ -5,6 +5,7 @@
  */
 
 namespace Drupal\Core\Asset\Factory;
+
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\Exception\LockedObjectException;
@@ -51,7 +52,7 @@ class AssetCollector implements AssetCollectorInterface {
   /**
    * The factory that creates metadata bags for assets.
    *
-   * @var MetadataFactoryInterface
+   * @var \Drupal\Core\Asset\Metadata\MetadataFactoryInterface
    */
   protected $metadataFactory;
 
@@ -61,7 +62,7 @@ class AssetCollector implements AssetCollectorInterface {
    * This is used to conveniently create sequencing relationships between CSS
    * assets as they pass through the collector.
    *
-   * @var AssetInterface
+   * @var \Drupal\Core\Asset\AssetInterface
    */
   protected $lastCss;
 
@@ -246,5 +247,5 @@ class AssetCollector implements AssetCollectorInterface {
 
     $this->metadataFactory = new DefaultAssetMetadataFactory();
   }
-}
 
+}

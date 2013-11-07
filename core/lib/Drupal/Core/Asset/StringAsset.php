@@ -29,11 +29,11 @@ class StringAsset extends BaseAsset {
   /**
    * Creates a new string asset object.
    *
-   * @param AssetMetadataInterface $metadata
+   * @param \Drupal\Core\Asset\Metadata\AssetMetadataInterface $metadata
    *   The metadata object for the new string asset.
    * @param string $content
-   *   The content of the new asset.
-   * @param FilterInterface[] $filters
+   *   The content of the new string asset.
+   * @param \Assetic\Filter\FilterInterface[] $filters
    *   (optional) An array of FilterInterface objects to apply to this asset.
    *
    * @throws \InvalidArgumentException
@@ -57,15 +57,25 @@ class StringAsset extends BaseAsset {
     return $this->id;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setLastModified($last_modified) {
     $this->lastModified = $last_modified;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getLastModified() {
     return $this->lastModified;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function load(FilterInterface $additionalFilter = NULL) {
     $this->doLoad($this->getContent(), $additionalFilter);
   }
+
 }

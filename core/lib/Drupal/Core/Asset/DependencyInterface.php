@@ -21,7 +21,7 @@ interface DependencyInterface {
   /**
    * Retrieve this asset's dependencies.
    *
-   * @return mixed
+   * @return array
    *   An array of dependencies if they exist,
    */
   public function getDependencyInfo();
@@ -30,11 +30,11 @@ interface DependencyInterface {
    * Add a dependency on a library for this asset.
    *
    * @param string $key
-   *   The string identifying the library. It should be two-part composite key,
-   *   slash-delimited, with the first part being the module owner and the
+   *   The string identifying the library. This should be a two-part composite
+   *   key, slash-delimited, with the first part being the module owner and the
    *   second part being the library name.
    *
-   * @return DependencyInterface
+   * @return \Drupal\Core\Asset\DependencyInterface
    *   The current DependencyInterface object.
    */
   public function addDependency($key);
@@ -42,11 +42,12 @@ interface DependencyInterface {
   /**
    * Clears (removes) all library dependencies for this asset.
    *
-   * This does not affect ordering data.
+   * This does not affect ordering (relative positioning) data.
    *
-   * @return DependencyInterface
+   * @return \Drupal\Core\Asset\DependencyInterface
    *   The current DependencyInterface object.
    */
   public function clearDependencies();
+
 }
 

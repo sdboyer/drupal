@@ -53,8 +53,8 @@ interface AssetCollectorInterface {
    *      A string containing data that defines the asset. Appropriate values vary
    *      depending on the source_type param:
    *      - 'file': the relative path to the file, or a stream wrapper URI.
-   *      - 'external': the absolute path to the external asset.
-   *      - 'string': a string containing valid CSS or Javascript to be injected
+   *      - 'external': the URL to the external asset.
+   *      - 'string': a string containing valid CSS or JavaScript to be injected
    *      directly onto the page.
    * @param array $options
    *      (optional) An array of metadata to explicitly set on the asset. These
@@ -68,6 +68,7 @@ interface AssetCollectorInterface {
    *      ordering purposes. Only applies to CSS. Note that passing FALSE will not
    *      prevent a CSS asset that is being created from automatically being
    *      after() the existing lastCss asset, if one exists. For that,
+   *      TODO finish this comment
    *
    * @see clearLastCss().
    *
@@ -214,13 +215,15 @@ interface AssetCollectorInterface {
   public function getMetadataDefaults($asset_type, $source_type, $data);
 
   /**
-   * Restores metadata default bags to their default state.
+   * Restores metadata factory to the default factory.
    *
-   * This simply creates new instances of CssMetadataBag and JsMetadataBag, as
-   * those classes have the normal defaults as hardmapped properties.
+   * This simply changes the metadata factory to
+   * \Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory, which will cause
+   * future create() calls to use the default metadata.
    *
-   * @throws LockedObjectException
+   * @throws \Drupal\Core\Asset\Exception\LockedObjectException
    *   Thrown if the incorrect key is provided.
    */
   public function restoreDefaults();
+
 }

@@ -94,7 +94,13 @@ class CssGraphSorter extends AssetGraphSorter {
       $optimal_lookup->attach($asset, $optimal[$k]);
     }
 
-    // First, transpose the graph in order to get an appropriate answer
+    // First, transpose the graph in order to get an appropriate answer.
+    // (In the AssetGraph, if asset A comes before asset B, a directed edge
+    // exists from B to A. By transposing the graph, all directed edges are
+    // reversed, so that a directed edge exists from A to B.
+    // A topological sort on a graph will provide a linear ordering of all
+    // vertices, in our example: "A, B". Without performing the transpose
+    // operation, we'd get "B, A", which is the inverse of what we need.)
     $transpose = $graph->transpose();
 
     // Create a queue of start vertices to prime the traversal.
@@ -108,4 +114,5 @@ class CssGraphSorter extends AssetGraphSorter {
     $final->reverse();
     return $final;
   }
+
 }

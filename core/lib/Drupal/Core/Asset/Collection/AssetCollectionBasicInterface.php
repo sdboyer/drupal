@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset\Collection;
+
 use Drupal\Core\Asset\AssetInterface;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
@@ -166,5 +167,6 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
    * @return \Traversable
    */
   public function eachLeaf();
+
 }
 

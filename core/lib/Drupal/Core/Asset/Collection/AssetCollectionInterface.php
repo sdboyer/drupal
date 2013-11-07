@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset\Collection;
+
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\AssetLibraryRepository;
 
@@ -21,15 +22,15 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *
    * If an asset is present in both collections, as identified by
    * AssetInterface::id(), the asset from the passed collection will
-   * supercede the asset in this collection.
+   * supersede the asset in this collection.
    *
-   * @param AssetCollectionInterface $collection
+   * @param \Drupal\Core\Asset\Collection\AssetCollectionInterface $collection
    *   The collection to merge.
    *
    * @param bool $freeze
    *   Whether to freeze the provided collection after merging. Defaults to TRUE.
    *
-   * @return AssetCollectionInterface
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    *   The current asset collection.
    */
   public function mergeCollection(AssetCollectionInterface $collection, $freeze = TRUE);
@@ -42,7 +43,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *
    * TODO put this on the basic interface so aggregates have it, too?
    *
-   * @return AssetCollectionInterface
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    *   The current asset collection.
    */
   public function freeze();
@@ -62,7 +63,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
   public function getCss();
 
   /**
-   * Returns all contained JS assets in a traversable form.
+   * Returns all contained JavaScript assets in a traversable form.
    *
    * @return \Traversable
    */
@@ -73,7 +74,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *
    * @param $callback
    *
-   * @return AssetCollectionInterface
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    *   The current asset collection.
    */
   public function uksort($callback);
@@ -81,7 +82,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
   /**
    * Sorts contained assets via ksort() on their ids.
    *
-   * @return AssetCollectionInterface
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    *   The current asset collection.
    */
   public function ksort();
@@ -89,7 +90,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
   /**
    * Reverses the sort order of the contained assets.
    *
-   * @return AssetCollectionInterface
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    *   The current asset collection.
    */
   public function reverse();
@@ -105,10 +106,10 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    *   slash-delimited, with the first part being the module owner and the
    *   second part being the library name.
    *
-   * @return AssetCollectionInterface
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    *   The current asset collection.
    *
-   * @see AssetCollectionInterface::resolveLibraries()
+   * @see \Drupal\Core\Asset\Collection\AssetCollectionInterface::resolveLibraries()
    */
   public function addUnresolvedLibrary($key);
 
@@ -131,7 +132,7 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
   /**
    * Empties the collection of its unresolved library keys.
    *
-   * @return AssetCollectionInterface
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    *   The current asset collection.
    */
   public function clearUnresolvedLibraries();
@@ -143,12 +144,13 @@ interface AssetCollectionInterface extends AssetCollectionBasicInterface {
    * directly to this collection, as well as those libraries included indirectly
    * via a contained asset's declared dependencies.
    *
-   * @param AssetLibraryRepository $repository
+   * @param \Drupal\Core\Asset\AssetLibraryRepository $repository
    *   The AssetLibraryRepository to use for resolving library keys into
    *   AssetLibrary objects.
    *
-   * @return AssetCollectionInterface
+   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
    *   The current asset collection.
    */
   public function resolveLibraries(AssetLibraryRepository $repository);
+
 }

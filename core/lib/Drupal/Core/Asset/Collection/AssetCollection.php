@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset\Collection;
+
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\AssetInterface;
@@ -227,7 +228,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
   }
 
   /**
-   * Checks if the asset library is frozen, throws an exception if it is.
+   * Checks if the asset collection is frozen, throws an exception if it is.
    *
    * @param string $method
    *   The name of the method that was originally called.
@@ -239,4 +240,5 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
       throw new FrozenObjectException(sprintf('AssetCollectionInterface::%s was called; writes cannot be performed on a frozen collection.', $method));
     }
   }
+
 }

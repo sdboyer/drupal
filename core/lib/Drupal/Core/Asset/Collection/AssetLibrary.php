@@ -49,8 +49,18 @@ class AssetLibrary extends AssetCollection implements DependencyInterface, Relat
    */
   protected $dependencies = array();
 
+  /**
+   * The asset library's predecing assets (not asset libraries!).
+   *
+   * @var array
+   */
   protected $predecessors = array();
 
+  /**
+   * The asset library's succeeding assets (not asset libraries!).
+   *
+   * @var array
+   */
   protected $successors = array();
 
   /**

@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset\Metadata;
+
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 /**
@@ -33,4 +34,5 @@ class AssetMetadataBag extends ParameterBag implements AssetMetadataInterface {
   public function getType() {
     return $this->type;
   }
+
 }

@@ -24,18 +24,18 @@ class FileAsset extends BaseAsset {
   /**
    * Creates a new file asset object.
    *
-   * @param AssetMetadataInterface $metadata
+   * @param \Drupal\Core\Asset\Metadata\AssetMetadataInterface $metadata
    *   The metadata object for the new file asset.
    * @param array $source
-   *   The path at which the external asset lives. This should be the path
-   *   relative to DRUPAL_ROOT, not an absolute path.
-   * @param FilterInterface[] $filters
+   *   The path at which the file asset lives. This should be the path relative
+   *   to DRUPAL_ROOT, not an absolute path.
+   * @param \Assetic\Filter\FilterInterface[] $filters
    *   (optional) An array of FilterInterface objects to apply to this asset.
    *
    * TODO https://drupal.org/node/1308152 would make $source MUCH clearer
    *
    * @throws \InvalidArgumentException
-   *   Thrown if an invalid URL is provided for $sourceUrl.
+   *   Thrown if an invalid URL is provided for $source.
    */
   public function __construct(AssetMetadataInterface $metadata, $source, $filters = array()) {
     if (!is_string($source)) {
@@ -78,4 +78,5 @@ class FileAsset extends BaseAsset {
 
     $this->doLoad(file_get_contents($this->source), $additionalFilter);
   }
+
 }

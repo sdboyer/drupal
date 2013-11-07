@@ -79,4 +79,5 @@ interface AssetMetadataInterface extends \Countable, \IteratorAggregate {
    * @return mixed
    */
   public function get($key);
+
 }

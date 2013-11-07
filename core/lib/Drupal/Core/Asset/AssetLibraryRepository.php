@@ -16,9 +16,9 @@ use Drupal\Core\Asset\Factory\AssetLibraryFactory;
 class AssetLibraryRepository {
 
   /**
-   * An array of loaded AssetLibrary objects.
+   * An array of loaded \Drupal\Core\Asset\Collection\AssetLibrary objects.
    *
-   * @var AssetLibrary[]
+   * @var \Drupal\Core\Asset\Collection\AssetLibrary[]
    */
   protected $libraries;
 
@@ -88,13 +88,13 @@ class AssetLibraryRepository {
   /**
    * Resolves declared dependencies into an array of library objects.
    *
-   * @param DependencyInterface $asset
+   * @param \Drupal\Core\Asset\DependencyInterface $asset
    *   The asset whose dependencies should be resolved.
    *
    * @param bool $attach
    *   Whether to automatically attach resolved dependencies to the given asset.
    *
-   * @return AssetLibrary[]
+   * @return \Drupal\Core\Asset\Collection\AssetLibrary[]
    *   An array of AssetLibraryInterface objects if any dependencies were found;
    *   otherwise, an empty array.
    */
@@ -125,7 +125,8 @@ class AssetLibraryRepository {
   /**
    * Returns an array of library names.
    *
-   * @return array An array of library names
+   * @return array
+   *   An array of library names.
    */
   public function getNames() {
     return array_keys($this->libraries);
@@ -137,4 +138,5 @@ class AssetLibraryRepository {
   public function clear() {
     $this->libraries = array();
   }
+
 }

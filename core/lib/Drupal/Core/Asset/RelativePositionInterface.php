@@ -7,7 +7,7 @@
 namespace Drupal\Core\Asset;
 
 /**
- * Describes an asset or asset-like object that can declare dependencies.
+ * Describes an asset or asset-like object that can declare relative positions.
  */
 interface RelativePositionInterface {
 
@@ -17,10 +17,10 @@ interface RelativePositionInterface {
    * Either the string identifier for the other asset, or the asset object
    * itself, should be provided.
    *
-   * @param string|AssetInterface $asset
+   * @param string|\Drupal\Core\Asset\AssetInterface $asset
    *   The asset to precede the current asset.
    *
-   * @return RelativePositionInterface
+   * @return \Drupal\Core\Asset\RelativePositionInterface
    *   The current RelativePositionInterface object.
    */
   public function after($asset);
@@ -46,7 +46,7 @@ interface RelativePositionInterface {
    *
    * This does not affect dependency data.
    *
-   * @return RelativePositionInterface
+   * @return \Drupal\Core\Asset\RelativePositionInterface
    *   The current RelativePositionInterface object.
    */
   public function clearPredecessors();
@@ -57,10 +57,10 @@ interface RelativePositionInterface {
    * Either the string identifier for the other asset, or the asset object
    * itself, should be provided.
    *
-   * @param string|AssetInterface $asset
+   * @param string|\Drupal\Core\Asset\AssetInterface $asset
    *   The asset to succeed the current asset.
    *
-   * @return RelativePositionInterface
+   * @return \Drupal\Core\Asset\RelativePositionInterface
    *   The current RelativePositionInterface object.
    */
   public function before($asset);
@@ -86,7 +86,7 @@ interface RelativePositionInterface {
    *
    * This does not affect dependency data.
    *
-   * @return RelativePositionInterface
+   * @return \Drupal\Core\Asset\RelativePositionInterface
    *   The current RelativePositionInterface object.
    */
   public function clearSuccessors();

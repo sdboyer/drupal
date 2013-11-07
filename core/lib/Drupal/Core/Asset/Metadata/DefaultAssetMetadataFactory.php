@@ -41,4 +41,5 @@ class DefaultAssetMetadataFactory implements MetadataFactoryInterface {
       'browsers' => array(),
     ));
   }
+
 }

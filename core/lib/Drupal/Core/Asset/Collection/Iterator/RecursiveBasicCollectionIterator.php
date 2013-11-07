@@ -21,4 +21,5 @@ class RecursiveBasicCollectionIterator extends \RecursiveArrayIterator {
   public function hasChildren() {
     return $this->current() instanceof AssetCollectionBasicInterface;
   }
+
 }

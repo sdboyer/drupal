@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Core\Asset\GroupSort;
+
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 
@@ -19,12 +20,12 @@ interface AssetGroupSorterInterface {
    *
    * Accounts for dependency and ordering metadata.
    *
-   * @param AssetCollectionInterface $collection
+   * @param \Drupal\Core\Asset\Collection\AssetCollectionInterface $collection
    *   The collection to group and sort.
    *
    * @return array
-   *   A sorted, linear list of assets that respects all necessary dependency
-   *   information.
+   *   A sorted, linear list of assets that respects all dependency and ordering
+   *   metadata.
    */
   public function groupAndSort(AssetCollectionInterface $collection);
 
@@ -34,7 +35,7 @@ interface AssetGroupSorterInterface {
    * Assets with the same grouping key are in alignment, meaning that they can
    * be safely aggregated together into a single, composite asset.
    *
-   * @param AssetInterface $asset
+   * @param \Drupal\Core\Asset\AssetInterface $asset
    *   The asset for which to produce a grouping key.
    *
    * @return string|FALSE
@@ -42,4 +43,5 @@ interface AssetGroupSorterInterface {
    *   ineligible for grouping.
    */
   public static function getGroupingKey(AssetInterface $asset);
+
 }
