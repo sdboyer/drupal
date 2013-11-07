@@ -16,28 +16,32 @@ use Gliph\Graph\DirectedAdjacencyList;
  * An extension of the DirectedAdjacencyGraph concept designed specifically for
  * Drupal's asset management use case.
  *
- * Drupal allows for two types of positioning declarations:
+ * Drupal allows for two types of ordering declarations:
  *
  *   - Dependencies, which guarantee that dependent asset must be present and
- *     that it must precede the asset declaring it as a dependency.
- *   - Ordering, which can guarantee that asset A will be either preceded or
+ *     that it must precede the asset declaring it as a dependency. Expressed by
+ *     methods on \Drupal\Core\Asset\DependencyInterface.
+ *   - Positioning, which can guarantee that asset A will be either preceded or
  *     succeeded by asset B, but does NOT guarantee that B will be present.
+ *     Expressed by methods on \Drupal\Core\Asset\RelativePositionInterface.
  *
- * The impact of a dependency can be calculated myopically (without knowledge of
- * the full set), as a dependency inherently guarantees the presence of the
- * other vertex in the set.
+ * The first, dependencies, are NOT dealt with by AssetGraph; dependency
+ * resolution requires collaboration with other fixed services. For that,
+ * @see \Drupal\Core\Asset\Collection\AssetCollection::resolveLibraries()
  *
- * For ordering, however, the full set must be inspected to determine whether or
- * not the other asset is already present. If it is, a directed edge can be
- * declared; if it is not, then ….
+ * AssetGraph deals only with positioning data. As asset vertices are added to
+ * the graph via addVertex(), AssetGraph checks their predecessor and successor
+ * lists. If an asset in either of those lists is already present in the graph,
+ * then AssetGraph will automatically create a directed edge between the two. If
+ * a vertex from those lists is not already present, then a 'watch' is
+ * created for it, such that if that vertex is added at a later time then the
+ * appropriate directed edge will be created automatically.
  *
- * This class eases the process of determining what to do with ordering
- * declarations by implementing a more sophisticated addVertex() mechanism,
- * which incrementally sets up (and triggers) watches for any ordering
- * declarations that have not yet been realized.
+ * This makes it much easier for calling code to construct the correct graph -
+ * it needs merely add all the asset vertices one by one, and the correct graph
+ * is guaranteed to be created.
  *
  * TODO add stuff that tracks data about unresolved successors/predecessors
- * TODO finish the ordering paragraph
  */
 class AssetGraph extends DirectedAdjacencyList {
 
