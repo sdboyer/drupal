@@ -181,35 +181,6 @@ class AssetCollectionTest extends AssetUnitTest {
   }
 
   /**
-   * @depends testAdd
-   * @covers ::mergeCollection
-   */
-  public function testMergeCollection() {
-    $coll2 = new AssetCollection();
-    $stub1 = $this->createStubFileAsset();
-    $stub2 = $this->createStubFileAsset();
-
-    $coll2->add($stub1);
-    $this->assertSame($this->collection, $this->collection->mergeCollection($coll2));
-
-    $this->assertContains($stub1, $this->collection);
-    $this->assertTrue($coll2->isFrozen());
-
-    $coll3 = new AssetCollection();
-    $coll3->add($stub1);
-    $coll3->add($stub2);
-    // Ensure no duplicates, and don't freeze merged bag
-    $this->assertSame($this->collection, $this->collection->mergeCollection($coll3, FALSE));
-
-    $contained = array(
-      $stub1->id() => $stub1,
-      $stub2->id() => $stub2,
-    );
-    $this->assertEquals($contained, $this->collection->all());
-    $this->assertFalse($coll3->isFrozen());
-  }
-
-  /**
    * Tests that all methods that should be disabled by freezing the collection
    * correctly trigger an exception.
    *
@@ -502,6 +473,42 @@ class AssetCollectionTest extends AssetUnitTest {
     );
 
     $this->assertEquals($expected, $this->collection->all());
+  }
+
+  /**
+   * @depends testAdd
+   * @depends testAddUnresolvedLibrary
+   * @depends testGetUnresolvedLibraries
+   * @covers ::mergeCollection
+   */
+  public function testMergeCollection() {
+    $coll2 = new AssetCollection();
+    $stub1 = $this->createStubFileAsset();
+    $stub2 = $this->createStubFileAsset();
+
+    $coll2->add($stub1);
+    $coll2->addUnresolvedLibrary('foo/bar');
+    // Assert same to check fluency
+    $this->assertSame($this->collection, $this->collection->mergeCollection($coll2));
+
+    $this->assertEquals(array('foo/bar'), $this->collection->getUnresolvedLibraries());
+    $this->assertContains($stub1, $this->collection);
+    $this->assertTrue($coll2->isFrozen());
+
+    $coll3 = new AssetCollection();
+    $coll3->add($stub1);
+    $coll3->add($stub2);
+    $coll3->addUnresolvedLibrary('foo/bar');
+    // Ensure no duplicates, and don't freeze merged bag
+    $this->collection->mergeCollection($coll3, FALSE);
+
+    $this->assertEquals(array('foo/bar'), $this->collection->getUnresolvedLibraries());
+    $contained = array(
+      $stub1->id() => $stub1,
+      $stub2->id() => $stub2,
+    );
+    $this->assertEquals($contained, $this->collection->all());
+    $this->assertFalse($coll3->isFrozen());
   }
 }
 

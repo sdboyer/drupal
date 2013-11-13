@@ -62,6 +62,11 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
       }
     }
 
+    foreach ($collection->getUnresolvedLibraries() as $library) {
+      // TODO just cheat and merge these in?
+      $this->addUnresolvedLibrary($library);
+    }
+
     if ($freeze) {
       $collection->freeze();
     }
