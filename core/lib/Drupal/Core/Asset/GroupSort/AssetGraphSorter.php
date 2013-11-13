@@ -16,6 +16,20 @@ use Gliph\Visitor\DepthFirstBasicVisitor;
  */
 abstract class AssetGraphSorter implements AssetGroupSorterInterface {
 
+  public function __construct() {
+    // By default, xdebug prevents a call stack depth of greater than 100
+    // function calls as a protection against recursion. The graph traversal
+    // used here utilizes a deep recursive walker that exceeds this limit in
+    // most cases - though typically not by much. So, if xdebug is enabled, we
+    // extend this call stack limit if it is less than 300. Exceeding a max
+    // stack depth of 300 would require there to be at least 90, but possibly as
+    // many as around 140, discrete css OR js assets (not combined). Even in the
+    // most complex of sites, such a high number is unlikely.
+    if (extension_loaded('xdebug') && ini_get('xdebug.max_nesting_level') < 300) {
+      ini_set('xdebug.max_nesting_level', 300);
+    }
+  }
+
   /**
    * Creates a queue of starting vertices that will facilitate an ideal TSL.
    *
@@ -25,7 +39,7 @@ abstract class AssetGraphSorter implements AssetGroupSorterInterface {
    * building asset groups: we assume they are more stable and yield the minimal
    * number of asset groups overall.
    *
-   * @param \Drupal\Core\Asset\AssetGraph $graph
+   * @param \Drupal\Core\Asset\GroupSort\AssetGraph $graph
    *   The graph from which to create a starting queue.
    *
    * @return \SplQueue $queue

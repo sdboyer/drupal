@@ -40,11 +40,11 @@ class StringAsset extends BaseAsset {
    *   Thrown if a non-string is provided as content.
    */
   public function __construct(AssetMetadataInterface $metadata, $content, $filters = array()) {
-    if (!is_string($content)) {
-      throw new \InvalidArgumentException('StringAsset requires a string for its content.');
+    if (!is_string($content) || empty($content)) {
+      throw new \InvalidArgumentException('StringAsset requires a non-empty string for its content.');
     }
 
-    $this->id= empty($content) ? Crypt::randomBytes(32) : hash('sha256', $content);
+    $this->id = hash('sha256', $content);
     $this->setContent($content);
 
     parent::__construct($metadata, $filters);

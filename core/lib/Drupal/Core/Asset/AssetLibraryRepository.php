@@ -105,9 +105,11 @@ class AssetLibraryRepository {
       foreach ($asset->getDependencyInfo() as $key) {
         $dependencies[] = $library = $this->get($key);
 
-        // Only bother attaching if operating on an asset.
+        // Only auto-attach if the argument is capable of it.
         if ($attach && $asset instanceof RelativePositionInterface) {
           foreach ($library as $libasset) {
+            // If operating on a proper AssetInterface object, only attach if
+            // the dependency and the given asset are of the same type.
             if ($asset instanceof AssetInterface &&
                 $asset->getAssetType() !== $libasset->getAssetType()) {
               continue;

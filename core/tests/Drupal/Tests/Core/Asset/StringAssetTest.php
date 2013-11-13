@@ -10,6 +10,7 @@ namespace Drupal\Tests\Core\Asset;
 use Drupal\Core\Asset\StringAsset;
 
 /**
+ * @coversDefaultClass \Drupal\Core\Asset\StringAsset
  * @group Asset
  */
 class StringAssetTest extends AssetUnitTest {
@@ -22,6 +23,9 @@ class StringAssetTest extends AssetUnitTest {
     );
   }
 
+  /**
+   * @covers ::__construct
+   */
   public function testInitialCreation() {
     $meta = $this->createStubAssetMetadata();
     $content = 'foo bar baz';
@@ -32,14 +36,26 @@ class StringAssetTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException \InvalidArgumentException
+   * @covers ::__construct
    */
-  public function testCreateNonString() {
+  public function testCreateInvalidContent() {
     $meta = $this->createStubAssetMetadata();
-    $asset = new StringAsset($meta, new \stdClass());
+    $invalid = array('', 0, 1.1, fopen(__FILE__, 'r'), TRUE, array(), new \stdClass);
+
+    try {
+      foreach ($invalid as $val) {
+        new StringAsset($meta, $val);
+        $varinfo = (gettype($val) == 'string') ? 'an empty string' : 'of type ' . gettype($val);
+        $this->fail(sprintf('Was able to create a string asset with invalid content; content was %s.', $varinfo));
+      }
+    } catch (\InvalidArgumentException $e) {}
   }
 
-  public function testSetLastModified() {
+  /**
+   * @covers ::setLastModified
+   * @covers ::getLastModified
+   */
+  public function testLastModified() {
     $meta = $this->createStubAssetMetadata();
     $content = 'foo bar baz';
     $asset = new StringAsset($meta, $content);
@@ -48,18 +64,20 @@ class StringAssetTest extends AssetUnitTest {
     $this->assertEquals(100, $asset->getLastModified());
   }
 
+  /**
+   * @covers ::id
+   */
   public function testId() {
     $meta = $this->createStubAssetMetadata();
     $content = 'foo bar baz';
     $asset = new StringAsset($meta, $content);
 
     $this->assertEquals(hash('sha256', $content), $asset->id());
-
-    $asset = new StringAsset($meta, '');
-    // If no content is provided, the id should be a 32-byte random string (ick)
-    $this->assertEquals(32, strlen($asset->id()));
   }
 
+  /**
+   * @covers ::load
+   */
   public function testLoad() {
     $meta = $this->createStubAssetMetadata();
     $content = 'foo bar baz';
@@ -70,3 +88,4 @@ class StringAssetTest extends AssetUnitTest {
     $this->assertEquals($content, $asset->getContent());
   }
 }
+

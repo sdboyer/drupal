@@ -74,6 +74,7 @@ class CssGraphSorter extends AssetGraphSorter {
     // all ordering information.
     $graph = new AssetGraph();
 
+    // TODO Would probably be better to inject the right collection rather than asking for it here
     foreach ($collection->getCss() as $asset) {
       $graph->addVertex($asset);
 
@@ -110,9 +111,7 @@ class CssGraphSorter extends AssetGraphSorter {
     $visitor = new OptimallyGroupedTSLVisitor($optimal, $optimal_lookup);
     DepthFirst::traverse($transpose, $visitor, $queue);
 
-    $final = $visitor->getTSL();
-    $final->reverse();
-    return $final;
+    return $visitor->getTSL()->reverse();
   }
 
 }
