@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\AssetAggregate.
+ * Contains \Drupal\Core\Asset\AggregateAsset.
  */
 
 namespace Drupal\Core\Asset\Aggregate;
@@ -11,7 +11,7 @@ use Assetic\Filter\FilterCollection;
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\AssetInterface;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
-use Drupal\Core\Asset\Aggregate\AssetAggregateInterface;
+use Drupal\Core\Asset\Aggregate\AggregateAssetInterface;
 use Drupal\Core\Asset\Collection\BasicAssetCollection;
 use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
@@ -20,7 +20,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 /**
  * Base class for representing aggregate assets.
  */
-class AssetAggregate extends BasicAssetCollection implements \IteratorAggregate, AssetInterface, AssetAggregateInterface {
+class AggregateAsset extends BasicAssetCollection implements \IteratorAggregate, AssetInterface, AggregateAssetInterface {
 
   /**
    * @var \Drupal\Core\Asset\Metadata\AssetMetadataInterface
@@ -31,7 +31,7 @@ class AssetAggregate extends BasicAssetCollection implements \IteratorAggregate,
    * A string identifier for this aggregate.
    *
    * For how this is calculated, see:
-   * @see AssetAggregate::calculateId()
+   * @see AggregateAsset::calculateId()
    *
    * @var string
    */

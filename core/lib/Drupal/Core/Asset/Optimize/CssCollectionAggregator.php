@@ -7,7 +7,7 @@
 
 namespace Drupal\Core\Asset\Optimize;
 
-use Drupal\Core\Asset\Aggregate\AssetAggregate;
+use Drupal\Core\Asset\Aggregate\AggregateAsset;
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\GroupSort\AssetGroupSorterInterface;
@@ -56,7 +56,7 @@ class CssCollectionAggregator implements AssetCollectionAggregatorInterface {
       $key = $this->sorter->getGroupingKey($asset);
 
       if ($key && $key !== $last_key) {
-        $aggregate = new AssetAggregate($asset->getMetadata());
+        $aggregate = new AggregateAsset($asset->getMetadata());
         $processed->add($aggregate);
       }
 

@@ -8,8 +8,8 @@
 namespace Drupal\Core\Asset\Render;
 
 use Drupal\Component\Utility\String;
-use Drupal\Core\Asset\Aggregate\AssetAggregate;
-use Drupal\Core\Asset\Aggregate\AssetAggregateInterface;
+use Drupal\Core\Asset\Aggregate\AggregateAsset;
+use Drupal\Core\Asset\Aggregate\AggregateAssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\ExternalAsset;
 use Drupal\Core\Asset\FileAsset;
@@ -81,7 +81,7 @@ class CssCollectionRenderer implements AssetCollectionRendererInterface {
       $link_count = 0;
       foreach ($all as $asset) {
         if ($asset instanceof FileAsset || $asset instanceof ExternalAsset ||
-            $asset instanceof AssetAggregateInterface) {
+            $asset instanceof AggregateAssetInterface) {
           $link_count++;
         }
       }
@@ -105,7 +105,7 @@ class CssCollectionRenderer implements AssetCollectionRendererInterface {
 
             if (count($add) > 1) {
               // only make aggregate if there's more than 1
-              $aggregate = new AssetAggregate(reset($add)->getMetadata(), $add);
+              $aggregate = new AggregateAsset(reset($add)->getMetadata(), $add);
               $meta = $aggregate->getMetadata();
               $meta->set('light_grouping', TRUE);
 
@@ -150,7 +150,7 @@ class CssCollectionRenderer implements AssetCollectionRendererInterface {
         $element['#value_prefix'] = "\n/* <![CDATA[ */\n";
         $element['#value_suffix'] = "\n/* ]]> */\n";
       }
-      elseif ($asset instanceof AssetAggregateInterface && $meta->get('light_grouping')) {
+      elseif ($asset instanceof AggregateAssetInterface && $meta->get('light_grouping')) {
         $import = array();
         foreach ($asset as $subasset) {
           $import[] = '@import url("' . String::checkPlain(file_create_url($subasset->getTargetPath()) . '?' . $query_string) . '");';

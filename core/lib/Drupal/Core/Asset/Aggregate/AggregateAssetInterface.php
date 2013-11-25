@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\Aggregate\AssetAggregateInterface.
+ * Contains \Drupal\Core\Asset\Aggregate\AggregateAssetInterface.
  */
 
 namespace Drupal\Core\Asset\Aggregate;
@@ -19,7 +19,7 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * This interface extends to Assetic's AssetCollectionInterface, but is intended
  * for a more narrow purpose than it. Whereas Assetic uses AssetCollections as
  * both a container for assets (a collection in the conventional sense) *and* as
- * a renderable unit, implementors of AssetAggregateInterface are considered to
+ * a renderable unit, implementors of AggregateAssetInterface are considered to
  * be solely the latter.
  *
  * This approach was taken because these two are discrete responsibilities, and
@@ -33,6 +33,6 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * @see \Assetic\Asset\AssetCollectionInterface
  * @see \Drupal\Core\Asset\Collection\AssetCollectionInterface
  */
-interface AssetAggregateInterface extends AssetInterface, AssetCollectionBasicInterface, AsseticAssetCollectionInterface {
+interface AggregateAssetInterface extends AssetInterface, AssetCollectionBasicInterface, AsseticAssetCollectionInterface {
 
 }

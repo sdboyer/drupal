@@ -22,7 +22,7 @@ interface AssetCollectionAggregatorInterface {
    * @return AssetCollectionInterface
    *   A new AssetCollectionInterface containing the aggregated assets. The
    *   collection is populated by objects implementing at least AssetInterface,
-   *   and possibly also AssetAggregateInterface.
+   *   and possibly also AggregateAssetInterface.
    */
   public function aggregate(AssetCollectionInterface $collection);
 }

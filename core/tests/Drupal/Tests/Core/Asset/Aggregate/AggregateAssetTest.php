@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\Core\Asset\Aggregate\AssetAggregateTest.
+ * Contains \Drupal\Tests\Core\Asset\Aggregate\AggregateAssetTest.
  */
 
 namespace Drupal\Tests\Core\Asset\Aggregate;
@@ -14,21 +14,21 @@ use Drupal\Tests\Core\Asset\AssetUnitTest;
 use Drupal\Tests\Core\Asset\Collection\BasicAssetCollectionTest;
 
 /**
- * @coversDefaultClass \Drupal\Core\Asset\Aggregate\AssetAggregate
+ * @coversDefaultClass \Drupal\Core\Asset\Aggregate\AggregateAsset
  * @group Asset
  */
-class AssetAggregateTest extends AssetUnitTest {
+class AggregateAssetTest extends AssetUnitTest {
 
   public static function getInfo() {
     return array(
       'name' => 'Asset aggregate tests',
-      'description' => 'Unit tests on AssetAggregate',
+      'description' => 'Unit tests on AggregateAsset',
       'group' => 'Asset',
     );
   }
 
   /**
-   * Generates a AssetAggregate mock with three leaf assets.
+   * Generates a AggregateAsset mock with three leaf assets.
    */
   public function getThreeLeafAggregate() {
     $aggregate = $this->getAggregate();
@@ -47,7 +47,7 @@ class AssetAggregateTest extends AssetUnitTest {
   }
 
   /**
-   * Returns an AssetAggregate, the base collection type for this unit test.
+   * Returns an AggregateAsset, the base collection type for this unit test.
    *
    * @return AssetCollectionBasicInterface
    */
@@ -60,14 +60,14 @@ class AssetAggregateTest extends AssetUnitTest {
     $mockmeta->expects($this->once())
       ->method('getType')
       ->will($this->returnValue('unicorns'));
-    $aggregate = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AssetAggregate', array($mockmeta));
+    $aggregate = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AggregateAsset', array($mockmeta));
 
     $this->assertEquals('unicorns', $aggregate->getAssetType());
   }
 
   public function testGetMetadata() {
     $mockmeta = $this->createStubAssetMetadata();
-    $aggregate = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AssetAggregate', array($mockmeta));
+    $aggregate = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AggregateAsset', array($mockmeta));
 
     $this->assertSame($mockmeta, $aggregate->getMetadata());
   }
@@ -131,7 +131,7 @@ class AssetAggregateTest extends AssetUnitTest {
     $asset1 = $this->createStubFileAsset();
     $asset2 = $this->createStubFileAsset();
     $meta = $this->createStubAssetMetadata();
-    $collection = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AssetAggregate', array($meta, array($asset1, $asset2)));
+    $collection = $this->getMockForAbstractClass('Drupal\Core\Asset\Aggregate\AggregateAsset', array($meta, array($asset1, $asset2)));
 
     $this->assertContains($asset1, $collection);
     $this->assertContains($asset2, $collection);
@@ -271,17 +271,17 @@ class AssetAggregateTest extends AssetUnitTest {
 
     try {
       $aggregate->replaceLeaf($vanilla, $drupally);
-      $this->fail('AssetAggregate::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+      $this->fail('AggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
     } catch (UnsupportedAsseticBehaviorException $e) {}
 
     try {
       $aggregate->replaceLeaf($vanilla, $vanilla);
-      $this->fail('AssetAggregate::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+      $this->fail('AggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
     } catch (UnsupportedAsseticBehaviorException $e) {}
 
     try {
       $aggregate->replaceLeaf($drupally, $vanilla);
-      $this->fail('AssetAggregate::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
+      $this->fail('AggregateAsset::removeLeaf() did not throw an UnsupportedAsseticBehaviorException when provided a vanilla asset leaf.');
     } catch (UnsupportedAsseticBehaviorException $e) {}
   }
 

@@ -49,7 +49,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
   }
 
   /**
-   * Generates a AssetAggregate mock with three leaf assets.
+   * Generates a AggregateAsset mock with three leaf assets.
    */
   public function getThreeLeafBasicCollection() {
     $collection = $this->getCollection();

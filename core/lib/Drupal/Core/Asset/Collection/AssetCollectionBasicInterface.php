@@ -19,10 +19,10 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * moving a set of a specific type of asset around.
  *
  * This interface contains the subset of methods that are shared with
- * AssetAggregateInterface. Because certain internal ordering and state is
+ * AggregateAssetInterface. Because certain internal ordering and state is
  * important to aggregates, they cannot behave like a full collection.
  *
- * @see \Drupal\Core\Asset\Aggregate\AssetAggregateInterface
+ * @see \Drupal\Core\Asset\Aggregate\AggregateAssetInterface
  * @see \Drupal\Core\Asset\Collection\AssetCollectionInterface
  */
 interface AssetCollectionBasicInterface extends \Traversable, \Countable {
