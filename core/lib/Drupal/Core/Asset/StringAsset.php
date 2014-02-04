@@ -24,8 +24,6 @@ class StringAsset extends BaseAsset {
    */
   protected $id;
 
-  protected $lastModified = FALSE; // TODO this is terrible
-
   /**
    * Creates a new string asset object.
    *
@@ -55,20 +53,6 @@ class StringAsset extends BaseAsset {
    */
   public function id() {
     return $this->id;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setLastModified($last_modified) {
-    $this->lastModified = $last_modified;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLastModified() {
-    return $this->lastModified;
   }
 
   /**

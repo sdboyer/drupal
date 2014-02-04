@@ -32,7 +32,6 @@ class StringAssetTest extends AssetUnitTest {
     $asset = new StringAsset($meta, $content);
 
     $this->assertEquals($content, $asset->getContent());
-    $this->assertFalse($asset->getLastModified()); // TODO change this once we have a better plan
   }
 
   /**
@@ -49,19 +48,6 @@ class StringAssetTest extends AssetUnitTest {
         $this->fail(sprintf('Was able to create a string asset with invalid content; content was %s.', $varinfo));
       }
     } catch (\InvalidArgumentException $e) {}
-  }
-
-  /**
-   * @covers ::setLastModified
-   * @covers ::getLastModified
-   */
-  public function testLastModified() {
-    $meta = $this->createStubAssetMetadata();
-    $content = 'foo bar baz';
-    $asset = new StringAsset($meta, $content);
-
-    $asset->setLastModified(100);
-    $this->assertEquals(100, $asset->getLastModified());
   }
 
   /**

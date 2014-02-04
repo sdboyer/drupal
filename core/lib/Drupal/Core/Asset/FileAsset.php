@@ -60,17 +60,6 @@ class FileAsset extends BaseAsset {
   /**
    * {@inheritdoc}
    */
-  public function getLastModified() {
-    if (!is_file($this->source)) {
-      throw new \RuntimeException(sprintf('The source file "%s" does not exist.', $this->source));
-    }
-
-    return filemtime($this->source);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function load(FilterInterface $additionalFilter = NULL) {
     if (!is_file($this->source)) {
       throw new \RuntimeException(sprintf('The source file "%s" does not exist.', $this->source));

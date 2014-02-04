@@ -216,13 +216,6 @@ class AggregateAsset extends BasicAssetCollection implements \IteratorAggregate,
   /**
    * {@inheritdoc}
    */
-  public function getLastModified() {
-    // TODO: Implement getLastModified() method.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getSourceRoot() {
     // Drupal doesn't use this in general, and especially not for aggregates.
     return NULL;
@@ -289,6 +282,13 @@ class AggregateAsset extends BasicAssetCollection implements \IteratorAggregate,
    */
   public final function getValues() {
     throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'values' concept.");
+  }
+
+  /**
+   * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public final function getLastModified() {
+    throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's getLastModified() concept.");
   }
 
 }

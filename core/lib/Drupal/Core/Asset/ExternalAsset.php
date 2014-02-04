@@ -60,14 +60,6 @@ class ExternalAsset extends BaseAsset {
   /**
    * {@inheritdoc}
    */
-  public function getLastModified() {
-    // TODO very wrong. decide how to do this right.
-    throw new UnsupportedAsseticBehaviorException('Drupal does not support the retrieval or manipulation of remote assets.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function load(FilterInterface $additionalFilter = NULL) {
     // TODO very wrong. decide how to do this right.
     throw new UnsupportedAsseticBehaviorException('Drupal does not support the retrieval or manipulation of remote assets.');

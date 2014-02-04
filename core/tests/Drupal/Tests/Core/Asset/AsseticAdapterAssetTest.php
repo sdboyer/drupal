@@ -55,4 +55,11 @@ class AsseticAdapterAssetTest extends UnitTestCase {
   public function testGetValues() {
     $this->mock->getValues();
   }
+
+  /**
+   * @expectedException \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public function testGetLastModified() {
+    $this->mock->getLastModified();
+  }
 }

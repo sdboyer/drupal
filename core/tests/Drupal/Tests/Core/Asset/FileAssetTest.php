@@ -42,20 +42,6 @@ class FileAssetTest extends AssetUnitTest {
   /**
    * @expectedException \RuntimeException
    */
-  public function testLastModified() {
-    // This seems less than ideal, but it's what Assetic does. So...
-    $meta = $this->createStubAssetMetadata();
-    $asset = new FileAsset($meta, __FILE__);
-
-    $this->assertInternalType('integer', $asset->getLastModified());
-
-    $asset = new FileAsset($meta, __FILE__ . '.foo');
-    $asset->getLastModified();
-  }
-
-  /**
-   * @expectedException \RuntimeException
-   */
   public function testLoad() {
     $meta = $this->createStubAssetMetadata();
     $asset = new FileAsset($meta, __FILE__);

@@ -39,14 +39,6 @@ class ExternalAssetTest extends AssetUnitTest {
     new ExternalAsset($meta, __FILE__);
   }
 
-  public function testGetLastModified() {
-    $meta = $this->createStubAssetMetadata();
-    $asset = new ExternalAsset($meta, self::JQUERY);
-
-    // TODO this throws an exception, but it should not. test fails till we fix.
-    $asset->getLastModified();
-  }
-
   public function testLoad() {
     $meta = $this->createStubAssetMetadata();
     $asset = new ExternalAsset($meta, self::JQUERY);

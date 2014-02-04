@@ -37,4 +37,11 @@ abstract class AsseticAdapterAsset extends AsseticBaseAsset implements AsseticAs
   public final function getValues() {
     throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's 'values' concept.");
   }
+
+  /**
+   * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException
+   */
+  public final function getLastModified() {
+    throw new UnsupportedAsseticBehaviorException("Drupal does not use or support Assetic's getLastModified() concept.");
+  }
 }
