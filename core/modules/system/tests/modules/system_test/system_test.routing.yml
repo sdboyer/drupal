@@ -45,20 +45,19 @@ system_test.lock_exit:
   requirements:
     _access: 'TRUE'
 
+system_test.cache_tags_page:
+  path: '/system-test/cache_tags_page'
+  defaults:
+    _content: '\Drupal\system_test\Controller\SystemTestController::system_test_cache_tags_page'
+  requirements:
+    _access: 'TRUE'
+
 system_test.authorize_init:
   path: '/system-test/authorize-init/{page_title}'
   defaults:
     _controller: '\Drupal\system_test\Controller\SystemTestController::authorizeInit'
   requirements:
     _permission: 'administer software updates'
-
-system_test.variable_get:
-  path: '/system-test/variable-get'
-  defaults:
-    _title: 'Variable Get'
-    _content: '\Drupal\system_test\Controller\SystemTestController::variableGet'
-  requirements:
-    _permission: 'access content'
 
 system_test.set_header:
   path: '/system-test/set-header'

@@ -8,7 +8,8 @@
 namespace Drupal\telephone\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\ConfigFieldItemBase;
-use Drupal\field\FieldInterface;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Plugin implementation of the 'telephone' field type.
@@ -33,7 +34,7 @@ class TelephoneItem extends ConfigFieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldInterface $field) {
+  public static function schema(FieldDefinitionInterface $field_definition) {
     return array(
       'columns' => array(
         'value' => array(
@@ -50,10 +51,8 @@ class TelephoneItem extends ConfigFieldItemBase {
    */
   public function getPropertyDefinitions() {
     if (!isset(static::$propertyDefinitions)) {
-      static::$propertyDefinitions['value'] = array(
-        'type' => 'string',
-        'label' => t('Telephone number'),
-      );
+      static::$propertyDefinitions['value'] = DataDefinition::create('string')
+        ->setLabel(t('Telephone number'));
     }
     return static::$propertyDefinitions;
   }
@@ -70,7 +69,7 @@ class TelephoneItem extends ConfigFieldItemBase {
    * {@inheritdoc}
    */
   public function getConstraints() {
-    $constraint_manager = \Drupal::typedData()->getValidationConstraintManager();
+    $constraint_manager = \Drupal::typedDataManager()->getValidationConstraintManager();
     $constraints = parent::getConstraints();
 
     $max_length = 256;
@@ -78,7 +77,7 @@ class TelephoneItem extends ConfigFieldItemBase {
       'value' => array(
         'Length' => array(
           'max' => $max_length,
-          'maxMessage' => t('%name: the telephone number may not be longer than @max characters.', array('%name' => $this->getFieldDefinition()->getFieldLabel(), '@max' => $max_length)),
+          'maxMessage' => t('%name: the telephone number may not be longer than @max characters.', array('%name' => $this->getFieldDefinition()->getLabel(), '@max' => $max_length)),
         )
       ),
     ));

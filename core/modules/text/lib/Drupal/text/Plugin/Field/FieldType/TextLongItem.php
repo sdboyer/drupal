@@ -7,7 +7,7 @@
 
 namespace Drupal\text\Plugin\Field\FieldType;
 
-use Drupal\field\FieldInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Plugin implementation of the 'text_long' field type.
@@ -28,7 +28,7 @@ class TextLongItem extends TextItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldInterface $field) {
+  public static function schema(FieldDefinitionInterface $field_definition) {
     return array(
       'columns' => array(
         'value' => array(
@@ -44,12 +44,6 @@ class TextLongItem extends TextItemBase {
       ),
       'indexes' => array(
         'format' => array('format'),
-      ),
-      'foreign keys' => array(
-        'format' => array(
-          'table' => 'filter_format',
-          'columns' => array('format' => 'format'),
-        ),
       ),
     );
   }

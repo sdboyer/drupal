@@ -46,6 +46,16 @@ abstract class FieldRdfaTestBase extends FieldUnitTestBase {
   public static $modules = array('rdf');
 
   /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp();
+
+    $this->installSchema('system', array('router'));
+    \Drupal::service('router.builder')->rebuild();
+  }
+
+  /**
    * Helper function to test the formatter's RDFa.
    *
    * @param string $formatter
@@ -100,8 +110,7 @@ abstract class FieldRdfaTestBase extends FieldUnitTestBase {
    *   The absolute URI.
    */
   protected function getAbsoluteUri($entity) {
-    $uri_info = $entity->uri();
-    return url($uri_info['path'], array('absolute' => TRUE));
+    return $entity->url('canonical', array('absolute' => TRUE));
   }
 
 }

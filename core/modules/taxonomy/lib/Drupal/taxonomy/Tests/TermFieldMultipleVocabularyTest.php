@@ -87,7 +87,7 @@ class TermFieldMultipleVocabularyTest extends TaxonomyTestBase {
 
     // Submit an entity with both terms.
     $this->drupalGet('entity_test/add');
-    $this->assertFieldByName("{$this->field_name}[]", '', 'Widget is displayed');
+    $this->assertFieldByName("{$this->field_name}[]", '', 'Widget is displayed.');
     $edit = array(
       'user_id' => mt_rand(0, 10),
       'name' => $this->randomName(),
@@ -101,7 +101,7 @@ class TermFieldMultipleVocabularyTest extends TaxonomyTestBase {
     // Render the entity.
     $entity = entity_load('entity_test', $id);
     $entities = array($id => $entity);
-    $display = entity_get_display($entity->entityType(), $entity->bundle(), 'full');
+    $display = entity_get_display($entity->getEntityTypeId(), $entity->bundle(), 'full');
     field_attach_prepare_view('entity_test', $entities, array($entity->bundle() => $display));
     $entity->content = field_attach_view($entity, $display);
     $this->content = drupal_render($entity->content);
@@ -114,7 +114,7 @@ class TermFieldMultipleVocabularyTest extends TaxonomyTestBase {
     // Re-render the content.
     $entity = entity_load('entity_test', $id);
     $entities = array($id => $entity);
-    $display = entity_get_display($entity->entityType(), $entity->bundle(), 'full');
+    $display = entity_get_display($entity->getEntityTypeId(), $entity->bundle(), 'full');
     field_attach_prepare_view('entity_test', $entities, array($entity->bundle() => $display));
     $entity->content = field_attach_view($entity, $display);
     $this->plainTextContent = FALSE;
@@ -126,11 +126,11 @@ class TermFieldMultipleVocabularyTest extends TaxonomyTestBase {
 
     // Verify that field and instance settings are correct.
     $field = field_info_field('entity_test', $this->field_name);
-    $this->assertEqual(count($field->getFieldSetting('allowed_values')), 1, 'Only one vocabulary is allowed for the field.');
+    $this->assertEqual(count($field->getSetting('allowed_values')), 1, 'Only one vocabulary is allowed for the field.');
 
     // The widget should still be displayed.
     $this->drupalGet('entity_test/add');
-    $this->assertFieldByName("{$this->field_name}[]", '', 'Widget is still displayed');
+    $this->assertFieldByName("{$this->field_name}[]", '', 'Widget is still displayed.');
 
     // Term 1 should still pass validation.
     $edit = array(

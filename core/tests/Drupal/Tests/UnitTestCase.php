@@ -8,6 +8,8 @@
 namespace Drupal\Tests;
 
 use Drupal\Component\Utility\Random;
+use Drupal\Component\Utility\String;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 
 /**
  * Provides a base class and helpers for Drupal unit tests.
@@ -37,7 +39,20 @@ abstract class UnitTestCase extends \PHPUnit_Framework_TestCase {
     // PHP does not allow us to declare this method as abstract public static,
     // so we simply throw an exception here if this has not been implemented by
     // a child class.
-    throw new \RuntimeException("Sub-class must implement the getInfo method!");
+    throw new \RuntimeException(String::format('@class must implement \Drupal\Tests\UnitTestCase::getInfo().', array(
+      '@class' => get_called_class(),
+    )));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown() {
+    parent::tearDown();
+    if (\Drupal::getContainer()) {
+      $container = new ContainerBuilder();
+      \Drupal::setContainer($container);
+    }
   }
 
   /**
@@ -177,7 +192,7 @@ abstract class UnitTestCase extends \PHPUnit_Framework_TestCase {
     $translation = $this->getMock('Drupal\Core\StringTranslation\TranslationInterface');
     $translation->expects($this->any())
       ->method('translate')
-      ->will($this->returnArgument(0));
+      ->will($this->returnCallback(function ($string, array $args = array()) { return strtr($string, $args); }));
     return $translation;
   }
 

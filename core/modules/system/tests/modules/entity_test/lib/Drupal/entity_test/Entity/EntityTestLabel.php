@@ -7,18 +7,14 @@
 
 namespace Drupal\entity_test\Entity;
 
-use Drupal\Core\Entity\Annotation\EntityType;
-use Drupal\Core\Annotation\Translation;
-
 /**
  * Test entity class.
  *
  * @EntityType(
  *   id = "entity_test_label",
  *   label = @Translation("Entity Test label"),
- *   module = "entity_test",
  *   controllers = {
- *     "storage" = "Drupal\entity_test\EntityTestStorageController",
+ *     "storage" = "Drupal\Core\Entity\FieldableDatabaseStorageController",
  *     "view_builder" = "Drupal\entity_test\EntityTestViewBuilder"
  *   },
  *   base_table = "entity_test",

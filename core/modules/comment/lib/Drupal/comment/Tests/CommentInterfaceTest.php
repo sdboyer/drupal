@@ -7,6 +7,8 @@
 
 namespace Drupal\comment\Tests;
 
+use Drupal\comment\CommentInterface;
+
 /**
  * Tests the comment module administrative and end-user-facing interfaces.
  */
@@ -78,7 +80,7 @@ class CommentInterfaceTest extends CommentTestBase {
 
     // Test changing the comment author to "Anonymous".
     $comment = $this->postComment(NULL, $comment->comment_body->value, $comment->subject->value, array('name' => ''));
-    $this->assertTrue(empty($comment->name->value) && $comment->uid->target_id == 0, 'Comment author successfully changed to anonymous.');
+    $this->assertTrue(empty($comment->name->value) && $comment->getOwnerId() == 0, 'Comment author successfully changed to anonymous.');
 
     // Test changing the comment author to an unverified user.
     $random_name = $this->randomName();
@@ -90,7 +92,7 @@ class CommentInterfaceTest extends CommentTestBase {
     // Test changing the comment author to a verified user.
     $this->drupalGet('comment/' . $comment->id() . '/edit');
     $comment = $this->postComment(NULL, $comment->comment_body->value, $comment->subject->value, array('name' => $this->web_user->getUsername()));
-    $this->assertTrue($comment->name->value == $this->web_user->getUsername() && $comment->uid->target_id == $this->web_user->id(), 'Comment author successfully changed to a registered user.');
+    $this->assertTrue($comment->name->value == $this->web_user->getUsername() && $comment->getOwnerId() == $this->web_user->id(), 'Comment author successfully changed to a registered user.');
 
     $this->drupalLogout();
 
@@ -146,7 +148,7 @@ class CommentInterfaceTest extends CommentTestBase {
     $this->setCommentsPerPage(50);
 
     // Attempt to reply to an unpublished comment.
-    $reply_loaded->status->value = COMMENT_NOT_PUBLISHED;
+    $reply_loaded->status->value = CommentInterface::NOT_PUBLISHED;
     $reply_loaded->save();
     $this->drupalGet('comment/reply/node/' . $this->node->id() . '/comment/' . $reply_loaded->id());
     $this->assertText(t('The comment you are replying to does not exist.'), 'Replying to an unpublished comment');

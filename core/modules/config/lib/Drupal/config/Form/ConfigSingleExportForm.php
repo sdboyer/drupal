@@ -9,7 +9,8 @@ namespace Drupal\config\Form;
 
 use Drupal\Component\Utility\MapArray;
 use Drupal\Core\Config\StorageInterface;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -21,7 +22,7 @@ class ConfigSingleExportForm extends FormBase {
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
@@ -35,19 +36,19 @@ class ConfigSingleExportForm extends FormBase {
   /**
    * Tracks the valid config entity type definitions.
    *
-   * @var array
+   * @var \Drupal\Core\Entity\EntityTypeInterface[]
    */
   protected $definitions = array();
 
   /**
    * Constructs a new ConfigSingleImportForm.
    *
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Config\StorageInterface $config_storage
    *   The config storage.
    */
-  public function __construct(EntityManager $entity_manager, StorageInterface $config_storage) {
+  public function __construct(EntityManagerInterface $entity_manager, StorageInterface $config_storage) {
     $this->entityManager = $entity_manager;
     $this->configStorage = $config_storage;
   }
@@ -74,12 +75,12 @@ class ConfigSingleExportForm extends FormBase {
    */
   public function buildForm(array $form, array &$form_state, $config_type = NULL, $config_name = NULL) {
     foreach ($this->entityManager->getDefinitions() as $entity_type => $definition) {
-      if (isset($definition['config_prefix']) && isset($definition['entity_keys']['uuid'])) {
+      if ($definition->getConfigPrefix() && $definition->hasKey('uuid')) {
         $this->definitions[$entity_type] = $definition;
       }
     }
-    $entity_types = array_map(function ($definition) {
-      return $definition['label'];
+    $entity_types = array_map(function (EntityTypeInterface $definition) {
+      return $definition->getLabel();
     }, $this->definitions);
     // Sort the entity types by label, then add the simple config to the top.
     uasort($entity_types, 'strnatcasecmp');
@@ -144,7 +145,7 @@ class ConfigSingleExportForm extends FormBase {
     // Determine the full config name for the selected config entity.
     if ($form_state['values']['config_type'] !== 'system.simple') {
       $definition = $this->entityManager->getDefinition($form_state['values']['config_type']);
-      $name = $definition['config_prefix'] . '.' . $form_state['values']['config_name'];
+      $name = $definition->getConfigPrefix() . '.' . $form_state['values']['config_name'];
     }
     // The config name is used directly for simple configuration.
     else {
@@ -176,8 +177,8 @@ class ConfigSingleExportForm extends FormBase {
     // Handle simple configuration.
     else {
       // Gather the config entity prefixes.
-      $config_prefixes = array_map(function ($definition) {
-        return $definition['config_prefix'] . '.';
+      $config_prefixes = array_map(function (EntityTypeInterface $definition) {
+        return $definition->getConfigPrefix() . '.';
       }, $this->definitions);
 
       // Find all config, and then filter our anything matching a config prefix.

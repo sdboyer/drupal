@@ -7,8 +7,8 @@
 
 namespace Drupal\rest\Plugin\Derivative;
 
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeInterface;
-use Drupal\Core\Entity\EntityManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -26,17 +26,17 @@ class EntityDerivative implements ContainerDerivativeInterface {
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
   /**
    * Constructs an EntityDerivative object.
    *
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct(EntityManager $entity_manager) {
+  public function __construct(EntityManagerInterface $entity_manager) {
     $this->entityManager = $entity_manager;
   }
 
@@ -71,8 +71,8 @@ class EntityDerivative implements ContainerDerivativeInterface {
         $this->derivatives[$entity_type] = array(
           'id' => 'entity:' . $entity_type,
           'entity_type' => $entity_type,
-          'serialization_class' => $entity_info['class'],
-          'label' => $entity_info['label'],
+          'serialization_class' => $entity_info->getClass(),
+          'label' => $entity_info->getLabel(),
         );
         $this->derivatives[$entity_type] += $base_plugin_definition;
       }

@@ -49,19 +49,18 @@ class FieldInfoTest extends FieldUnitTestBase {
     $field->save();
     $fields = field_info_fields();
     $this->assertEqual(count($fields), count($core_fields) + 1, 'One new field exists');
-    $this->assertEqual($fields[$field->uuid]->getFieldName(), $field->getFieldName(), 'info fields contains field name');
-    $this->assertEqual($fields[$field->uuid]->getFieldType(), $field->getFieldType(), 'info fields contains field type');
+    $this->assertEqual($fields[$field->uuid]->getName(), $field->getName(), 'info fields contains field name');
+    $this->assertEqual($fields[$field->uuid]->getType(), $field->getType(), 'info fields contains field type');
     $this->assertEqual($fields[$field->uuid]->module, 'field_test', 'info fields contains field module');
     $settings = array('test_field_setting' => 'dummy test string');
     foreach ($settings as $key => $val) {
-      $this->assertEqual($fields[$field->uuid]->getFieldSetting($key), $val, format_string('Field setting %key has correct default value %value', array('%key' => $key, '%value' => $val)));
+      $this->assertEqual($fields[$field->uuid]->getSetting($key), $val, format_string('Field setting %key has correct default value %value', array('%key' => $key, '%value' => $val)));
     }
-    $this->assertEqual($fields[$field->uuid]->getFieldCardinality(), 1, 'info fields contains cardinality 1');
-    $this->assertEqual($fields[$field->uuid]->active, TRUE, 'info fields contains active 1');
+    $this->assertEqual($fields[$field->uuid]->getCardinality(), 1, 'info fields contains cardinality 1');
 
     // Create an instance, verify that it shows up
     $instance_definition = array(
-      'field_name' => $field->getFieldName(),
+      'field_name' => $field->getName(),
       'entity_type' => 'entity_test',
       'bundle' => 'entity_test',
       'label' => $this->randomName(),
@@ -71,12 +70,12 @@ class FieldInfoTest extends FieldUnitTestBase {
     $instance = entity_create('field_instance', $instance_definition);
     $instance->save();
 
-    $info = entity_get_info('entity_test');
+    $info = \Drupal::entityManager()->getDefinition('entity_test');
     $instances = field_info_instances('entity_test', $instance->bundle);
     $this->assertEqual(count($instances), 1, format_string('One instance shows up in info when attached to a bundle on a @label.', array(
-      '@label' => $info['label']
+      '@label' => $info->getLabel(),
     )));
-    $this->assertTrue($instance_definition < $instances[$instance->getFieldName()], 'Instance appears in info correctly');
+    $this->assertTrue($instance_definition < $instances[$instance->getName()], 'Instance appears in info correctly');
 
     // Test a valid entity type but an invalid bundle.
     $instances = field_info_instances('entity_test', 'invalid_bundle');
@@ -174,6 +173,11 @@ class FieldInfoTest extends FieldUnitTestBase {
    * Test that instances on disabled entity types are filtered out.
    */
   function testInstanceDisabledEntityType() {
+    // Disabling the comment module invokes user_modules_uninstalled() and calls
+    // drupal_flush_all_caches(). Install the necessary schema to support this.
+    $this->installSchema('user', array('users_data'));
+    $this->installSchema('system', array('router'));
+
     // For this test the field type and the entity type must be exposed by
     // different modules.
     $this->enableModules(array('node', 'comment'));
@@ -188,9 +192,10 @@ class FieldInfoTest extends FieldUnitTestBase {
       'entity_type' => 'comment',
       'bundle' => 'comment_node_article',
     );
-    entity_create('field_instance', $instance_definition);
+    entity_create('field_instance', $instance_definition)->save();
 
-    // Disable coment module. This clears field_info cache.
+    $this->assertNotNull(field_info_instance('comment', 'field', 'comment_node_article'), 'Instance is returned on enabled entity types.');
+    // Disable comment module. This clears field_info cache.
     module_uninstall(array('comment'));
     $this->assertNull(field_info_instance('comment', 'field', 'comment_node_article'), 'No instances are returned on disabled entity types.');
   }

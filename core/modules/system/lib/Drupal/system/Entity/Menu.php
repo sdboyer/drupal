@@ -8,8 +8,7 @@
 namespace Drupal\system\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\Annotation\EntityType;
-use Drupal\Core\Annotation\Translation;
+use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\system\MenuInterface;
 
 /**
@@ -18,12 +17,12 @@ use Drupal\system\MenuInterface;
  * @EntityType(
  *   id = "menu",
  *   label = @Translation("Menu"),
- *   module = "system",
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
  *     "access" = "Drupal\system\MenuAccessController"
  *   },
  *   config_prefix = "system.menu",
+ *   admin_permission = "administer menu",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",

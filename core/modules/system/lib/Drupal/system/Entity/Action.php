@@ -8,8 +8,6 @@
 namespace Drupal\system\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\Annotation\EntityType;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\system\ActionConfigEntityInterface;
 use Drupal\Core\Action\ActionBag;
@@ -21,7 +19,6 @@ use Drupal\Component\Plugin\ConfigurablePluginInterface;
  * @EntityType(
  *   id = "action",
  *   label = @Translation("Action"),
- *   module = "system",
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
  *   },
@@ -106,7 +103,7 @@ class Action extends ConfigEntityBase implements ActionConfigEntityInterface {
    */
   public function setPlugin($plugin_id) {
     $this->plugin = $plugin_id;
-    $this->pluginBag->addInstanceID($plugin_id);
+    $this->pluginBag->addInstanceId($plugin_id);
   }
 
   /**

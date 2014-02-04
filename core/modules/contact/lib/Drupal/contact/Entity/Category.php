@@ -9,8 +9,6 @@ namespace Drupal\contact\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
-use Drupal\Core\Entity\Annotation\EntityType;
-use Drupal\Core\Annotation\Translation;
 use Drupal\contact\CategoryInterface;
 
 /**
@@ -19,7 +17,6 @@ use Drupal\contact\CategoryInterface;
  * @EntityType(
  *   id = "contact_category",
  *   label = @Translation("Contact category"),
- *   module = "contact",
  *   controllers = {
  *     "storage" = "Drupal\contact\CategoryStorageController",
  *     "access" = "Drupal\contact\CategoryAccessController",
@@ -31,6 +28,7 @@ use Drupal\contact\CategoryInterface;
  *     }
  *   },
  *   config_prefix = "contact.category",
+ *   admin_permission = "administer contact forms",
  *   bundle_of = "contact_message",
  *   entity_keys = {
  *     "id" = "id",
@@ -38,7 +36,8 @@ use Drupal\contact\CategoryInterface;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "edit-form" = "admin/structure/contact/manage/{contact_category}"
+ *     "delete-form" = "contact.category_delete",
+ *     "edit-form" = "contact.category_edit"
  *   }
  * )
  */

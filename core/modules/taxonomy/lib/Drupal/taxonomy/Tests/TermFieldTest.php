@@ -118,7 +118,7 @@ class TermFieldTest extends TaxonomyTestBase {
     // Display the object.
     $entity = entity_load('entity_test', $id);
     $entities = array($id => $entity);
-    $display = entity_get_display($entity->entityType(), $entity->bundle(), 'full');
+    $display = entity_get_display($entity->getEntityTypeId(), $entity->bundle(), 'full');
     field_attach_prepare_view('entity_test', $entities, array($entity->bundle() => $display));
     $entity->content = field_attach_view($entity, $display);
     $this->content = drupal_render($entity->content);
@@ -127,7 +127,7 @@ class TermFieldTest extends TaxonomyTestBase {
     // Delete the vocabulary and verify that the widget is gone.
     $this->vocabulary->delete();
     $this->drupalGet('entity_test/add');
-    $this->assertNoFieldByName($this->field_name, '', 'Widget is not displayed');
+    $this->assertNoFieldByName($this->field_name, '', 'Widget is not displayed.');
   }
 
   /**
@@ -158,7 +158,7 @@ class TermFieldTest extends TaxonomyTestBase {
 
     // Check that the field instance is still attached to the vocabulary.
     $field = field_info_field('entity_test', $this->field_name);
-    $allowed_values = $field->getFieldSetting('allowed_values');
+    $allowed_values = $field->getSetting('allowed_values');
     $this->assertEqual($allowed_values[0]['vocabulary'], $new_name, 'Index 0: Machine name was updated correctly.');
     $this->assertEqual($allowed_values[1]['vocabulary'], $new_name, 'Index 1: Machine name was updated correctly.');
     $this->assertEqual($allowed_values[2]['vocabulary'], 'foo', 'Index 2: Machine name was left untouched.');

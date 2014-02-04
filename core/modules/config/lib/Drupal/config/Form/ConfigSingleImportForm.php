@@ -8,7 +8,7 @@
 namespace Drupal\config\Form;
 
 use Drupal\Core\Config\StorageInterface;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -20,7 +20,7 @@ class ConfigSingleImportForm extends ConfirmFormBase {
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
@@ -48,12 +48,12 @@ class ConfigSingleImportForm extends ConfirmFormBase {
   /**
    * Constructs a new ConfigSingleImportForm.
    *
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Config\StorageInterface $config_storage
    *   The config storage.
    */
-  public function __construct(EntityManager $entity_manager, StorageInterface $config_storage) {
+  public function __construct(EntityManagerInterface $entity_manager, StorageInterface $config_storage) {
     $this->entityManager = $entity_manager;
     $this->configStorage = $config_storage;
   }
@@ -90,12 +90,12 @@ class ConfigSingleImportForm extends ConfirmFormBase {
   public function getQuestion() {
     if ($this->data['config_type'] === 'system.simple') {
       $name = $this->data['config_name'];
-      $type = $this->t('Simple configuration');
+      $type = $this->t('simple configuration');
     }
     else {
       $definition = $this->entityManager->getDefinition($this->data['config_type']);
-      $name = $this->data['import'][$definition['entity_keys']['id']];
-      $type = $definition['label'];
+      $name = $this->data['import'][$definition->getKey('id')];
+      $type = $definition->getLowercaseLabel();
     }
 
     $args = array(
@@ -122,8 +122,8 @@ class ConfigSingleImportForm extends ConfirmFormBase {
 
     $entity_types = array();
     foreach ($this->entityManager->getDefinitions() as $entity_type => $definition) {
-      if (isset($definition['config_prefix']) && isset($definition['entity_keys']['uuid'])) {
-        $entity_types[$entity_type] = $definition['label'];
+      if ($definition->getConfigPrefix() && $definition->hasKey('uuid')) {
+        $entity_types[$entity_type] = $definition->getLabel();
       }
     }
     // Sort the entity types by label, then add the simple config to the top.
@@ -139,6 +139,7 @@ class ConfigSingleImportForm extends ConfirmFormBase {
     );
     $form['config_name'] = array(
       '#title' => $this->t('Configuration name'),
+      '#description' => $this->t('Enter the name of the configuration file without the <em>.yml</em> extension. (e.g. <em>system.site</em>)'),
       '#type' => 'textfield',
       '#states' => array(
         'required' => array(
@@ -179,34 +180,34 @@ class ConfigSingleImportForm extends ConfirmFormBase {
     // Validate for config entities.
     if ($form_state['values']['config_type'] !== 'system.simple') {
       $definition = $this->entityManager->getDefinition($form_state['values']['config_type']);
-      $id_key = $definition['entity_keys']['id'];
+      $id_key = $definition->getKey('id');
       $entity_storage = $this->entityManager->getStorageController($form_state['values']['config_type']);
       // If an entity ID was not specified, set an error.
       if (!isset($data[$id_key])) {
-        form_set_error('import', $this->t('Missing ID key "@id_key" for this @entity_type import.', array('@id_key' => $id_key, '@entity_type' => $definition['label'])));
+        $this->setFormError('import', $form_state, $this->t('Missing ID key "@id_key" for this @entity_type import.', array('@id_key' => $id_key, '@entity_type' => $definition->getLabel())));
         return;
       }
-      $uuid_key = $definition['entity_keys']['uuid'];
+      $uuid_key = $definition->getKey('uuid');
       // If there is an existing entity, ensure matching ID and UUID.
       if ($entity = $entity_storage->load($data[$id_key])) {
         $this->configExists = $entity;
         if (!isset($data[$uuid_key])) {
-          form_set_error('import', $this->t('An entity with this machine name already exists but the import did not specify a UUID.'));
+          $this->setFormError('import', $form_state, $this->t('An entity with this machine name already exists but the import did not specify a UUID.'));
           return;
         }
         if ($data[$uuid_key] !== $entity->uuid()) {
-          form_set_error('import', $this->t('An entity with this machine name already exists but the UUID does not match.'));
+          $this->setFormError('import', $form_state, $this->t('An entity with this machine name already exists but the UUID does not match.'));
           return;
         }
       }
       // If there is no entity with a matching ID, check for a UUID match.
       elseif (isset($data[$uuid_key]) && $entity_storage->loadByProperties(array($uuid_key => $data[$uuid_key]))) {
-        form_set_error('import', $this->t('An entity with this UUID already exists but the machine name does not match.'));
+        $this->setFormError('import', $form_state, $this->t('An entity with this UUID already exists but the machine name does not match.'));
       }
     }
     else {
       $config = $this->config($form_state['values']['config_name']);
-      $this->configExists = $config->isNew() ? $config : FALSE;
+      $this->configExists = !$config->isNew() ? $config : FALSE;
     }
 
     // Store the decoded version of the submitted import.
@@ -236,7 +237,7 @@ class ConfigSingleImportForm extends ConfirmFormBase {
           ->getStorageController($this->data['config_type'])
           ->create($this->data['import']);
         $entity->save();
-        drupal_set_message($this->t('The @entity_type %label was imported.', array('@entity_type' => $entity->entityType(), '%label' => $entity->label())));
+        drupal_set_message($this->t('The @entity_type %label was imported.', array('@entity_type' => $entity->getEntityTypeId(), '%label' => $entity->label())));
       }
       catch (\Exception $e) {
         drupal_set_message($e->getMessage(), 'error');

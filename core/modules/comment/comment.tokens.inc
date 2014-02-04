@@ -127,6 +127,7 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
   $replacements = array();
 
   if ($type == 'comment' && !empty($data['comment'])) {
+    /** @var \Drupal\comment\CommentInterface $comment */
     $comment = $data['comment'];
 
     foreach ($tokens as $name => $original) {
@@ -142,13 +143,13 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
           break;
 
         case 'name':
-          $name = ($comment->uid->target_id == 0) ? \Drupal::config('user.settings')->get('anonymous') : $comment->name->value;
+          $name = ($comment->getOwnerId() == 0) ? \Drupal::config('user.settings')->get('anonymous') : $comment->name->value;
           $replacements[$original] = $sanitize ? filter_xss($name) : $name;
           break;
 
         case 'mail':
-          if ($comment->uid->target_id != 0) {
-            $mail = $comment->uid->entity->getEmail();
+          if ($comment->getOwnerId()) {
+            $mail = $comment->getOwner()->getEmail();
           }
           else {
             $mail = $comment->mail->value;
@@ -244,19 +245,20 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
       $replacements += $token_service->generate('comment', $parent_tokens, array('comment' => $parent), $options);
     }
 
-    if (($author_tokens = $token_service->findwithPrefix($tokens, 'author')) && $account = $comment->uid->entity) {
+    if (($author_tokens = $token_service->findwithPrefix($tokens, 'author')) && $account = $comment->getOwner()) {
       $replacements += $token_service->generate('user', $author_tokens, array('user' => $account), $options);
     }
   }
   elseif (($type == 'entity' & !empty($data['entity'])) ||
     ($type == 'node' & !empty($data['node']))) {
+    /** @var $entity \Drupal\Core\Entity\ContentEntityInterface */
     $entity = !empty($data['entity']) ? $data['entity'] : $data['node'];
 
     foreach ($tokens as $name => $original) {
       switch($name) {
         case 'comment-count':
           $count = 0;
-          $fields = array_keys(\Drupal::service('comment.manager')->getFields($entity->entityType()));
+          $fields = array_keys(\Drupal::service('comment.manager')->getFields($entity->getEntityTypeId()));
           $definitions = array_keys($entity->getPropertyDefinitions());
           $valid_fields = array_intersect($fields, $definitions);
           foreach ($valid_fields as $field_name) {
@@ -266,7 +268,7 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
           break;
 
         case 'comment-count-new':
-          $replacements[$original] = comment_num_new($entity->id(), $entity->entityType());
+          $replacements[$original] = comment_num_new($entity->id(), $entity->getEntityTypeId());
           break;
       }
     }

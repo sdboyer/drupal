@@ -7,159 +7,14 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\entity\Entity\EntityDisplay;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\field\Field;
-
-
-/**
- * Returns information about field types.
- *
- * @param $field_type
- *   (optional) A field type name. If omitted, all field types will be returned.
- *
- * @return
- *   Either a field type definition, or an array of all existing field types,
- *   keyed by field type name.
- *
- * @deprecated as of Drupal 8.0. Use
- *   \Drupal::service('plugin.manager.field.field_type')->getDefinition()
- *   or
- *   \Drupal::service('plugin.manager.field.field_type')->getConfigurableDefinitions().
- */
-function field_info_field_types($field_type = NULL) {
-  if ($field_type) {
-    return \Drupal::service('plugin.manager.field.field_type')->getDefinition($field_type);
-  }
-  else {
-    return \Drupal::service('plugin.manager.field.field_type')->getConfigurableDefinitions();
-  }
-}
-
-/**
- * Returns a field type's default settings.
- *
- * @param $type
- *   A field type name.
- *
- * @return
- *   The field type's default settings, or an empty array if type or settings
- *   are not defined.
- *
- * @deprecated as of Drupal 8.0. Use
- *   \Drupal::service('plugin.manager.field.field_type')->getDefaultSettings()
- */
-function field_info_field_settings($type) {
-  return \Drupal::service('plugin.manager.field.field_type')->getDefaultSettings($type);
-}
-
-/**
- * Returns a field type's default instance settings.
- *
- * @param $type
- *   A field type name.
- *
- * @return
- *   The field type's default instance settings, or an empty array if type or
- *   settings are not defined.
- *
- * @deprecated as of Drupal 8.0. Use
- *   \Drupal::service('plugin.manager.field.field_type')->getDefaultInstanceSettings()
- */
-function field_info_instance_settings($type) {
-  return \Drupal::service('plugin.manager.field.field_type')->getDefaultInstanceSettings($type);
-}
-
-/**
- * Returns information about field widgets from AnnotatedClassDiscovery.
- *
- * @param string $widget_type
- *   (optional) A widget type name. If omitted, all widget types will be
- *   returned.
- *
- * @return array
- *   Either a single widget type description, as provided by class annotations,
- *   or an array of all existing widget types, keyed by widget type name.
- *
- * @deprecated as of Drupal 8.0. Use
- *   \Drupal::service('plugin.manager.field.widget')->getDefinition()
- *   or
- *   \Drupal::service('plugin.manager.field.widget')->getDefinitions()
- */
-function field_info_widget_types($widget_type = NULL) {
-  if ($widget_type) {
-    return \Drupal::service('plugin.manager.field.widget')->getDefinition($widget_type);
-  }
-  else {
-    return \Drupal::service('plugin.manager.field.widget')->getDefinitions();
-  }
-}
-
-/**
- * Returns a field widget's default settings.
- *
- * @param $type
- *   A widget type name.
- *
- * @return
- *   The widget type's default settings, as provided by
- *   hook_field_widget_info(), or an empty array if type or settings are
- *   undefined.
- *
- * @deprecated as of Drupal 8.0. Use
- *   \Drupal::service('plugin.manager.field.widget')->getDefaultSettings()
- */
-function field_info_widget_settings($type) {
-  return \Drupal::service('plugin.manager.field.widget')->getDefaultSettings($type);
-}
-
-/**
- * Returns information about field formatters from hook_field_formatter_info().
- *
- * @param string $formatter_type
- *   (optional) A formatter type name. If omitted, all formatter types will be
- *   returned.
- *
- * @return array
- *   Either a single formatter type description, as provided by class
- *   annotations, or an array of all existing formatter types, keyed by
- *   formatter type name.
- *
- * @deprecated as of Drupal 8.0. Use
- *   \Drupal::service('plugin.manager.field.formatter')->getDefinition()
- *   or
- *   \Drupal::service('plugin.manager.field.formatter')->getDefinitions()
- */
-function field_info_formatter_types($formatter_type = NULL) {
-  if ($formatter_type) {
-    return \Drupal::service('plugin.manager.field.formatter')->getDefinition($formatter_type);
-  }
-  else {
-    return \Drupal::service('plugin.manager.field.formatter')->getDefinitions();
-  }
-}
-
-/**
- * Returns a field formatter's default settings.
- *
- * @param $type
- *   A field formatter type name.
- *
- * @return
- *   The formatter type's default settings, as provided by
- *   hook_field_formatter_info(), or an empty array if type or settings are
- *   undefined.
- *
- * @deprecated as of Drupal 8.0. Use
- *   \Drupal::service('plugin.manager.field.formatter')->getDefaultSettings()
- */
-function field_info_formatter_settings($type) {
-  return \Drupal::service('plugin.manager.field.formatter')->getDefaultSettings($type);
-}
 
 /**
  * Returns a lightweight map of fields across bundles.
  *
- * The function only returns active, non deleted fields.
+ * The function only returns non-deleted fields.
  *
  * @return
  *   An array keyed by entity type. Each value is an array which keys are
@@ -194,15 +49,11 @@ function field_info_field_map() {
  *   The entity type.
  * @param $field_name
  *   The name of the field to retrieve. $field_name can only refer to a
- *   non-deleted, active field. For deleted fields, use
- *   field_info_field_by_id(). To retrieve information about inactive fields,
- *   use field_read_fields().
+ *   non-deleted field. For deleted fields, use field_info_field_by_id().
  *
  * @return
- *   The field array, as returned by field_read_fields(), with an
- *   additional element 'bundles', whose value is an array of all the bundles
- *   this field belongs to keyed by entity type. NULL if the field was not
- *   found.
+ *   The \Drupal\field\FieldInterface field definition, as returned by
+ *   entity_load_multiple_by_properties(), NULL if the field was not found.
  *
  * @see field_info_field_by_id()
 
@@ -217,13 +68,11 @@ function field_info_field($entity_type, $field_name) {
  * Returns data about an individual field, given a field ID.
  *
  * @param $field_id
- *   The ID of the field to retrieve. $field_id can refer to a deleted field,
- *   but not an inactive one.
+ *   The ID of the field to retrieve. $field_id can refer to a deleted field.
  *
  * @return
- *   The field array, as returned by field_read_fields(), with an additional
- *   element 'bundles', whose value is an array of all the bundles this field
- *   belongs to.
+ *   The \Drupal\field\FieldInterface field definition, as returned by
+ *   entity_load_multiple_by_properties(), NULL if the field was not found.
  *
  * @see field_info_field()
  *
@@ -241,13 +90,11 @@ function field_info_field_by_id($field_id) {
  * statically caches a potentially large array of information.
  *
  * When iterating over the fields present in a given bundle after a call to
- * field_info_instances($entity_type, $bundle), it is recommended to use
- * field_info_field() on each individual field instead.
+ * field_info_instances($entity_type, $bundle), it is recommended to use the
+ * getField() method on each $instance instead.
  *
- * @return
- *   An array, each key is a field ID and the values are field arrays as
- *   returned by field_read_fields(), with an additional element 'bundles',
- *   whose value is an array of all the bundle this field belongs to.
+ * @return \Drupal\field\FieldInterface[]
+ *   An array of FieldInterface configuration entities, keyed by UUID.
  *
  * @see field_info_field()
  * @see field_info_field_by_id()
@@ -326,132 +173,6 @@ function field_info_instances($entity_type = NULL, $bundle_name = NULL) {
  */
 function field_info_instance($entity_type, $field_name, $bundle_name) {
   return Field::fieldInfo()->getInstance($entity_type, $bundle_name, $field_name);
-}
-
-/**
- * Reads a single field record directly from the database.
- *
- * Generally, you should use the field_info_field() instead.
- *
- * This function will not return deleted fields. Use field_read_fields() instead
- * for this purpose.
- *
- * @param $entity_type
- *   The entity type.
- * @param $field_name
- *   The field name to read.
- * @param array $include_additional
- *   The default behavior of this function is to not return a field that is
- *   inactive. Setting $include_additional['include_inactive'] to TRUE will
- *   override this behavior.
- *
- * @return
- *   A field definition array, or FALSE.
- *
- * @deprecated as of Drupal 8.0. Use
- *   entity_load('field_entity', 'field_name').
- */
-function field_read_field($entity_type, $field_name, $include_additional = array()) {
-  $fields = field_read_fields(array('entity_type' => $entity_type, 'name' => $field_name), $include_additional);
-  return $fields ? current($fields) : FALSE;
-}
-
-/**
- * Reads in fields that match an array of conditions.
- *
- * @param array $conditions
- *   An array of conditions to match against. Keys are names of properties found
- *   in field configuration files, and values are conditions to match.
- * @param array $include_additional
- *   The default behavior of this function is to not return fields that are
- *   inactive or have been deleted. Setting
- *   $include_additional['include_inactive'] or
- *   $include_additional['include_deleted'] to TRUE will override this behavior.
- *
- * @return
- *   An array of fields matching $params. If
- *   $include_additional['include_deleted'] is TRUE, the array is keyed by
- *   field ID, otherwise it is keyed by field name.
- *
- * @deprecated as of Drupal 8.0. Use
- *   entity_load_multiple_by_properties('field_entity', $conditions).
- */
-function field_read_fields($conditions = array(), $include_additional = array()) {
-  // Include inactive fields if specified in the $include_additional parameter.
-  $include_inactive = isset($include_additional['include_inactive']) && $include_additional['include_inactive'];
-  // Include deleted fields if specified either in the $include_additional or
-  // the $conditions parameters.
-  $include_deleted = (isset($include_additional['include_deleted']) && $include_additional['include_deleted']) || (isset($conditions['deleted']) && $conditions['deleted']);
-
-  // Pass include_inactive and include_deleted to the $conditions array.
-  $conditions['include_inactive'] = $include_inactive;
-  $conditions['include_deleted'] = $include_deleted;
-
-  return entity_load_multiple_by_properties('field_entity', $conditions);
-}
-
-/**
- * Reads a single instance record from the database.
- *
- * Generally, you should use field_info_instance() instead, as it provides
- * caching and allows other modules the opportunity to append additional
- * formatters, widgets, and other information.
- *
- * @param $entity_type
- *   The type of entity to which the field is bound.
- * @param $field_name
- *   The field name to read.
- * @param $bundle
- *   The bundle to which the field is bound.
- * @param array $include_additional
- *   The default behavior of this function is to not return an instance that has
- *   been deleted, or whose field is inactive. Setting
- *   $include_additional['include_inactive'] or
- *   $include_additional['include_deleted'] to TRUE will override this behavior.
- *
- * @return
- *   An instance structure, or FALSE.
- *
- * @deprecated as of Drupal 8.0. Use
- *   entity_load('field_instance', 'field_name').
- */
-function field_read_instance($entity_type, $field_name, $bundle, $include_additional = array()) {
-  $instances = field_read_instances(array('entity_type' => $entity_type, 'field_name' => $field_name, 'bundle' => $bundle), $include_additional);
-  return $instances ? current($instances) : FALSE;
-}
-
-/**
- * Reads in field instances that match an array of conditions.
- *
- * @param $param
- *   An array of properties to use in selecting a field instance. Keys are names
- *   of properties found in field instance configuration files, and values are
- *   conditions to match.
- * @param $include_additional
- *   The default behavior of this function is to not return field instances that
- *   have been marked deleted, or whose field is inactive. Setting
- *   $include_additional['include_inactive'] or
- *   $include_additional['include_deleted'] to TRUE will override this behavior.
- *
- * @return
- *   An array of instances matching the arguments.
- *
- * @deprecated as of Drupal 8.0. Use
- *   entity_load_multiple_by_properties('field_instance', $conditions).
- */
-function field_read_instances($conditions = array(), $include_additional = array()) {
-  // Include instances of inactive fields if specified in the
-  // $include_additional parameter.
-  $include_inactive = isset($include_additional['include_inactive']) && $include_additional['include_inactive'];
-  // Include deleted instances if specified either in the $include_additional
-  // or the $conditions parameters.
-  $include_deleted = (isset($include_additional['include_deleted']) && $include_additional['include_deleted']) || (isset($conditions['deleted']) && $conditions['deleted']);
-
-  // Pass include_inactive and include_deleted to the $conditions array.
-  $conditions['include_inactive'] = $include_inactive;
-  $conditions['include_deleted'] = $include_deleted;
-
-  return entity_load_multiple_by_properties('field_instance', $conditions);
 }
 
 /**
@@ -564,11 +285,9 @@ function field_attach_form(EntityInterface $entity, &$form, &$form_state, $langc
   // Get the entity_form_display object for this form.
   $form_display = $form_state['form_display'];
 
-  // If no language is provided use the default site language.
-  $options['langcode'] = field_valid_language($langcode);
   $form += (array) field_invoke_method('form', _field_invoke_widget_target($form_display), $entity, $form, $form_state, $options);
 
-  $form['#entity_type'] = $entity->entityType();
+  $form['#entity_type'] = $entity->getEntityTypeId();
   $form['#bundle'] = $entity->bundle();
 
   // Let other modules make changes to the form.
@@ -615,7 +334,7 @@ function field_attach_form_validate(ContentEntityInterface $entity, $form, &$for
   $has_violations = FALSE;
   foreach ($entity as $field_name => $field) {
     $definition = $field->getDefinition();
-    if (!empty($definition['configurable']) && (empty($options['field_name']) || $options['field_name'] == $field_name)) {
+    if ($definition->isConfigurable() && (empty($options['field_name']) || $options['field_name'] == $field_name)) {
       $field_violations = $field->validate();
       if (count($field_violations)) {
         $has_violations = TRUE;
@@ -630,7 +349,8 @@ function field_attach_form_validate(ContentEntityInterface $entity, $form, &$for
 
   if ($has_violations) {
     // Map errors back to form elements.
-    field_invoke_method('flagErrors', _field_invoke_widget_target($form_state['form_display']), $entity, $form, $form_state, $options);
+    $form_display = $form_state['form_display'];
+    field_invoke_method('flagErrors', _field_invoke_widget_target($form_display), $entity, $form, $form_state, $options);
   }
 }
 
@@ -695,8 +415,6 @@ function field_attach_extract_form_values(EntityInterface $entity, $form, &$form
  * @deprecated as of Drupal 8.0. Use the entity system instead.
  */
 function field_attach_prepare_view($entity_type, array $entities, array $displays, $langcode = NULL) {
-  $options['langcode'] = array();
-
   // To ensure hooks are only run once per entity, only process items without
   // the _field_view_prepared flag.
   // @todo: resolve this more generally for both entity and field level hooks.
@@ -706,10 +424,6 @@ function field_attach_prepare_view($entity_type, array $entities, array $display
       // Add this entity to the items to be prepared.
       $prepare[$id] = $entity;
 
-      // Determine the actual language code to display for each field, given the
-      // language codes available in the field data.
-      $options['langcode'][$id] = field_language($entity, NULL, $langcode);
-
       // Mark this item as prepared.
       $entity->_field_view_prepared = TRUE;
     }
@@ -718,9 +432,9 @@ function field_attach_prepare_view($entity_type, array $entities, array $display
   // Then let the formatters do their own specific massaging. For each
   // instance, call the prepareView() method on the formatter object handed by
   // the entity display.
-  $target_function = function ($instance) use ($displays) {
-    if (isset($displays[$instance->bundle])) {
-      return $displays[$instance->bundle]->getRenderer($instance->getFieldName());
+  $target_function = function (FieldDefinitionInterface $field_definition, $bundle) use ($displays) {
+    if (isset($displays[$bundle])) {
+      return $displays[$bundle]->getRenderer($field_definition->getName());
     }
   };
   $null = NULL;
@@ -741,29 +455,25 @@ function field_attach_prepare_view($entity_type, array $entities, array $display
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   The entity with fields to render.
- * @param \Drupal\entity\Entity\EntityDisplay $display
+ * @param \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display
  *   The entity display object.
  * @param $langcode
  *   The language the field values are to be shown in. If no language is
  *   provided the current language is used.
  * @param array $options
  *   An associative array of additional options. See field_invoke_method() for
- *   details. Note: key "langcode" will be overridden inside this function.
+ *   details.
  *
  * @return array
  *   A renderable array for the field values.
  *
  * @deprecated as of Drupal 8.0. Use the entity system instead.
  */
-function field_attach_view(EntityInterface $entity, EntityDisplay $display, $langcode = NULL, array $options = array()) {
-  // Determine the actual language code to display for each field, given the
-  // language codes available in the field data.
-  $options['langcode'] = field_language($entity, NULL, $langcode);
-
-  // For each instance, call the view() method on the formatter object handed
+function field_attach_view(EntityInterface $entity, EntityViewDisplayInterface $display, $langcode = NULL, array $options = array()) {
+  // For each field, call the view() method on the formatter object handed
   // by the entity display.
-  $target_function = function ($instance) use ($display) {
-    return $display->getRenderer($instance->getFieldName());
+  $target_function = function (FieldDefinitionInterface $field_definition) use ($display) {
+    return $display->getRenderer($field_definition->getName());
   };
   $null = NULL;
   $output = field_invoke_method('view', $target_function, $entity, $null, $null, $options);
@@ -784,77 +494,4 @@ function field_attach_view(EntityInterface $entity, EntityDisplay $display, $lan
   unset($entity->_field_view_prepared);
 
   return $output;
-}
-
-/**
- * Returns the field items in the language they currently would be displayed.
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
- *   The entity containing the data to be displayed.
- * @param $field_name
- *   The field to be displayed.
- * @param $langcode
- *   (optional) The language code $entity->{$field_name} has to be displayed in.
- *   Defaults to the current language.
- *
- * @return
- *   An array with available field items keyed by delta.
- *
- * @deprecated as of Drupal 8.0. Use
- *   $entity->getTranslation($langcode)->{$field_name}
- */
-function field_get_items(EntityInterface $entity, $field_name, $langcode = NULL) {
-  $langcode = field_language($entity, $field_name, $langcode);
-  return isset($entity->{$field_name}[$langcode]) ? $entity->{$field_name}[$langcode] : array();
-}
-
-/**
- * Helper function to get the default value for a field on an entity.
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
- *   The entity for the operation.
- * @param $field
- *   The field structure.
- * @param $instance
- *   The instance structure.
- * @param $langcode
- *   The field language to fill-in with the default value.
- *
- * @return array
- *   The default value for the field.
- *
- * @deprecated as of Drupal 8.0. Use
- *   $instance->getFieldDefaultValue($entity)
- */
-function field_get_default_value(EntityInterface $entity, $field, $instance, $langcode = NULL) {
-  return $instance->getFieldDefaultValue($entity);
-}
-
-/**
- * Determines whether the user has access to a given field.
- *
- * @param string $op
- *   The operation to be performed. Possible values:
- *   - edit
- *   - view
- * @param \Drupal\field\FieldInterface $field
- *   The field on which the operation is to be performed.
- * @param $entity_type
- *   The type of $entity; for example, 'node' or 'user'.
- * @param $entity
- *   (optional) The entity for the operation.
- * @param $account
- *   (optional) The account to check, if not given use currently logged in user.
- *
- * @return
- *   TRUE if the operation is allowed; FALSE if the operation is denied.
- *
- * @deprecated as of Drupal 8.0. Use
- *   Drupal\Core\Entity\EntityAccessControllerInterface::fieldAccess()
- */
-function field_access($op, FieldInterface $field, $entity_type, $entity = NULL, $account = NULL) {
-  $access_controller = \Drupal::entityManager()->getAccessController($entity_type);
-
-  $items = $entity ? $entity->get($field->id()) : NULL;
-  return $access_controller->fieldAccess($op, $field, $account, $items);
 }

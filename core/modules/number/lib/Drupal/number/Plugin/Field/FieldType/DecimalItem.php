@@ -7,7 +7,8 @@
 
 namespace Drupal\number\Plugin\Field\FieldType;
 
-use Drupal\field\FieldInterface;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Component\Utility\MapArray;
 
 /**
@@ -38,10 +39,8 @@ class DecimalItem extends NumberItemBase {
    */
   public function getPropertyDefinitions() {
     if (!isset(static::$propertyDefinitions)) {
-      static::$propertyDefinitions['value'] = array(
-        'type' => 'string',
-        'label' => t('Decimal value'),
-      );
+      static::$propertyDefinitions['value'] = DataDefinition::create('string')
+        ->setLabel(t('Decimal value'));
     }
     return static::$propertyDefinitions;
   }
@@ -49,13 +48,13 @@ class DecimalItem extends NumberItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldInterface $field) {
+  public static function schema(FieldDefinitionInterface $field_definition) {
     return array(
       'columns' => array(
         'value' => array(
           'type' => 'numeric',
-          'precision' => $field->settings['precision'],
-          'scale' => $field->settings['scale'],
+          'precision' => $field_definition->settings['precision'],
+          'scale' => $field_definition->settings['scale'],
           'not null' => FALSE
         )
       ),
@@ -79,7 +78,7 @@ class DecimalItem extends NumberItemBase {
     );
     $element['scale'] = array(
       '#type' => 'select',
-      '#title' => t('Scale'),
+      '#title' => t('Scale', array(), array('decimal places')),
       '#options' => MapArray::copyValuesToKeys(range(0, 10)),
       '#default_value' => $settings['scale'],
       '#description' => t('The number of digits to the right of the decimal.'),

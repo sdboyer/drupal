@@ -13,8 +13,6 @@ use Drupal\ckeditor\CKEditorPluginManager;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageManager;
 use Drupal\editor\Plugin\EditorBase;
-use Drupal\editor\Annotation\Editor;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\editor\Entity\Editor as EditorEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,6 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Editor(
  *   id = "ckeditor",
  *   label = @Translation("CKEditor"),
+ *   supports_content_filtering = TRUE,
  *   supports_inline_editing = TRUE
  * )
  */
@@ -267,7 +266,7 @@ class CKEditor extends EditorBase implements ContainerFactoryPluginInterface {
 
     // Map the interface language code to a CKEditor translation.
     $ckeditor_langcodes = $this->getLangcodes();
-    $language_interface = $this->languageManager->getLanguage(Language::TYPE_INTERFACE);
+    $language_interface = $this->languageManager->getCurrentLanguage();
     if (isset($ckeditor_langcodes[$language_interface->id])) {
       $display_langcode = $ckeditor_langcodes[$language_interface->id];
     }
@@ -294,7 +293,7 @@ class CKEditor extends EditorBase implements ContainerFactoryPluginInterface {
 
     // Parse all CKEditor plugin JavaScript files for translations.
     if ($this->moduleHandler->moduleExists('locale')) {
-      locale_js_translate(array_values($settings['drupalExternalPlugins']));
+      locale_js_translate(array_values($external_plugin_files));
     }
 
     ksort($settings);
@@ -320,9 +319,9 @@ class CKEditor extends EditorBase implements ContainerFactoryPluginInterface {
     if (empty($langcodes)) {
       $langcodes = array();
       // Collect languages included with CKEditor based on file listing.
-      $ckeditor_languages = glob(DRUPAL_ROOT . '/core/assets/vendor/ckeditor/lang/*.js');
-      foreach ($ckeditor_languages as $language_filename) {
-        $langcode = basename($language_filename, '.js');
+      $ckeditor_languages = new \GlobIterator(DRUPAL_ROOT . '/core/assets/vendor/ckeditor/lang/*.js');
+      foreach ($ckeditor_languages as $language_file) {
+        $langcode = $language_file->getBasename('.js');
         $langcodes[$langcode] = $langcode;
       }
       cache('ckeditor.languages')->set('langcodes', $langcodes);

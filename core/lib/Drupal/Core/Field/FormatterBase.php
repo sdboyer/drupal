@@ -74,22 +74,22 @@ abstract class FormatterBase extends PluginSettingsBase implements FormatterInte
     $elements = $this->viewElements($items);
     if ($elements) {
       $entity = $items->getEntity();
-      $entity_type = $entity->entityType();
-      $field_name = $this->fieldDefinition->getFieldName();
+      $entity_type = $entity->getEntityTypeId();
+      $field_name = $this->fieldDefinition->getName();
       $info = array(
         '#theme' => 'field',
-        '#title' => $this->fieldDefinition->getFieldLabel(),
+        '#title' => $this->fieldDefinition->getLabel(),
         '#access' => $items->access('view'),
         '#label_display' => $this->label,
         '#view_mode' => $this->viewMode,
         '#language' => $items->getLangcode(),
         '#field_name' => $field_name,
-        '#field_type' => $this->fieldDefinition->getFieldType(),
-        '#field_translatable' => $this->fieldDefinition->isFieldTranslatable(),
+        '#field_type' => $this->fieldDefinition->getType(),
+        '#field_translatable' => $this->fieldDefinition->isTranslatable(),
         '#entity_type' => $entity_type,
         '#bundle' => $entity->bundle(),
         '#object' => $entity,
-        '#items' => $items->getValue(TRUE),
+        '#items' => $items,
         '#formatter' => $this->getPluginId(),
         '#cache' => array('tags' => array())
       );
@@ -101,8 +101,8 @@ abstract class FormatterBase extends PluginSettingsBase implements FormatterInte
         }
 
         if (isset($item->entity)) {
-          $info['#cache']['tags'][$item->entity->entityType()][] = $item->entity->id();
-          $info['#cache']['tags'][$item->entity->entityType() . '_view'] = TRUE;
+          $info['#cache']['tags'][$item->entity->getEntityTypeId()][] = $item->entity->id();
+          $info['#cache']['tags'][$item->entity->getEntityTypeId() . '_view'] = TRUE;
         }
       }
 
@@ -138,7 +138,7 @@ abstract class FormatterBase extends PluginSettingsBase implements FormatterInte
    *   The array of settings.
    */
   protected function getFieldSettings() {
-    return $this->fieldDefinition->getFieldSettings();
+    return $this->fieldDefinition->getSettings();
   }
 
   /**
@@ -151,7 +151,7 @@ abstract class FormatterBase extends PluginSettingsBase implements FormatterInte
    *   The setting value.
    */
   protected function getFieldSetting($setting_name) {
-    return $this->fieldDefinition->getFieldSetting($setting_name);
+    return $this->fieldDefinition->getSetting($setting_name);
   }
 
 }

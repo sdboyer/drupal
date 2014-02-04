@@ -7,7 +7,7 @@
 
 namespace Drupal\text\Plugin\Field\FieldType;
 
-use Drupal\field\FieldInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Plugin implementation of the 'text' field type.
@@ -31,12 +31,12 @@ class TextItem extends TextItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldInterface $field) {
+  public static function schema(FieldDefinitionInterface $field_definition) {
     return array(
       'columns' => array(
         'value' => array(
           'type' => 'varchar',
-          'length' => $field->settings['max_length'],
+          'length' => $field_definition->getSetting('max_length'),
           'not null' => FALSE,
         ),
         'format' => array(
@@ -48,12 +48,6 @@ class TextItem extends TextItemBase {
       'indexes' => array(
         'format' => array('format'),
       ),
-      'foreign keys' => array(
-        'format' => array(
-          'table' => 'filter_format',
-          'columns' => array('format' => 'format'),
-        ),
-      ),
     );
   }
 
@@ -61,7 +55,7 @@ class TextItem extends TextItemBase {
    * {@inheritdoc}
    */
   public function getConstraints() {
-    $constraint_manager = \Drupal::typedData()->getValidationConstraintManager();
+    $constraint_manager = \Drupal::typedDataManager()->getValidationConstraintManager();
     $constraints = parent::getConstraints();
 
     if ($max_length = $this->getFieldSetting('max_length')) {
@@ -69,7 +63,7 @@ class TextItem extends TextItemBase {
         'value' => array(
           'Length' => array(
             'max' => $max_length,
-            'maxMessage' => t('%name: the text may not be longer than @max characters.', array('%name' => $this->getFieldDefinition()->getFieldLabel(), '@max' => $max_length)),
+            'maxMessage' => t('%name: the text may not be longer than @max characters.', array('%name' => $this->getFieldDefinition()->getLabel(), '@max' => $max_length)),
           )
         ),
       ));

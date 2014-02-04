@@ -74,11 +74,11 @@ abstract class NumberItemBase extends ConfigFieldItemBase {
    * {@inheritdoc}
    */
   public function getConstraints() {
-    $constraint_manager = \Drupal::typedData()->getValidationConstraintManager();
+    $constraint_manager = \Drupal::typedDataManager()->getValidationConstraintManager();
     $constraints = parent::getConstraints();
 
     $settings = $this->getFieldSettings();
-    $label = $this->getFieldDefinition()->getFieldLabel();
+    $label = $this->getFieldDefinition()->getLabel();
 
     if (!empty($settings['min'])) {
       $min = $settings['min'];

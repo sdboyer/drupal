@@ -79,15 +79,7 @@ class ConfigTestFormController extends EntityFormController {
       drupal_set_message(format_string('%label configuration has been created.', array('%label' => $entity->label())));
     }
 
-    $form_state['redirect'] = 'admin/structure/config_test';
-  }
-
-  /**
-   * Overrides Drupal\Core\Entity\EntityFormController::delete().
-   */
-  public function delete(array $form, array &$form_state) {
-    $entity = $this->entity;
-    $form_state['redirect'] = 'admin/structure/config_test/manage/' . $entity->id() . '/delete';
+    $form_state['redirect_route']['route_name'] = 'config_test.list_page';
   }
 
 }

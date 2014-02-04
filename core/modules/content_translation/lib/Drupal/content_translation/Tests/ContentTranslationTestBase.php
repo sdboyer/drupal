@@ -110,9 +110,9 @@ abstract class ContentTranslationTestBase extends WebTestBase {
    * Returns the translate permissions for the current entity and bundle.
    */
   protected function getTranslatePermission() {
-    $info = entity_get_info($this->entityType);
-    if (!empty($info['permission_granularity'])) {
-      return $info['permission_granularity'] == 'bundle' ? "translate {$this->bundle} {$this->entityType}" : "translate {$this->entityType}";
+    $info = \Drupal::entityManager()->getDefinition($this->entityType);
+    if ($permission_granularity = $info->getPermissionGranularity()) {
+      return $permission_granularity == 'bundle' ? "translate {$this->bundle} {$this->entityType}" : "translate {$this->entityType}";
     }
   }
 
@@ -125,12 +125,19 @@ abstract class ContentTranslationTestBase extends WebTestBase {
   }
 
   /**
+   * Returns an array of permissions needed for the administrator.
+   */
+  protected function getAdministratorPermissions() {
+    return array_merge($this->getEditorPermissions(), $this->getTranslatorPermissions(), array('administer content translation'));
+  }
+
+  /**
    * Creates and activates translator, editor and admin users.
    */
   protected function setupUsers() {
     $this->translator = $this->drupalCreateUser($this->getTranslatorPermissions(), 'translator');
     $this->editor = $this->drupalCreateUser($this->getEditorPermissions(), 'editor');
-    $this->administrator = $this->drupalCreateUser(array_merge($this->getEditorPermissions(), $this->getTranslatorPermissions()), 'administrator');
+    $this->administrator = $this->drupalCreateUser($this->getAdministratorPermissions(), 'administrator');
     $this->drupalLogin($this->translator);
   }
 
@@ -199,9 +206,9 @@ abstract class ContentTranslationTestBase extends WebTestBase {
   protected function createEntity($values, $langcode, $bundle_name = NULL) {
     $entity_values = $values;
     $entity_values['langcode'] = $langcode;
-    $info = entity_get_info($this->entityType);
-    if (!empty($info['entity_keys']['bundle'])) {
-      $entity_values[$info['entity_keys']['bundle']] = $bundle_name ?: $this->bundle;
+    $info = \Drupal::entityManager()->getDefinition($this->entityType);
+    if ($bundle_key = $info->getKey('bundle')) {
+      $entity_values[$bundle_key] = $bundle_name ?: $this->bundle;
     }
     $controller = $this->container->get('entity.manager')->getStorageController($this->entityType);
     if (!($controller instanceof FieldableDatabaseStorageController)) {

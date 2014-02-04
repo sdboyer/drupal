@@ -26,8 +26,8 @@ class LanguageLocalTasks extends LocalTaskIntegrationTest {
   }
 
   public function setUp() {
-    $this->moduleList = array(
-      'language' => 'core/modules/language/language.module',
+    $this->directoryList = array(
+      'language' => 'core/modules/language',
     );
     parent::setUp();
   }
@@ -59,15 +59,5 @@ class LanguageLocalTasks extends LocalTaskIntegrationTest {
       0 => array('language.edit'),
     ));
   }
-
-  /**
-   * Tests language date format local tasks.
-   */
-  public function testLanguageDateLocalTasks() {
-    $this->assertLocalTasks('system.date_format_language_overview', array(
-      0 => array('system.date_format_language_overview'),
-    ));
-  }
-
 
 }

@@ -211,7 +211,7 @@ abstract class ViewTestBase extends WebTestBase {
    *   message is provided, the message will indicate the button label.
    *
    * @return bool
-   *   TRUE if the asserion was succesful, or FALSE on failure.
+   *   TRUE if the asserion was successful, or FALSE on failure.
    */
   protected function helperButtonHasLabel($id, $expected_label, $message = 'Label has the expected value: %label.') {
     return $this->assertFieldById($id, $expected_label, t($message, array('%label' => $expected_label)));
@@ -226,6 +226,9 @@ abstract class ViewTestBase extends WebTestBase {
    *   (optional) An array of the view arguments to use for the view.
    */
   protected function executeView($view, $args = array()) {
+    // A view does not really work outside of a request scope, due to many
+    // dependencies like the current user.
+    $this->container->enterScope('request');
     $view->setDisplay();
     $view->preExecute($args);
     $view->execute();

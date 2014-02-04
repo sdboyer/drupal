@@ -10,6 +10,7 @@ namespace Drupal\node;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\EntityControllerInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Entity\EntityAccessController;
 use Drupal\Core\Entity\EntityInterface;
@@ -33,24 +34,21 @@ class NodeAccessController extends EntityAccessController implements NodeAccessC
   /**
    * Constructs a NodeAccessController object.
    *
-   * @param string $entity_type
-   *   The entity type of the access controller instance.
-   * @param array $entity_info
-   *   An array of entity info for the entity type.
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_info
+   *   The entity info for the entity type.
    * @param \Drupal\node\NodeGrantDatabaseStorageInterface $grant_storage
    *   The node grant storage.
    */
-  public function __construct($entity_type, array $entity_info, NodeGrantDatabaseStorageInterface $grant_storage) {
-    parent::__construct($entity_type, $entity_info);
+  public function __construct(EntityTypeInterface $entity_info, NodeGrantDatabaseStorageInterface $grant_storage) {
+    parent::__construct($entity_info);
     $this->grantStorage = $grant_storage;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, $entity_type, array $entity_info) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_info) {
     return new static(
-      $entity_type,
       $entity_info,
       $container->get('node.grant_storage')
     );
@@ -92,7 +90,9 @@ class NodeAccessController extends EntityAccessController implements NodeAccessC
   protected function checkAccess(EntityInterface $node, $operation, $langcode, AccountInterface $account) {
     // Fetch information from the node object if possible.
     $status = $node->getTranslation($langcode)->isPublished();
-    $uid = $node->getTranslation($langcode)->getAuthorId();
+    /** @var \Drupal\node\NodeInterface $translation */
+    $translation = $node->getTranslation($langcode);
+    $uid = $translation->getOwnerId();
 
     // Check if authors can view their own unpublished nodes.
     if ($operation === 'view' && !$status && user_access('view own unpublished content', $account)) {

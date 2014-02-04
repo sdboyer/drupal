@@ -19,7 +19,7 @@ class NodeImportCreateTest extends DrupalUnitTestBase {
    *
    * @var array
    */
-  public static $modules = array('node', 'entity', 'field', 'text', 'system');
+  public static $modules = array('node', 'entity', 'field', 'text', 'system', 'user');
 
   /**
    * Set the default field storage backend for fields created during tests.
@@ -28,6 +28,7 @@ class NodeImportCreateTest extends DrupalUnitTestBase {
     parent::setUp();
 
     $this->installSchema('system', array('config_snapshot'));
+    $this->installSchema('user', array('users'));
 
     // Set default storage backend.
     $this->installConfig(array('field'));
@@ -78,6 +79,7 @@ class NodeImportCreateTest extends DrupalUnitTestBase {
     // Check that the content type was created.
     $node_type = entity_load('node_type', $node_type_id);
     $this->assertTrue($node_type, 'Import node type from staging was created.');
+    $this->assertFalse(field_info_instance('node', 'body', $node_type_id));
   }
 
 }

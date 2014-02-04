@@ -68,7 +68,7 @@ class CommentTranslationUITest extends ContentTranslationUITest {
    * Overrides \Drupal\content_translation\Tests\ContentTranslationUITest::getTranslatorPermission().
    */
   protected function getTranslatorPermissions() {
-    return array_merge(parent::getTranslatorPermissions(), array('post comments', 'administer comments'));
+    return array_merge(parent::getTranslatorPermissions(), array('post comments', 'administer comments', 'access comments'));
   }
 
   /**
@@ -108,7 +108,7 @@ class CommentTranslationUITest extends ContentTranslationUITest {
     $values['entity_id'] = $node->id();
     $values['entity_type'] = 'node';
     $values['field_id'] = $node_bundle;
-    $values['uid'] = $node->getAuthorId();
+    $values['uid'] = $node->getOwnerId();
     return parent::createEntity($values, $langcode, $node_bundle);
   }
 
@@ -134,7 +134,7 @@ class CommentTranslationUITest extends ContentTranslationUITest {
     $languages = language_list();
 
     // Check that simple users cannot see unpublished field translations.
-    $path = $this->controller->getViewPath($entity);
+    $path = $entity->getSystemPath();
     foreach ($this->langcodes as $index => $langcode) {
       $translation = $this->getTranslation($entity, $langcode);
       $value = $this->getValue($translation, 'comment_body', $langcode);
@@ -155,7 +155,7 @@ class CommentTranslationUITest extends ContentTranslationUITest {
    * Tests translate link on comment content admin page.
    */
   function testTranslateLinkCommentAdminPage() {
-    $this->admin_user = $this->drupalCreateUser(array_merge(parent::getTranslatorPermissions(), array('access administration pages', 'administer comments')));
+    $this->admin_user = $this->drupalCreateUser(array_merge(parent::getTranslatorPermissions(), array('access administration pages', 'administer comments', 'skip comment approval')));
     $this->drupalLogin($this->admin_user);
 
     $cid_translatable = $this->createEntity(array(), $this->langcodes[0]);

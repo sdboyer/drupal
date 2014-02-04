@@ -7,7 +7,7 @@
 
 namespace Drupal\Core\Entity\Plugin\DataType\Deriver;
 
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -33,7 +33,7 @@ class EntityDeriver implements ContainerDerivativeInterface {
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
@@ -42,10 +42,10 @@ class EntityDeriver implements ContainerDerivativeInterface {
    *
    * @param string $base_plugin_id
    *   The base plugin ID.
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct($base_plugin_id, EntityManager $entity_manager) {
+  public function __construct($base_plugin_id, EntityManagerInterface $entity_manager) {
     $this->basePluginId = $base_plugin_id;
     $this->entityManager = $entity_manager;
   }
@@ -82,8 +82,8 @@ class EntityDeriver implements ContainerDerivativeInterface {
     // Add definitions for each entity type and bundle.
     foreach ($this->entityManager->getDefinitions() as $entity_type => $info) {
       $this->derivatives[$entity_type] = array(
-        'label' => $info['label'],
-        'class' => $info['class'],
+        'label' => $info->getLabel(),
+        'class' => $info->getClass(),
         'constraints' => array('EntityType' => $entity_type),
       ) + $base_plugin_definition;
 
@@ -92,7 +92,7 @@ class EntityDeriver implements ContainerDerivativeInterface {
         if ($bundle !== $entity_type) {
           $this->derivatives[$entity_type . ':' . $bundle] = array(
             'label' => $bundle_info['label'],
-            'class' => $info['class'],
+            'class' => $info->getClass(),
             'constraints' => array(
               'EntityType' => $entity_type,
               'Bundle' => $bundle,

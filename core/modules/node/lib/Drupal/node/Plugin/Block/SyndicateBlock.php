@@ -8,8 +8,6 @@
 namespace Drupal\node\Plugin\Block;
 
 use Drupal\block\BlockBase;
-use Drupal\block\Annotation\Block;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Session\AccountInterface;
 
 /**
@@ -17,7 +15,8 @@ use Drupal\Core\Session\AccountInterface;
  *
  * @Block(
  *   id = "node_syndicate_block",
- *   admin_label = @Translation("Syndicate")
+ *   admin_label = @Translation("Syndicate"),
+ *   category = @Translation("System")
  * )
  */
 class SyndicateBlock extends BlockBase {

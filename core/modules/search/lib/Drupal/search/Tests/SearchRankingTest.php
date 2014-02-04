@@ -7,14 +7,17 @@
 
 namespace Drupal\search\Tests;
 
+/**
+ * Indexes content and tests ranking factors.
+ */
 class SearchRankingTest extends SearchTestBase {
 
   /**
-   * A node search plugin instance.
+   * The node search page.
    *
-   * @var \Drupal\search\Plugin\SearchInterface
+   * @var \Drupal\search\SearchPageInterface
    */
-  protected $nodeSearchPlugin;
+  protected $nodeSearch;
 
   /**
    * Modules to enable.
@@ -35,12 +38,12 @@ class SearchRankingTest extends SearchTestBase {
     parent::setUp();
 
     // Create a plugin instance.
-    $this->nodeSearchPlugin = $this->container->get('plugin.manager.search')->createInstance('node_search');
+    $this->nodeSearch = entity_load('search_page', 'node_search');
   }
 
   public function testRankings() {
     // Login with sufficient privileges.
-    $this->drupalLogin($this->drupalCreateUser(array('post comments', 'skip comment approval', 'create page content')));
+    $this->drupalLogin($this->drupalCreateUser(array('post comments', 'skip comment approval', 'create page content', 'administer search')));
     // Add a comment field.
     $this->container->get('comment.manager')->addDefaultField('node', 'page');
 
@@ -48,6 +51,7 @@ class SearchRankingTest extends SearchTestBase {
     $node_ranks = array('sticky', 'promote', 'relevance', 'recent', 'comments', 'views');
 
     // Create nodes for testing.
+    $nodes = array();
     foreach ($node_ranks as $node_rank) {
       $settings = array(
         'type' => 'page',
@@ -80,11 +84,8 @@ class SearchRankingTest extends SearchTestBase {
     }
 
     // Update the search index.
-    $this->nodeSearchPlugin->updateIndex();
+    $this->nodeSearch->getPlugin()->updateIndex();
     search_update_totals();
-
-    // Refresh variables after the treatment.
-    $this->refreshVariables();
 
     // Add a comment to one of the nodes.
     $edit = array();
@@ -107,21 +108,47 @@ class SearchRankingTest extends SearchTestBase {
     for ($i = 0; $i < 5; $i ++) {
       $client->post($stats_path, array(), array('nid' => $nid))->send();
     }
-    // Test each of the possible rankings.
+
     // @todo - comments and views are removed from the array since they are
     // broken in core. Those modules expected hook_update_index() to be called
     // even though it was only called on modules that implemented a search type.
     array_pop($node_ranks);
     array_pop($node_ranks);
+
+    // Test that the settings form displays the context ranking section.
+    $this->drupalGet('admin/config/search/settings/manage/node_search');
+    $this->assertText(t('Content ranking'));
+
+    // Check that all rankings are visible and set to 0.
     foreach ($node_ranks as $node_rank) {
-      // Disable all relevancy rankings except the one we are testing.
-      foreach ($node_ranks as $var) {
-        variable_set('node_rank_' . $var, $var == $node_rank ? 10 : 0);
-      }
+      $this->assertTrue($this->xpath('//select[@id="edit-rankings-' . $node_rank . '"]//option[@value="0"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 0.');
+    }
+
+    // Test each of the possible rankings.
+    $edit = array();
+    foreach ($node_ranks as $node_rank) {
+      // Enable the ranking we are testing.
+      $edit['rankings_' . $node_rank] = 10;
+      $this->drupalPostForm('admin/config/search/settings/manage/node_search', $edit, t('Save search page'));
+      $this->drupalGet('admin/config/search/settings/manage/node_search');
+      $this->assertTrue($this->xpath('//select[@id="edit-rankings-' . $node_rank . '"]//option[@value="10"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 10.');
+
+      // Reload the plugin to get the up-to-date values.
+      $this->nodeSearch = entity_load('search_page', 'node_search');
       // Do the search and assert the results.
-      $this->nodeSearchPlugin->setSearch('rocks', array(), array());
-      $set = $this->nodeSearchPlugin->execute();
+      $this->nodeSearch->getPlugin()->setSearch('rocks', array(), array());
+      $set = $this->nodeSearch->getPlugin()->execute();
       $this->assertEqual($set[0]['node']->id(), $nodes[$node_rank][1]->id(), 'Search ranking "' . $node_rank . '" order.');
+      // Clear this ranking for the next test.
+      $edit['rankings_' . $node_rank] = 0;
+    }
+
+    // Save the final node_rank change then check that all rankings are visible
+    // and have been set back to 0.
+    $this->drupalPostForm('admin/config/search/settings/manage/node_search', $edit, t('Save search page'));
+    $this->drupalGet('admin/config/search/settings/manage/node_search');
+    foreach ($node_ranks as $node_rank) {
+      $this->assertTrue($this->xpath('//select[@id="edit-rankings-' . $node_rank . '"]//option[@value="0"]'), 'Select list to prioritize ' . $node_rank . ' for node ranks is visible and set to 0.');
     }
   }
 
@@ -148,6 +175,7 @@ class SearchRankingTest extends SearchTestBase {
       'type' => 'page',
       'title' => 'Simple node',
     );
+    $nodes = array();
     foreach ($shuffled_tags as $tag) {
       switch ($tag) {
         case 'a':
@@ -164,20 +192,12 @@ class SearchRankingTest extends SearchTestBase {
     }
 
     // Update the search index.
-    $this->nodeSearchPlugin->updateIndex();
+    $this->nodeSearch->getPlugin()->updateIndex();
     search_update_totals();
 
-    // Refresh variables after the treatment.
-    $this->refreshVariables();
-
-    // Disable all other rankings.
-    $node_ranks = array('sticky', 'promote', 'recent', 'comments', 'views');
-    foreach ($node_ranks as $node_rank) {
-      variable_set('node_rank_' . $node_rank, 0);
-    }
-    $this->nodeSearchPlugin->setSearch('rocks', array(), array());
+    $this->nodeSearch->getPlugin()->setSearch('rocks', array(), array());
     // Do the search and assert the results.
-    $set = $this->nodeSearchPlugin->execute();
+    $set = $this->nodeSearch->getPlugin()->execute();
 
     // Test the ranking of each tag.
     foreach ($sorted_tags as $tag_rank => $tag) {
@@ -196,14 +216,12 @@ class SearchRankingTest extends SearchTestBase {
       $node = $this->drupalCreateNode($settings);
 
       // Update the search index.
-      $this->nodeSearchPlugin->updateIndex();
+      $this->nodeSearch->getPlugin()->updateIndex();
       search_update_totals();
 
-      // Refresh variables after the treatment.
-      $this->refreshVariables();
-      $this->nodeSearchPlugin->setSearch('rocks', array(), array());
+      $this->nodeSearch->getPlugin()->setSearch('rocks', array(), array());
       // Do the search and assert the results.
-      $set = $this->nodeSearchPlugin->execute();
+      $set = $this->nodeSearch->getPlugin()->execute();
 
       // Ranking should always be second to last.
       $set = array_slice($set, -2, 1);
@@ -225,35 +243,36 @@ class SearchRankingTest extends SearchTestBase {
     // Login with sufficient privileges.
     $this->drupalLogin($this->drupalCreateUser(array('skip comment approval', 'create page content')));
 
-    // See testRankings() above - build a node that will rank high for sticky.
+    // Create two nodes that will match the search, one that is sticky.
     $settings = array(
       'type' => 'page',
       'title' => 'Drupal rocks',
       'body' => array(array('value' => "Drupal's search rocks")),
-      'sticky' => 1,
     );
-
+    $this->drupalCreateNode($settings);
+    $settings['sticky'] = 1;
     $node = $this->drupalCreateNode($settings);
 
     // Update the search index.
-    $this->nodeSearchPlugin->updateIndex();
+    $this->nodeSearch->getPlugin()->updateIndex();
     search_update_totals();
-
-    // Refresh variables after the treatment.
-    $this->refreshVariables();
 
     // Set up for ranking sticky and lots of comments; make sure others are
     // disabled.
     $node_ranks = array('sticky', 'promote', 'relevance', 'recent', 'comments', 'views');
+    $configuration = $this->nodeSearch->getPlugin()->getConfiguration();
     foreach ($node_ranks as $var) {
       $value = ($var == 'sticky' || $var == 'comments') ? 10 : 0;
-      variable_set('node_rank_' . $var, $value);
+      $configuration['rankings'][$var] = $value;
     }
+    $this->nodeSearch->getPlugin()->setConfiguration($configuration);
+    $this->nodeSearch->save();
 
     // Do the search and assert the results.
-    $this->nodeSearchPlugin->setSearch('rocks', array(), array());
+    $this->nodeSearch->getPlugin()->setSearch('rocks', array(), array());
     // Do the search and assert the results.
-    $set = $this->nodeSearchPlugin->execute();
+    $set = $this->nodeSearch->getPlugin()->execute();
     $this->assertEqual($set[0]['node']->id(), $node->id(), 'Search double ranking order.');
   }
+
 }

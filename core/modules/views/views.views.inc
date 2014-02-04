@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Provide views data and handlers that aren't tied to any other module.
- *
- * @ingroup views_module_handlers
+ * Provide views data that isn't tied to any other module.
  */
+
+use Drupal\system\ActionConfigEntityInterface;
 
 /**
  * Implements hook_views_data().
@@ -115,10 +115,10 @@ function views_views_data() {
   );
 
   // Registers an entity area handler per entity type.
-  foreach (entity_get_info() as $entity_type => $entity_info) {
+  foreach (\Drupal::entityManager()->getDefinitions() as $entity_type => $entity_info) {
     // Exclude entity types, which cannot be rendered.
-    if (!empty($entity_info['controllers']['view_builder'])) {
-      $label = $entity_info['label'];
+    if ($entity_info->hasViewBuilderClass()) {
+      $label = $entity_info->getLabel();
       $data['views']['entity_' . $entity_type] = array(
         'title' => t('Rendered entity - @label', array('@label' => $label)),
         'help' => t('Displays a rendered @label entity in an area.', array('@label' => $label)),
@@ -130,5 +130,21 @@ function views_views_data() {
     }
   }
 
+  // Registers an action bulk form per entity.
+  foreach (\Drupal::entityManager()->getDefinitions() as $entity_type => $entity_info) {
+    $actions = array_filter(\Drupal::entityManager()->getStorageController('action')->loadMultiple(), function (ActionConfigEntityInterface $action) use ($entity_type) {
+      return $action->getType() == $entity_type;
+    });
+    if (empty($actions)) {
+      continue;
+    }
+    $data[$entity_info->getBaseTable()][$entity_type . '_bulk_form'] = array(
+      'title' => t('Bulk update'),
+      'help' => t('Allows users to apply an action to one or more items.'),
+      'field' => array(
+        'id' => 'bulk_form',
+      ),
+    );
+  }
   return $data;
 }

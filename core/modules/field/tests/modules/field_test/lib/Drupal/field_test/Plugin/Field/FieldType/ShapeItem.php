@@ -7,7 +7,8 @@
 
 namespace Drupal\field_test\Plugin\Field\FieldType;
 
-use Drupal\field\FieldInterface;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\ConfigFieldItemBase;
 
 /**
@@ -39,16 +40,12 @@ class ShapeItem extends ConfigFieldItemBase {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions() {
-
     if (!isset(static::$propertyDefinitions)) {
-      static::$propertyDefinitions['shape'] = array(
-        'type' => 'string',
-        'label' => t('Shape'),
-      );
-      static::$propertyDefinitions['color'] = array(
-        'type' => 'string',
-        'label' => t('Color'),
-      );
+      static::$propertyDefinitions['shape'] = DataDefinition::create('string')
+        ->setLabel(t('Shape'));
+
+      static::$propertyDefinitions['color'] = DataDefinition::create('string')
+        ->setLabel(t('Color'));
     }
     return static::$propertyDefinitions;
   }
@@ -56,16 +53,16 @@ class ShapeItem extends ConfigFieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldInterface $field) {
+  public static function schema(FieldDefinitionInterface $field_definition) {
     $foreign_keys = array();
     // The 'foreign keys' key is not always used in tests.
-    if ($field->getFieldSetting('foreign_key_name')) {
+    if ($field_definition->getSetting('foreign_key_name')) {
       $foreign_keys['foreign keys'] = array(
         // This is a dummy foreign key definition, references a table that
         // doesn't exist, but that's not a problem.
-        $field->getFieldSetting('foreign_key_name') => array(
-          'table' => $field->getFieldSetting('foreign_key_name'),
-          'columns' => array($field->getFieldSetting('foreign_key_name') => 'id'),
+        $field_definition->getSetting('foreign_key_name') => array(
+          'table' => $field_definition->getSetting('foreign_key_name'),
+          'columns' => array($field_definition->getSetting('foreign_key_name') => 'id'),
         ),
       );
     }

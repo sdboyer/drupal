@@ -116,7 +116,9 @@ class PictureFormatter extends ImageFormatterBase {
     $elements = array();
     // Check if the formatter involves a link.
     if ($this->getSetting('image_link') == 'content') {
-      $uri = $items->getEntity()->uri();
+      $uri = $items->getEntity()->urlInfo();
+      // @todo Remove when theme_picture_formatter() has support for route name.
+      $uri['path'] = $items->getEntity()->getSystemPath();
     }
     elseif ($this->getSetting('image_link') == 'file') {
       $link_file = TRUE;
@@ -133,9 +135,8 @@ class PictureFormatter extends ImageFormatterBase {
           // Make sure that the breakpoint exists and is enabled.
           // @todo add the following when breakpoint->status is added again:
           // $picture_mapping->breakpointGroup->breakpoints[$breakpoint_name]->status
-          if (isset($picture_mapping->breakpointGroup->breakpoints[$breakpoint_name])) {
-            $breakpoint = $picture_mapping->breakpointGroup->breakpoints[$breakpoint_name];
-
+          $breakpoint = $picture_mapping->breakpointGroup->getBreakpointById($breakpoint_name);
+          if ($breakpoint) {
             // Determine the enabled multipliers.
             $multipliers = array_intersect_key($multipliers, $breakpoint->multipliers);
             foreach ($multipliers as $multiplier => $image_style) {
@@ -173,7 +174,7 @@ class PictureFormatter extends ImageFormatterBase {
         '#attached' => array('library' => array(
           array('picture', 'picturefill'),
         )),
-        '#item' => $item->getValue(TRUE),
+        '#item' => $item,
         '#image_style' => $fallback_image_style,
         '#breakpoints' => $breakpoint_styles,
         '#path' => isset($uri) ? $uri : '',

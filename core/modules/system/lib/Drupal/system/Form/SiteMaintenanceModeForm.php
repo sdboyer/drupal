@@ -8,8 +8,7 @@
 namespace Drupal\system\Form;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Config\Context\ContextInterface;
-use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
+use Drupal\Core\KeyValueStore\StateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -21,7 +20,7 @@ class SiteMaintenanceModeForm extends ConfigFormBase {
   /**
    * The state keyvalue collection.
    *
-   * @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface
+   * @var \Drupal\Core\KeyValueStore\StateInterface
    */
   protected $state;
 
@@ -30,13 +29,11 @@ class SiteMaintenanceModeForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\Core\Config\Context\ContextInterface $context
-   *   The configuration context to use.
-   * @param \Drupal\Core\KeyValueStore\KeyValueStoreInterface $state
+   * @param \Drupal\Core\KeyValueStore\StateInterface $state
    *   The state keyvalue collection to use.
    */
-  public function __construct(ConfigFactory $config_factory, ContextInterface $context, KeyValueStoreInterface $state) {
-    parent::__construct($config_factory, $context);
+  public function __construct(ConfigFactory $config_factory, StateInterface $state) {
+    parent::__construct($config_factory);
     $this->state = $state;
   }
 
@@ -46,7 +43,6 @@ class SiteMaintenanceModeForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('config.context.free'),
       $container->get('state')
     );
   }

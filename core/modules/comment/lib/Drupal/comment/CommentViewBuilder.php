@@ -8,27 +8,19 @@
 namespace Drupal\comment;
 
 use Drupal\Core\Access\CsrfTokenGenerator;
-use Drupal\Core\Entity\EntityControllerInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManager;
-use Drupal\Core\Entity\EntityViewBuilderInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityViewBuilder;
-use Drupal\entity\Entity\EntityDisplay;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\field\FieldInfo;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Render controller for comments.
  */
-class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderInterface, EntityControllerInterface {
-
-  /**
-   * The entity manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityManager
-   */
-  protected $entityManager;
+class CommentViewBuilder extends EntityViewBuilder {
 
   /**
    * The field info service.
@@ -54,12 +46,12 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, $entity_type, array $entity_info) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_info) {
     return new static(
-      $entity_type,
+      $entity_info,
       $container->get('entity.manager'),
+      $container->get('language_manager'),
       $container->get('field.info'),
-      $container->get('module_handler'),
       $container->get('csrf_token')
     );
   }
@@ -67,22 +59,20 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
   /**
    * Constructs a new CommentViewBuilder.
    *
-   * @param string $entity_type
-   *   The entity type.
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_info
+   *   The entity information array.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    * @param \Drupal\field\FieldInfo $field_info
    *   The field info service.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler service.
    * @param \Drupal\Core\Access\CsrfTokenGenerator $csrf_token
    *   The CSRF token manager service.
    */
-  public function __construct($entity_type, EntityManager $entity_manager, FieldInfo $field_info, ModuleHandlerInterface $module_handler, CsrfTokenGenerator $csrf_token) {
-    parent::__construct($entity_type);
-    $this->entityManager = $entity_manager;
+  public function __construct(EntityTypeInterface $entity_info, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, FieldInfo $field_info, CsrfTokenGenerator $csrf_token) {
+    parent::__construct($entity_info, $entity_manager, $language_manager);
     $this->fieldInfo = $field_info;
-    $this->moduleHandler = $module_handler;
     $this->csrfToken = $csrf_token;
   }
 
@@ -104,7 +94,7 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
     // Pre-load associated users into cache to leverage multiple loading.
     $uids = array();
     foreach ($entities as $entity) {
-      $uids[] = $entity->uid->target_id;
+      $uids[] = $entity->getOwnerId();
     }
     $this->entityManager->getStorageController('user')->loadMultiple(array_unique($uids));
 
@@ -132,13 +122,17 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
       $entity->content['#entity'] = $entity;
       $entity->content['#theme'] = 'comment__' . $entity->field_id->value . '__' . $commented_entity->bundle();
       $entity->content['links'] = array(
-        '#theme' => 'links__comment',
-        '#pre_render' => array('drupal_pre_render_links'),
-        '#attributes' => array('class' => array('links', 'inline')),
+        '#type' => 'render_cache_placeholder',
+        '#callback' => '\Drupal\comment\CommentViewBuilder::renderLinks',
+        '#context' => array(
+          'comment_entity_id' => $entity->id(),
+          'view_mode' => $view_mode,
+          'langcode' => $langcode,
+          'commented_entity_type' => $commented_entity->getEntityTypeId(),
+          'commented_entity_id' => $commented_entity->id(),
+          'in_preview' => !empty($entity->in_preview),
+        ),
       );
-      if (empty($entity->in_preview)) {
-        $entity->content['links'][$this->entityType] = $this->buildLinks($entity, $commented_entity);
-      }
 
       if (!isset($entity->content['#attached'])) {
         $entity->content['#attached'] = array();
@@ -146,14 +140,61 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
       $entity->content['#attached']['library'][] = array('comment', 'drupal.comment-by-viewer');
       if ($this->moduleHandler->moduleExists('history') &&  \Drupal::currentUser()->isAuthenticated()) {
         $entity->content['#attached']['library'][] = array('comment', 'drupal.comment-new-indicator');
+
+        // Embed the metadata for the comment "new" indicators on this node.
+        $entity->content['#post_render_cache']['history_attach_timestamp'] = array(
+          array('node_id' => $commented_entity->id()),
+        );
       }
     }
   }
 
   /**
+   * #post_render_cache callback; replaces the placeholder with comment links.
+   *
+   * Renders the links on a comment.
+   *
+   * @param array $context
+   *   An array with the following keys:
+   *   - comment_entity_id: a comment entity ID
+   *   - view_mode: the view mode in which the comment entity is being viewed
+   *   - langcode: in which language the comment entity is being viewed
+   *   - commented_entity_type: the entity type to which the comment is attached
+   *   - commented_entity_id: the entity ID to which the comment is attached
+   *   - in_preview: whether the comment is currently being previewed
+   *
+   * @return array
+   *   A renderable array representing the comment links.
+   */
+  public static function renderLinks(array $context) {
+    $links = array(
+      '#theme' => 'links__comment',
+      '#pre_render' => array('drupal_pre_render_links'),
+      '#attributes' => array('class' => array('links', 'inline')),
+    );
+
+    if (!$context['in_preview']) {
+      $entity = entity_load('comment', $context['comment_entity_id']);
+      $commented_entity = entity_load($context['commented_entity_type'], $context['commented_entity_id']);
+
+      $links['comment'] = self::buildLinks($entity, $commented_entity);
+
+      // Allow other modules to alter the comment links.
+      $hook_context = array(
+        'view_mode' => $context['view_mode'],
+        'langcode' => $context['langcode'],
+        'commented_entity' => $commented_entity
+      );
+      \Drupal::moduleHandler()->alter('comment_links', $links, $entity, $hook_context);
+    }
+
+    return $links;
+  }
+
+  /**
    * Build the default links (reply, edit, delete …) for a comment.
    *
-   * @param \Drupal\comment\Entity\CommentInterface $entity
+   * @param \Drupal\comment\CommentInterface $entity
    *   The comment object.
    * @param \Drupal\Core\Entity\EntityInterface $commented_entity
    *   The entity to which the comment is attached.
@@ -161,14 +202,16 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
    * @return array
    *   An array that can be processed by drupal_pre_render_links().
    */
-  protected function buildLinks(CommentInterface $entity, EntityInterface $commented_entity) {
+  protected static function buildLinks(CommentInterface $entity, EntityInterface $commented_entity) {
     $links = array();
     $status = $commented_entity->get($entity->field_name->value)->status;
+
+    $container = \Drupal::getContainer();
 
     if ($status == COMMENT_OPEN) {
       if ($entity->access('delete')) {
         $links['comment-delete'] = array(
-          'title' => t('delete'),
+          'title' => t('Delete'),
           'href' => "comment/{$entity->id()}/delete",
           'html' => TRUE,
         );
@@ -176,41 +219,36 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
 
       if ($entity->access('update')) {
         $links['comment-edit'] = array(
-          'title' => t('edit'),
+          'title' => t('Edit'),
           'href' => "comment/{$entity->id()}/edit",
           'html' => TRUE,
         );
       }
       if ($entity->access('create')) {
         $links['comment-reply'] = array(
-          'title' => t('reply'),
+          'title' => t('Reply'),
           'href' => "comment/reply/{$entity->entity_type->value}/{$entity->entity_id->value}/{$entity->field_name->value}/{$entity->id()}",
           'html' => TRUE,
         );
       }
-      if ($entity->status->value == COMMENT_NOT_PUBLISHED && $entity->access('approve')) {
+      if ($entity->status->value == CommentInterface::NOT_PUBLISHED && $entity->access('approve')) {
         $links['comment-approve'] = array(
-          'title' => t('approve'),
-          'href' => "comment/{$entity->id()}/approve",
+          'title' => t('Approve'),
+          'route_name' => 'comment.approve',
+          'route_parameters' => array('comment' => $entity->id()),
           'html' => TRUE,
-          'query' => array('token' => $this->csrfToken->get("comment/{$entity->id()}/approve")),
         );
       }
       if (empty($links)) {
-        $comment_post_forbidden = array(
-          '#theme' => 'comment_post_forbidden',
-          '#commented_entity' => $commented_entity,
-          '#field_name' => $entity->field_name->value,
-        );
-        $links['comment-forbidden']['title'] = drupal_render($comment_post_forbidden);
+        $links['comment-forbidden']['title'] = \Drupal::service('comment.manager')->forbiddenMessage($commented_entity, $entity->field_name->value);
         $links['comment-forbidden']['html'] = TRUE;
       }
     }
 
     // Add translations link for translation-enabled comment bundles.
-    if ($this->moduleHandler->moduleExists('content_translation') && content_translation_translate_access($entity)) {
+    if ($container->get('module_handler')->moduleExists('content_translation') && content_translation_translate_access($entity)) {
       $links['comment-translations'] = array(
-        'title' => t('translate'),
+        'title' => t('Translate'),
         'href' => 'comment/' . $entity->id() . '/translations',
         'html' => TRUE,
       );
@@ -228,14 +266,14 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
   /**
    * {@inheritdoc}
    */
-  protected function alterBuild(array &$build, EntityInterface $comment, EntityDisplay $display, $view_mode, $langcode = NULL) {
+  protected function alterBuild(array &$build, EntityInterface $comment, EntityViewDisplayInterface $display, $view_mode, $langcode = NULL) {
     parent::alterBuild($build, $comment, $display, $view_mode, $langcode);
     if (empty($comment->in_preview)) {
       $prefix = '';
       $commented_entity = $this->entityManager->getStorageController($comment->entity_type->value)->load($comment->entity_id->value);
-      $instance = $this->fieldInfo->getInstance($commented_entity->entityType(), $commented_entity->bundle(), $comment->field_name->value);
+      $instance = $this->fieldInfo->getInstance($commented_entity->getEntityTypeId(), $commented_entity->bundle(), $comment->field_name->value);
       $is_threaded = isset($comment->divs)
-        && $instance->getFieldSetting('default_mode') == COMMENT_MODE_THREADED;
+        && $instance->getSetting('default_mode') == COMMENT_MODE_THREADED;
 
       // Add indentation div or close open divs as needed.
       if ($is_threaded) {
@@ -252,6 +290,57 @@ class CommentViewBuilder extends EntityViewBuilder implements EntityViewBuilderI
         $build['#suffix'] = str_repeat('</div>', $comment->divs_final);
       }
     }
+  }
+
+  /**
+   * #post_render_cache callback; attaches "X new comments" link metadata.
+   *
+   * @param array $element
+   *   A render array with the following keys:
+   *   - #markup
+   *   - #attached
+   * @param array $context
+   *   An array with the following keys:
+   *   - entity_type: an entity type
+   *   - entity_id: an entity ID
+   *   - field_name: a comment field name
+   *
+   * @return array $element
+   *   The updated $element.
+   */
+  public static function attachNewCommentsLinkMetadata(array $element, array $context) {
+    // Build "X new comments" link metadata.
+    $new = (int)comment_num_new($context['entity_id'], $context['entity_type']);
+    // Early-return if there are zero new comments for the current user.
+    if ($new === 0) {
+      return $element;
+    }
+    $entity = \Drupal::entityManager()
+      ->getStorageController($context['entity_type'])
+      ->load($context['entity_id']);
+    $field_name = $context['field_name'];
+    $query = comment_new_page_count($entity->{$field_name}->comment_count, $new, $entity);
+
+    // Attach metadata.
+    $element['#attached']['js'][] = array(
+      'type' => 'setting',
+      'data' => array(
+        'comment' => array(
+          'newCommentsLinks' => array(
+            $context['entity_type'] => array(
+              $context['field_name'] => array(
+                $context['entity_id'] => array(
+                  'new_comment_count' => (int)$new,
+                  'first_new_comment_link' => \Drupal::urlGenerator()->generateFromPath('node/' . $entity->id(), array('query' => $query, 'fragment' => 'new')),
+                )
+              )
+            ),
+          )
+        ),
+      ),
+    );
+
+    return $element;
   }
 
 }

@@ -12,7 +12,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Config\Context\ContextInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 
@@ -33,13 +32,11 @@ class ThemeSettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\Core\Config\Context\ContextInterface $context
-   *   The configuration context to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface
    *   The module handler instance to use.
    */
-  public function __construct(ConfigFactory $config_factory, ContextInterface $context, ModuleHandlerInterface $module_handler) {
-    parent::__construct($config_factory, $context);
+  public function __construct(ConfigFactory $config_factory, ModuleHandlerInterface $module_handler) {
+    parent::__construct($config_factory);
 
     $this->moduleHandler = $module_handler;
   }
@@ -50,7 +47,6 @@ class ThemeSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('config.context.free'),
       $container->get('module_handler')
     );
   }
@@ -323,7 +319,7 @@ class ThemeSettingsForm extends ConfigFormBase {
       $validators = array('file_validate_is_image' => array());
 
       // Check for a new uploaded logo.
-      $file = file_save_upload('logo_upload', $validators, FALSE, 0);
+      $file = file_save_upload('logo_upload', $form_state, $validators, FALSE, 0);
       if (isset($file)) {
         // File upload was attempted.
         if ($file) {
@@ -332,14 +328,14 @@ class ThemeSettingsForm extends ConfigFormBase {
         }
         else {
           // File upload failed.
-          form_set_error('logo_upload', t('The logo could not be uploaded.'));
+          $this->setFormError('logo_upload', $form_state, $this->t('The logo could not be uploaded.'));
         }
       }
 
       $validators = array('file_validate_extensions' => array('ico png gif jpg jpeg apng svg'));
 
       // Check for a new uploaded favicon.
-      $file = file_save_upload('favicon_upload', $validators, FALSE, 0);
+      $file = file_save_upload('favicon_upload', $form_state, $validators, FALSE, 0);
       if (isset($file)) {
         // File upload was attempted.
         if ($file) {
@@ -348,7 +344,7 @@ class ThemeSettingsForm extends ConfigFormBase {
         }
         else {
           // File upload failed.
-          form_set_error('favicon_upload', t('The favicon could not be uploaded.'));
+          $this->setFormError('favicon_upload', $form_state, $this->t('The favicon could not be uploaded.'));
         }
       }
 
@@ -357,13 +353,13 @@ class ThemeSettingsForm extends ConfigFormBase {
       if ($form_state['values']['logo_path']) {
         $path = $this->validatePath($form_state['values']['logo_path']);
         if (!$path) {
-          form_set_error('logo_path', t('The custom logo path is invalid.'));
+          $this->setFormError('logo_path', $form_state, $this->t('The custom logo path is invalid.'));
         }
       }
       if ($form_state['values']['favicon_path']) {
         $path = $this->validatePath($form_state['values']['favicon_path']);
         if (!$path) {
-          form_set_error('favicon_path', t('The custom favicon path is invalid.'));
+          $this->setFormError('favicon_path', $form_state, $this->t('The custom favicon path is invalid.'));
         }
       }
     }

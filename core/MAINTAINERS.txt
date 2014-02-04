@@ -213,6 +213,10 @@ Module maintainers
 Aggregator module
 - Paris Liakos 'rootatwc' http://drupal.org/user/1011436
 
+Basic Auth module
+- Klaus Purer 'klausi' http://drupal.org/user/262198
+- Juampy Novillo Requena 'juampy' https://drupal.org/user/682736
+
 Block module
 - Tim Plunkett 'tim.plunkett' http://drupal.org/user/241634
 - Ben Dougherty 'benjy' http://drupal.org/user/1852732
@@ -237,8 +241,16 @@ Comment module
 Configuration module
 - ?
 
+Configuration Translation module
+- Gábor Hojtsy 'Gábor Hojtsy' http://drupal.org/user/4166
+- Tobias Stöckler 'tstoeckler' https://drupal.org/user/107158
+- Vijayachandran Mani 'vijaycs85' https://drupal.org/user/93488
+
 Contact module
 - ?
+
+Content Translation module
+- Francesco Placella 'plach' http://drupal.org/user/183211
 
 Contextual module
 - Daniel F. Kudwien 'sun' http://drupal.org/user/54136
@@ -294,11 +306,15 @@ Help module
 Image module
 - Claudiu Cristea 'claudiu.cristea' https://drupal.org/user/56348
 
+Interface Translation (locale) module
+- Gábor Hojtsy 'Gábor Hojtsy' http://drupal.org/user/4166
+
+Language module
+- Francesco Placella 'plach' http://drupal.org/user/183211
+- Gábor Hojtsy 'Gábor Hojtsy' http://drupal.org/user/4166
+
 Link module
 - ?
-
-Locale module
-- Gábor Hojtsy 'Gábor Hojtsy' http://drupal.org/user/4166
 
 Menu module
 - ?
@@ -318,24 +334,17 @@ Number module
 Options module
 - Yves Chedemois 'yched' http://drupal.org/user/39567
 
-Overlay module
-- ?
-
 Path module
 - ?
 
 Phone module
 - Dave Reid 'davereid' http://drupal.org/user/53892
 
-PHP module
-- ?
-
 Picture module
 - Peter Droogmans 'attiks' http://drupal.org/user/105002
 
 RDF module
 - Stéphane Corlosquet 'scor' http://drupal.org/user/52142
-- Lin Clark 'linclark' http://drupal.org/user/396253
 
 REST module
 - Klaus Purer 'klausi' http://drupal.org/user/262198
@@ -381,9 +390,6 @@ Tour module
 
 Tracker module
 - David Strauss 'David Strauss' http://drupal.org/user/93254
-
-Translation module
-- Francesco Placella 'plach' http://drupal.org/user/183211
 
 Update module
 - Derek Wright 'dww' http://drupal.org/user/46549

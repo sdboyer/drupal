@@ -80,25 +80,20 @@ function custom_block_menu() {
     'route_name' => 'custom_block.add_page',
   );
 
-  // There has to be a base-item in order for contextual links to work.
-  $items['block/%custom_block'] = array(
-    'title' => 'Edit',
-    'route_name' => 'custom_block.edit',
-  );
-  $items['block/%custom_block/edit'] = array(
-    'title' => 'Edit',
-    'weight' => 0,
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'context' => MENU_CONTEXT_INLINE,
-  );
-  $items['block/%custom_block/delete'] = array(
-    'title' => 'Delete',
-    'weight' => 1,
-    'type' => MENU_LOCAL_TASK,
-    'context' => MENU_CONTEXT_INLINE,
-    'route_name' => 'custom_block.delete',
-  );
   return $items;
+}
+
+/**
+ * Implements hook_menu_link_defaults().
+ */
+function custom_block_menu_link_defaults() {
+  $links['custom_block.add_page'] = array(
+    'link_title' => 'Add custom block',
+    'description' => 'Add custom block',
+    'route_name' => 'custom_block.add_page',
+  );
+
+  return $links;
 }
 
 /**
@@ -143,10 +138,13 @@ function custom_block_load($id) {
 /**
  * Implements hook_entity_info_alter().
  */
-function custom_block_entity_info_alter(&$types) {
+function custom_block_entity_info_alter(&$entity_info) {
+  /** @var $entity_info \Drupal\Core\Entity\EntityTypeInterface[] */
   // Add a translation handler for fields if the language module is enabled.
   if (\Drupal::moduleHandler()->moduleExists('language')) {
-    $types['custom_block']['translation']['custom_block'] = TRUE;
+    $translation = $entity_info['custom_block']->get('translation');
+    $translation['custom_block'] = TRUE;
+    $entity_info['custom_block']->set('translation', $translation);
   }
 }
 

@@ -7,7 +7,8 @@
 
 namespace Drupal\image\Plugin\Field\FieldType;
 
-use Drupal\field\FieldInterface;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\file\Plugin\Field\FieldType\FileItem;
 
 /**
@@ -19,7 +20,13 @@ use Drupal\file\Plugin\Field\FieldType\FileItem;
  *   description = @Translation("This field stores the ID of an image file as an integer value."),
  *   settings = {
  *     "uri_scheme" = "",
- *     "default_image" = "0",
+ *     "default_image" = {
+ *       "fid" = NULL,
+ *       "alt" = "",
+ *       "title" = "",
+ *       "width" = NULL,
+ *       "height" = NULL
+ *     },
  *     "column_groups" = {
  *       "file" = {
  *         "label" = @Translation("File"),
@@ -45,7 +52,13 @@ use Drupal\file\Plugin\Field\FieldType\FileItem;
  *     "title_field_required" = "0",
  *     "max_resolution" = "",
  *     "min_resolution" = "",
- *     "default_image" = "0"
+ *     "default_image" = {
+ *       "fid" = NULL,
+ *       "alt" = "",
+ *       "title" = "",
+ *       "width" = NULL,
+ *       "height" = NULL
+ *     }
  *   },
  *   default_widget = "image_image",
  *   default_formatter = "image",
@@ -57,7 +70,7 @@ class ImageItem extends FileItem {
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldInterface $field) {
+  public static function schema(FieldDefinitionInterface $field_definition) {
     return array(
       'columns' => array(
         'target_id' => array(
@@ -105,27 +118,22 @@ class ImageItem extends FileItem {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions() {
-    $this->definition['settings']['target_type'] = 'file';
+    $this->definition->setSetting('target_type', 'file');
 
     if (!isset(static::$propertyDefinitions)) {
       static::$propertyDefinitions = parent::getPropertyDefinitions();
 
-      static::$propertyDefinitions['alt'] = array(
-        'type' => 'string',
-        'label' => t("Alternative image text, for the image's 'alt' attribute."),
-      );
-      static::$propertyDefinitions['title'] = array(
-        'type' => 'string',
-        'label' => t("Image title text, for the image's 'title' attribute."),
-      );
-      static::$propertyDefinitions['width'] = array(
-        'type' => 'integer',
-        'label' => t('The width of the image in pixels.'),
-      );
-      static::$propertyDefinitions['height'] = array(
-        'type' => 'integer',
-        'label' => t('The height of the image in pixels.'),
-      );
+      static::$propertyDefinitions['alt'] = DataDefinition::create('string')
+        ->setLabel(t("Alternative image text, for the image's 'alt' attribute."));
+
+      static::$propertyDefinitions['title'] = DataDefinition::create('string')
+        ->setLabel(t("Image title text, for the image's 'title' attribute."));
+
+      static::$propertyDefinitions['width'] = DataDefinition::create('integer')
+        ->setLabel(t('The width of the image in pixels.'));
+
+      static::$propertyDefinitions['height'] = DataDefinition::create('integer')
+        ->setLabel(t('The height of the image in pixels.'));
     }
     return static::$propertyDefinitions;
   }
@@ -139,7 +147,7 @@ class ImageItem extends FileItem {
     // We need the field-level 'default_image' setting, and $this->getSettings()
     // will only provide the instance-level one, so we need to explicitly fetch
     // the field.
-    $settings = $this->getFieldDefinition()->getField()->getFieldSettings();
+    $settings = $this->getFieldDefinition()->getField()->getSettings();
 
     $scheme_options = array();
     foreach (file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE) as $scheme => $stream_wrapper) {
@@ -153,13 +161,9 @@ class ImageItem extends FileItem {
       '#description' => t('Select where the final files should be stored. Private file storage has significantly more overhead than public files, but allows restricted access to files within this field.'),
     );
 
-    $element['default_image'] = array(
-      '#title' => t('Default image'),
-      '#type' => 'managed_file',
-      '#description' => t('If no image is uploaded, this image will be shown on display.'),
-      '#default_value' => empty($settings['default_image']) ? array() : array($settings['default_image']),
-      '#upload_location' => $settings['uri_scheme'] . '://default_images/',
-    );
+    // Add default_image element.
+    static::defaultImageForm($element, $settings);
+    $element['default_image']['#description'] = t('If no image is uploaded, this image will be shown on display.');
 
     return $element;
   }
@@ -269,14 +273,9 @@ class ImageItem extends FileItem {
       ),
     );
 
-    // Add the default image to the instance.
-    $element['default_image'] = array(
-      '#title' => t('Default image'),
-      '#type' => 'managed_file',
-      '#description' => t("If no image is uploaded, this image will be shown on display and will override the field's default image."),
-      '#default_value' => empty($settings['default_image']) ? array() : array($settings['default_image']),
-      '#upload_location' => $settings['uri_scheme'] . '://default_images/',
-    );
+    // Add default_image element.
+    static::defaultImageForm($element, $settings);
+    $element['default_image']['#description'] = t("If no image is uploaded, this image will be shown on display and will override the field's default image.");
 
     return $element;
   }
@@ -305,7 +304,7 @@ class ImageItem extends FileItem {
     if (!empty($element['x']['#value']) || !empty($element['y']['#value'])) {
       foreach (array('x', 'y') as $dimension) {
         if (!$element[$dimension]['#value']) {
-          form_error($element[$dimension], t('Both a height and width value must be specified in the !name field.', array('!name' => $element['#title'])));
+          form_error($element[$dimension], $form_state, t('Both a height and width value must be specified in the !name field.', array('!name' => $element['#title'])));
           return;
         }
       }
@@ -314,6 +313,76 @@ class ImageItem extends FileItem {
     else {
       form_set_value($element, '', $form_state);
     }
+  }
+
+  /**
+   * Builds the default_image details element.
+   *
+   * @param array $element
+   *   The form associative array passed by reference.
+   * @param array $settings
+   *   The field settings array.
+   */
+  protected function defaultImageForm(array &$element, array $settings) {
+    $element['default_image'] = array(
+      '#type' => 'details',
+      '#title' => t('Default image'),
+      '#open' => TRUE,
+    );
+    $element['default_image']['fid'] = array(
+      '#type' => 'managed_file',
+      '#title' => t('Image'),
+      '#description' => t('Image to be shown if no image is uploaded.'),
+      '#default_value' => empty($settings['default_image']['fid']) ? array() : array($settings['default_image']['fid']),
+      '#upload_location' => $settings['uri_scheme'] . '://default_images/',
+      '#element_validate' => array('file_managed_file_validate', array(get_class($this), 'validateDefaultImageForm')),
+    );
+    $element['default_image']['alt'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Alternate text'),
+      '#description' => t('This text will be used by screen readers, search engines, and when the image cannot be loaded.'),
+      '#default_value' => $settings['default_image']['alt'],
+      '#maxlength' => 512,
+    );
+    $element['default_image']['title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title'),
+      '#description' => t('The title attribute is used as a tooltip when the mouse hovers over the image.'),
+      '#default_value' => $settings['default_image']['title'],
+      '#maxlength' => 1024,
+    );
+    $element['default_image']['width'] = array(
+      '#type' => 'value',
+      '#value' => $settings['default_image']['width'],
+    );
+    $element['default_image']['height'] = array(
+      '#type' => 'value',
+      '#value' => $settings['default_image']['height'],
+    );
+  }
+
+  /**
+   * Validates the managed_file element for the default Image form.
+   *
+   * This function ensures the fid is a scalar value and not an array. It is
+   * assigned as a #element_validate callback in
+   * \Drupal\image\Plugin\Field\FieldType\ImageItem::defaultImageForm().
+   *
+   * @param array $element
+   *   The form element to process.
+   * @param array $form_state
+   *   The form state.
+   */
+  public static function validateDefaultImageForm(array &$element, array &$form_state) {
+    // Consolidate the array value of this field to a single FID as #extended
+    // for default image is not TRUE and this is a single value.
+    if (isset($element['fids']['#value'][0])) {
+      $value = $element['fids']['#value'][0];
+    }
+    else {
+      $value = 0;
+    }
+    \Drupal::formBuilder()->setValue($element, $value, $form_state);
   }
 
   /**

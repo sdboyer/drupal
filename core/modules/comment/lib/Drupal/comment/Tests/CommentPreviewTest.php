@@ -15,11 +15,13 @@ use Drupal\Core\Datetime\DrupalDateTime;
 class CommentPreviewTest extends CommentTestBase {
 
   /**
-   * Modules to enable.
+   * The profile to install as a basis for testing.
    *
-   * @var array
+   * Using the standard profile to test user picture display in comments.
+   *
+   * @var string
    */
-  public static $modules = array('image');
+  protected $profile = 'standard';
 
   public static function getInfo() {
     return array(
@@ -27,32 +29,6 @@ class CommentPreviewTest extends CommentTestBase {
       'description' => 'Test comment preview.',
       'group' => 'Comment',
     );
-  }
-
-  function setUp() {
-    parent::setUp();
-
-    // Create user picture field.
-    module_load_install('user');
-    user_install_picture_field();
-
-    // Add the basic_html filter format from the standard install profile.
-    $filter_format_storage_controller = $this->container->get('entity.manager')->getStorageController('filter_format');
-    $filter_format = $filter_format_storage_controller->create(array(
-      'format' => 'basic_html',
-      'name' => 'Basic HTML',
-      'status' => TRUE,
-      'roles' => array('authenticated'),
-    ), 'filter_format');
-
-    $filter_format->setFilterConfig('filter_html', array(
-      'module' => 'filter',
-      'status' => TRUE,
-      'settings' => array(
-        'allowed_html' => '<a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h4> <h5> <h6> <p> <span> <img>',
-      ),
-    ));
-    $filter_format->save();
   }
 
   /**

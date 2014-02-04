@@ -7,7 +7,8 @@
 
 namespace Drupal\text\Plugin\Field\FieldType;
 
-use Drupal\field\FieldInterface;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Plugin implementation of the 'text_with_summary' field type.
@@ -40,20 +41,15 @@ class TextWithSummaryItem extends TextItemBase {
     if (!isset(static::$propertyDefinitions)) {
       static::$propertyDefinitions = parent::getPropertyDefinitions();
 
-      static::$propertyDefinitions['summary'] = array(
-        'type' => 'string',
-        'label' => t('Summary text value'),
-      );
-      static::$propertyDefinitions['summary_processed'] = array(
-        'type' => 'string',
-        'label' => t('Processed summary text'),
-        'description' => t('The summary text value with the text format applied.'),
-        'computed' => TRUE,
-        'class' => '\Drupal\text\TextProcessed',
-        'settings' => array(
-          'text source' => 'summary',
-        ),
-      );
+      static::$propertyDefinitions['summary'] = DataDefinition::create('string')
+        ->setLabel(t('Summary text value'));
+
+      static::$propertyDefinitions['summary_processed'] = DataDefinition::create('string')
+        ->setLabel(t('Processed summary text'))
+        ->setDescription(t('The summary text value with the text format applied.'))
+        ->setComputed(TRUE)
+        ->setClass('\Drupal\text\TextProcessed')
+        ->setSetting('text source', 'summary');
     }
     return static::$propertyDefinitions;
   }
@@ -61,7 +57,7 @@ class TextWithSummaryItem extends TextItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldInterface $field) {
+  public static function schema(FieldDefinitionInterface $field_definition) {
     return array(
       'columns' => array(
         'value' => array(
@@ -82,12 +78,6 @@ class TextWithSummaryItem extends TextItemBase {
       ),
       'indexes' => array(
         'format' => array('format'),
-      ),
-      'foreign keys' => array(
-        'format' => array(
-          'table' => 'filter_format',
-          'columns' => array('format' => 'format'),
-        ),
       ),
     );
   }

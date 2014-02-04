@@ -29,7 +29,8 @@ use Drupal\field\FieldUpdateForbiddenException;
  *   'display'). The keys are the name of the elements as appearing in the
  *   renderable array (either the entity form or the displayed entity). The
  *   value is an associative array:
- *   - label: The human readable name of the element.
+ *   - label: The human readable name of the element. Make sure you sanitize
+ *     this appropriately.
  *   - description: A short description of the element contents.
  *   - weight: The default weight of the element.
  *   - visible: (optional) The default visibility of the element. Defaults to
@@ -49,7 +50,7 @@ function hook_field_extra_fields() {
   foreach (node_type_get_types() as $bundle) {
     if ($bundle->has_title) {
       $extra['node'][$bundle->type]['form']['title'] = array(
-        'label' => $bundle->title_label,
+        'label' => check_plain($bundle->title_label),
         'description' => $description,
         'weight' => -5,
       );
@@ -210,7 +211,7 @@ function hook_field_widget_info_alter(array &$info) {
 function hook_field_widget_form_alter(&$element, &$form_state, $context) {
   // Add a css class to widget form elements for all fields of type mytype.
   $field_definition = $context['items']->getFieldDefinition();
-  if ($field_definition->getFieldType() == 'mytype') {
+  if ($field_definition->getType() == 'mytype') {
     // Be sure not to overwrite existing attributes.
     $element['#attributes']['class'][] = 'myclass';
   }
@@ -357,24 +358,6 @@ function hook_field_attach_extract_form_values(\Drupal\Core\Entity\EntityInterfa
 }
 
 /**
- * Alter field_attach_preprocess() variables.
- *
- * This hook is invoked while preprocessing field templates in
- * field_attach_preprocess().
- *
- * @param $variables
- *   The variables array is passed by reference and will be populated with field
- *   values.
- * @param $context
- *   An associative array containing:
- *   - entity: The entity with fields to render.
- *   - element: The structured array containing the values ready for rendering.
- */
-function hook_field_attach_preprocess_alter(&$variables, $context) {
-  // @todo Needs function body.
-}
-
-/**
  * Perform alterations on field_attach_view() or field_view_field().
  *
  * This hook is invoked after the field module has performed the operation.
@@ -402,7 +385,7 @@ function hook_field_attach_view_alter(&$output, $context) {
     $element = &$output[$field_name];
     if ($element['#field_type'] == 'entity_reference' && $element['#formatter'] == 'entity_reference_label') {
       foreach ($element['#items'] as $delta => $item) {
-        $term = $item['entity'];
+        $term = $item->entity;
         if (!empty($term->rdf_mapping['rdftype'])) {
           $element[$delta]['#options']['attributes']['typeof'] = $term->rdf_mapping['rdftype'];
         }
@@ -412,49 +395,6 @@ function hook_field_attach_view_alter(&$output, $context) {
       }
     }
   }
-}
-
-/**
- * Perform alterations on field_language() values.
- *
- * This hook is invoked to alter the array of display language codes for the
- * given entity.
- *
- * @param $display_langcode
- *   A reference to an array of language codes keyed by field name.
- * @param $context
- *   An associative array containing:
- *   - entity: The entity with fields to render.
- *   - langcode: The language code $entity has to be displayed in.
- */
-function hook_field_language_alter(&$display_langcode, $context) {
-  // Do not apply core language fallback rules if they are disabled or if Locale
-  // is not registered as a translation handler.
-  if (field_language_fallback_enabled() && field_has_translation_handler($context['entity']->entityType())) {
-    field_language_fallback($display_langcode, $context['entity'], $context['langcode']);
-  }
-}
-
-/**
- * Alter field_available_languages() values.
- *
- * This hook is invoked from field_available_languages() to allow modules to
- * alter the array of available language codes for the given field.
- *
- * @param $langcodes
- *   A reference to an array of language codes to be made available.
- * @param $context
- *   An associative array containing:
- *   - entity_type: The type of the entity the field is attached to.
- *   - field: A field data structure.
- */
-function hook_field_available_languages_alter(&$langcodes, $context) {
-  // Add an unavailable language code.
-  $langcodes[] = 'xx';
-
-  // Remove an available language code.
-  $index = array_search('yy', $langcodes);
-  unset($langcodes[$index]);
 }
 
 /**

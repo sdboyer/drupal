@@ -87,6 +87,7 @@ class UserRegistrationTest extends WebTestBase {
     $this->container->get('entity.manager')->getStorageController('user')->resetCache();
     $accounts = entity_load_multiple_by_properties('user', array('name' => $name, 'mail' => $mail));
     $new_user = reset($accounts);
+    $this->assertNotNull($new_user, 'New account successfully created with matching passwords.');
     $this->assertText(t('Registration successful. You are now logged in.'), 'Users are logged in after registering.');
     $this->drupalLogout();
 
@@ -181,7 +182,6 @@ class UserRegistrationTest extends WebTestBase {
     $new_user = reset($accounts);
     $this->assertEqual($new_user->getUsername(), $name, 'Username matches.');
     $this->assertEqual($new_user->getEmail(), $mail, 'E-mail address matches.');
-    $this->assertEqual($new_user->theme->value, '', 'Correct theme field.');
     $this->assertEqual($new_user->getSignature(), '', 'Correct signature field.');
     $this->assertTrue(($new_user->getCreatedTime() > REQUEST_TIME - 20 ), 'Correct creation time.');
     $this->assertEqual($new_user->isActive(), $config_user_settings->get('register') == USER_REGISTER_VISITORS ? 1 : 0, 'Correct status field.');

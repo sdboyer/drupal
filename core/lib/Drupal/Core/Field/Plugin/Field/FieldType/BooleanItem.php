@@ -7,7 +7,9 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
+use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Defines the 'boolean' entity field type.
@@ -34,13 +36,26 @@ class BooleanItem extends FieldItemBase {
    * Implements \Drupal\Core\TypedData\ComplexDataInterface::getPropertyDefinitions().
    */
   public function getPropertyDefinitions() {
-
     if (!isset(static::$propertyDefinitions)) {
-      static::$propertyDefinitions['value'] = array(
-        'type' => 'boolean',
-        'label' => t('Boolean value'),
-      );
+      static::$propertyDefinitions['value'] = DataDefinition::create('boolean')
+        ->setLabel(t('Boolean value'));
     }
     return static::$propertyDefinitions;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function schema(FieldDefinitionInterface $field_definition) {
+    return array(
+      'columns' => array(
+        'value' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+        ),
+      ),
+    );
+  }
+
 }

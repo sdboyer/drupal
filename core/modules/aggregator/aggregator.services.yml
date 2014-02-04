@@ -12,7 +12,7 @@ services:
     class: Drupal\aggregator\Access\CategoriesAccessCheck
     arguments: ['@database']
     tags:
-      - { name: access_check }
+      - { name: access_check, applies_to: _access_aggregator_categories }
   aggregator.category.storage:
     class: Drupal\aggregator\CategoryStorageController
     arguments: ['@database']

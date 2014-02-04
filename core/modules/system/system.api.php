@@ -51,8 +51,7 @@ function hook_hook_info() {
  *
  * Modules may specify whether or not the routing paths they define are
  * to be considered administrative. Other modules may use this information to
- * display those pages differently (e.g. in a modal overlay, or in a different
- * theme).
+ * display those pages differently.
  *
  * To change the administrative status of menu items defined in another module's
  * routing paths, modules should implement hook_admin_paths_alter().
@@ -186,14 +185,14 @@ function hook_queue_info() {
 /**
  * Alter cron queue information before cron runs.
  *
- * Called by drupal_cron_run() to allow modules to alter cron queue settings
+ * Called by \Drupal\Core\Cron to allow modules to alter cron queue settings
  * before any jobs are processesed.
  *
  * @param array $queues
  *   An array of cron queue information.
  *
  * @see hook_queue_info()
- * @see drupal_cron_run()
+ * @see \Drupal\Core\Cron
  */
 function hook_queue_info_alter(&$queues) {
   // This site has many feeds so let's spend 90 seconds on each cron run
@@ -234,7 +233,7 @@ function hook_queue_info_alter(&$queues) {
  *  - "#post_render": array of callables taking $children and $element.
  *  - "#submit": array of callback functions taking $form and $form_state.
  *  - "#title_display": optional string indicating if and how #title should be
- *    displayed, see theme_form_element() and theme_form_element_label().
+ *    displayed, see the form-element template and theme_form_element_label().
  *
  * @see hook_element_info_alter()
  * @see system_element_info()
@@ -271,7 +270,7 @@ function hook_element_info_alter(&$type) {
  * @param $javascript
  *   An array of all JavaScript being presented on the page.
  *
- * @see drupal_add_js()
+ * @see _drupal_add_js()
  * @see drupal_get_js()
  * @see drupal_js_defaults()
  */
@@ -294,11 +293,11 @@ function hook_js_alter(&$javascript) {
  *   version_compare() to compare different versions.
  * - 'js': An array of JavaScript elements; each element's key is used as $data
  *   argument, each element's value is used as $options array for
- *   drupal_add_js(). To add library-specific (not module-specific) JavaScript
+ *   _drupal_add_js(). To add library-specific (not module-specific) JavaScript
  *   settings, the key may be skipped, the value must specify
  *   'type' => 'setting', and the actual settings must be contained in a 'data'
  *   element of the value.
- * - 'css': Like 'js', an array of CSS elements passed to drupal_add_css().
+ * - 'css': Like 'js', an array of CSS elements passed to _drupal_add_css().
  * - 'dependencies': An array of libraries that are required for a library. Each
  *   element is an array listing the module and name of another library. Note
  *   that all dependencies for each dependent library will also be added when
@@ -391,7 +390,7 @@ function hook_library_info_alter(&$libraries, $module) {
  * @param $css
  *   An array of all CSS items (files and inline CSS) being requested on the page.
  *
- * @see drupal_add_css()
+ * @see _drupal_add_css()
  * @see drupal_get_css()
  */
 function hook_css_alter(&$css) {
@@ -400,17 +399,18 @@ function hook_css_alter(&$css) {
 }
 
 /**
- * Alter the commands that are sent to the user through the Ajax framework.
+ * Alter the Ajax command data that is sent to the client.
  *
- * @param $commands
- *   An array of all commands that will be sent to the user.
+ * @param \Drupal\Core\Ajax\CommandInterface[] $data
+ *   An array of all the rendered commands that will be sent to the client.
  *
- * @see ajax_render()
+ * @see \Drupal\Core\Ajax\AjaxResponse::ajaxRender()
  */
-function hook_ajax_render_alter($commands) {
+function hook_ajax_render_alter(array &$data) {
   // Inject any new status messages into the content area.
   $status_messages = array('#theme' => 'status_messages');
-  $commands[] = ajax_command_prepend('#block-system-main .content', drupal_render($status_messages));
+  $command = new \Drupal\Core\Ajax\PrependCommand('#block-system-main .content', drupal_render($status_messages));
+  $data[] = $command->render();
 }
 
 /**
@@ -487,6 +487,72 @@ function hook_menu_get_item_alter(&$router_item, $path, $original_map) {
     // ...call a function that prepares something for this request.
     mymodule_prepare_something();
   }
+}
+
+/**
+ * Define links for menus.
+ *
+ * @return array
+ *   An array of default menu links. Each link has a key that is the machine
+ *   name, which must be unique. The corresponding array value is an
+ *   associative array that may contain the following key-value pairs:
+ *   - link_title: (required) The untranslated title of the menu item.
+ *   - description: The untranslated description of the link.
+ *   - route_name: (optional) The route name to be used to build the path.
+ *     Either a route_name or a link_path must be provided.
+ *   - route_parameters: (optional) The route parameters to build the path.
+ *   - link_path: (optional) If you have an external link use link_path instead
+ *     of providing a route_name.
+ *   - parent: (optional) The machine name of the link that is this link's menu
+ *     parent.
+ *   - weight: (optional) An integer that determines the relative position of
+ *     items in the menu; higher-weighted items sink. Defaults to 0. Menu items
+ *     with the same weight are ordered alphabetically.
+ *   - menu_name: (optional) The machine name of a menu to put the link in, if
+ *     not the default Tools menu.
+ *   - expanded: (optional) If set to TRUE, and if a menu link is provided for
+ *     this menu item (as a result of other properties), then the menu link is
+ *     always expanded, equivalent to its 'always expanded' checkbox being set
+ *     in the UI.
+ *   - type: (optional) A bitmask of flags describing properties of the menu
+ *     item. The following two bitmasks are provided as constants in menu.inc:
+ *     - MENU_NORMAL_ITEM: Normal menu items show up in the menu tree and can be
+ *       moved/hidden by the administrator.
+ *     - MENU_SUGGESTED_ITEM: Modules may "suggest" menu items that the
+ *       administrator may enable.
+ *     If the "type" element is omitted, MENU_NORMAL_ITEM is assumed.
+ *   - options: (optional) An array of options to be passed to l() when
+ *     generating a link from this menu item.
+ *
+ * @see hook_menu_link_defaults_alter()
+ */
+function hook_menu_link_defaults() {
+  $links['user'] = array(
+    'link_title' => 'My account',
+    'weight' => -10,
+    'route_name' => 'user.page',
+    'menu_name' => 'account',
+  );
+
+  $links['user.logout'] = array(
+    'link_title' => 'Log out',
+    'route_name' => 'user.logout',
+    'weight' => 10,
+    'menu_name' => 'account',
+  );
+
+  return $links;
+}
+
+/**
+ * Alter links for menus.
+ *
+ * @see hook_menu_link_defaults()
+ */
+function hook_menu_link_defaults_alter(&$links) {
+  // Change the weight and title of the user.logout link.
+  $links['user.logout']['weight'] = -10;
+  $links['user.logout']['link_title'] = t('Logout');
 }
 
 /**
@@ -669,7 +735,7 @@ function hook_menu_local_actions_alter(&$local_actions) {
  * @see \Drupal\Core\Menu\LocalTaskInterface
  * @see \Drupal\Core\Menu\LocalTaskManager
  */
-function hook_local_task_alter(&$local_tasks) {
+function hook_local_tasks_alter(&$local_tasks) {
   // Remove a specified local task plugin.
   unset($local_tasks['example_plugin_id']);
 }
@@ -677,45 +743,59 @@ function hook_local_task_alter(&$local_tasks) {
 /**
  * Alter contextual links before they are rendered.
  *
- * This hook is invoked by menu_contextual_links(). The system-determined
- * contextual links are passed in by reference. Additional links may be added
- * or existing links can be altered.
+ * This hook is invoked by
+ * \Drupal\Core\Menu\ContextualLinkManager::getContextualLinkPluginsByGroup().
+ * The system-determined contextual links are passed in by reference. Additional
+ * links may be added and existing links can be altered.
  *
- * Each contextual link must at least contain:
+ * Each contextual link contains the following entries:
  * - title: The localized title of the link.
- * - href: The system path to link to.
+ * - route_name: The route name of the link.
+ * - route_parameters: The route parameters of the link.
  * - localized_options: An array of options to pass to url().
+ * - (optional) weight: The weight of the link, which is used to sort the links.
  *
- * @param $links
- *   An associative array containing contextual links for the given $root_path,
+ *
+ * @param array $links
+ *   An associative array containing contextual links for the given $group,
  *   as described above. The array keys are used to build CSS class names for
  *   contextual links and must therefore be unique for each set of contextual
  *   links.
- * @param $router_item
- *   The menu router item belonging to the $root_path being requested.
- * @param $root_path
- *   The (parent) path that has been requested to build contextual links for.
- *   This is a normalized path, which means that an originally passed path of
- *   'node/123' became 'node/%'.
+ * @param string $group
+ *   The group of contextual links being rendered.
+ * @param array $route_parameters.
+ *   The route parameters passed to each route_name of the contextual links.
+ *   For example:
+ *   @code
+ *   array('node' => $node->id())
+ *   @endcode
  *
- * @see hook_contextual_links_view_alter()
- * @see menu_contextual_links()
- * @see hook_menu()
- * @see contextual_preprocess()
+ * @see \Drupal\Core\Menu\ContextualLinkManager
  */
-function hook_menu_contextual_links_alter(&$links, $router_item, $root_path) {
-  // Add a link to all contextual links for nodes.
-  if ($root_path == 'node/%') {
-    $links['foo'] = array(
-      'title' => t('Do fu'),
-      'href' => 'foo/do',
-      'localized_options' => array(
-        'query' => array(
-          'foo' => 'bar',
-        ),
-      ),
-    );
+function hook_contextual_links_alter(array &$links, $group, array $route_parameters) {
+  if ($group == 'menu') {
+    // Dynamically use the menu name for the title of the menu_edit contextual
+    // link.
+    $menu = \Drupal::entityManager()->getStorageController('menu')->load($route_parameters['menu']);
+    $links['menu_edit']['title'] = t('Edit menu: !label', array('!label' => $menu->label()));
   }
+}
+
+/**
+ * Alter the plugin definition of contextual links.
+ *
+ * @param array $contextual_links
+ *   An array of contextual_links plugin definitions, keyed by contextual link
+ *   ID. Each entry contains the following keys:
+ *     - title: The displayed title of the link
+ *     - route_name: The route_name of the contextual link to be displayed
+ *     - group: The group under which the contextual links should be added to.
+ *       Possible values are e.g. 'node' or 'menu'.
+ *
+ * @see \Drupal\Core\Menu\ContextualLinkManager
+ */
+function hook_contextual_links_plugins_alter(array &$contextual_links) {
+  $contextual_links['menu_edit']['title'] = 'Edit the menu';
 }
 
 /**
@@ -1203,15 +1283,14 @@ function hook_permission() {
 }
 
 /**
- * Register a module (or theme's) theme implementations.
+ * Register a module or theme's theme implementations.
  *
- * The implementations declared by this hook have two purposes: either they
- * specify how a particular render array is to be rendered as HTML (this is
- * usually the case if the theme function is assigned to the render array's
- * #theme property), or they return the HTML that should be returned by an
- * invocation of theme().
- *
- * The following parameters are all optional.
+ * The implementations declared by this hook have several purposes:
+ * - They can specify how a particular render array is to be rendered as HTML.
+ *   This is usually the case if the theme function is assigned to the render
+ *   array's #theme property.
+ * - They can return HTML for default calls to theme().
+ * - They can return HTML for calls to theme() for a theme suggestion.
  *
  * @param array $existing
  *   An array of existing implementations that may be used for override
@@ -1236,28 +1315,28 @@ function hook_permission() {
  *   looked up.
  *
  * @return array
- *   An associative array of theme hook information. The keys on the outer
- *   array are the internal names of the hooks, and the values are arrays
- *   containing information about the hook. Each information array must contain
- *   either a 'variables' element or a 'render element' element, but not both.
- *   Use 'render element' if you are theming a single element or element tree
- *   composed of elements, such as a form array, a page array, or a single
- *   checkbox element. Use 'variables' if your theme implementation is
- *   intended to be called directly through theme() and has multiple arguments
- *   for the data and style; in this case, the variables not supplied by the
- *   calling function will be given default values and passed to the template
- *   or theme function. The returned theme information array can contain the
- *   following key/value pairs:
- *   - variables: (see above) Each array key is the name of the variable, and
- *     the value given is used as the default value if the function calling
- *     theme() does not supply it. Template implementations receive each array
- *     key as a variable in the template file (so they must be legal PHP
- *     variable names). Function implementations are passed the variables in a
- *     single $variables function argument.
- *   - render element: (see above) The name of the renderable element or element
- *     tree to pass to the theme function. This name is used as the name of the
- *     variable that holds the renderable element or tree in preprocess and
- *     process functions.
+ *   An associative array of information about theme implementations. The keys
+ *   on the outer array are known as "theme hooks". For simple theme
+ *   implementations for regular calls to theme(), the theme hook is the first
+ *   argument. For theme suggestions, instead of the array key being the base
+ *   theme hook, the key is a theme suggestion name with the format
+ *   'base_hook_name__sub_hook_name'. For render elements, the key is the
+ *   machine name of the render element. The array values are themselves arrays
+ *   containing information about the theme hook and its implementation. Each
+ *   information array must contain either a 'variables' element (for theme()
+ *   calls) or a 'render element' element (for render elements), but not both.
+ *   The following elements may be part of each information array:
+ *   - variables: Used for theme() call items only: an array of variables,
+ *     where the array keys are the names of the variables, and the array
+ *     values are the default values if they are not passed into theme().
+ *     Template implementations receive each array key as a variable in the
+ *     template file (so they must be legal PHP/Twig variable names). Function
+ *     implementations are passed the variables in a single $variables function
+ *     argument.
+ *   - render element: Used for render element items only: the name of the
+ *     renderable element or element tree to pass to the theme function. This
+ *     name is used as the name of the variable that holds the renderable
+ *     element or tree in preprocess and process functions.
  *   - file: The file the implementation resides in. This file will be included
  *     prior to the theme being rendered, to make sure that the function or
  *     preprocess function (as needed) is actually loaded; this makes it
@@ -1277,9 +1356,17 @@ function hook_permission() {
  *     registers the 'node' theme hook, 'theme_node' will be assigned to its
  *     function. If the chameleon theme registers the node hook, it will be
  *     assigned 'chameleon_node' as its function.
- *   - base hook: A string declaring the base theme hook if this theme
- *     implementation is actually implementing a suggestion for another theme
- *     hook.
+ *   - base hook: Used for theme() suggestions only: the base theme hook name.
+ *     Instead of this suggestion's implementation being used directly, the base
+ *     hook will be invoked with this implementation as its first suggestion.
+ *     The base hook's files will be included and the base hook's preprocess
+ *     functions will be called in place of any suggestion's preprocess
+ *     functions. If an implementation of hook_theme_suggestions_HOOK() (where
+ *     HOOK is the base hook) changes the suggestion order, a different
+ *     suggestion may be used in place of this suggestion. If after
+ *     hook_theme_suggestions_HOOK() this suggestion remains the first
+ *     suggestion, then this suggestion's function or template will be used to
+ *     generate the output for theme().
  *   - pattern: A regular expression pattern to be used to allow this theme
  *     implementation to have a dynamic name. The convention is to use __ to
  *     differentiate the dynamic portion of the theme. For example, to allow
@@ -1341,7 +1428,7 @@ function hook_theme($existing, $type, $theme, $path) {
  *
  * The $theme_registry array is keyed by theme hook name, and contains the
  * information returned from hook_theme(), as well as additional properties
- * added by _theme_process_registry().
+ * added by \Drupal\Core\Theme\Registry::processExtension().
  *
  * For example:
  * @code
@@ -1364,7 +1451,7 @@ function hook_theme($existing, $type, $theme, $path) {
  *   The entire cache of theme registry information, post-processing.
  *
  * @see hook_theme()
- * @see _theme_process_registry()
+ * @see \Drupal\Core\Theme\Registry::processExtension()
  */
 function hook_theme_registry_alter(&$theme_registry) {
   // Kill the next/previous forum topic navigation links.
@@ -1402,36 +1489,6 @@ function hook_theme_registry_alter(&$theme_registry) {
  */
 function hook_template_preprocess_default_variables_alter(&$variables) {
   $variables['is_admin'] = user_access('access administration pages');
-}
-
-/**
- * Return the machine-readable name of the theme to use for the current page.
- *
- * This hook can be used to dynamically set the theme for the current page
- * request. It should be used by modules which need to override the theme
- * based on dynamic conditions (for example, a module which allows the theme to
- * be set based on the current user's role). The return value of this hook will
- * be used on all pages except those which have a valid per-page or per-section
- * theme set via a theme callback function in hook_menu(); the themes on those
- * pages can only be overridden using hook_menu_alter().
- *
- * Note that returning different themes for the same path may not work with page
- * caching. This is most likely to be a problem if an anonymous user on a given
- * path could have different themes returned under different conditions.
- *
- * Since only one theme can be used at a time, the last (i.e., highest
- * weighted) module which returns a valid theme name from this hook will
- * prevail.
- *
- * @return
- *   The machine-readable name of the theme that should be used for the current
- *   page request. The value returned from this function will only have an
- *   effect if it corresponds to a currently-active theme on the site. Do not
- *   return a value if you do not wish to set a custom theme.
- */
-function hook_custom_theme() {
-  // Allow the user to request a particular theme via a query parameter.
-  return \Drupal::request()->query->get('theme');
 }
 
 /**
@@ -1573,9 +1630,10 @@ function hook_mail($key, &$message, $params) {
 
   // Node-based variable translation is only available if we have a node.
   if (isset($params['node'])) {
+    /** @var \Drupal\node\NodeInterface $node */
     $node = $params['node'];
     $variables += array(
-      '%uid' => $node->getAuthorId(),
+      '%uid' => $node->getOwnerId(),
       '%node_url' => url('node/' . $node->id(), array('absolute' => TRUE)),
       '%node_type' => node_get_type_label($node),
       '%title' => $node->getTitle(),
@@ -1831,7 +1889,7 @@ function hook_file_download($uri) {
  *   shipped file.
  */
 function hook_file_url_alter(&$uri) {
-  global $user;
+  $user = \Drupal::currentUser();
 
   // User 1 will always see the local file in this example.
   if ($user->id() == 1) {
@@ -2202,22 +2260,24 @@ function hook_install() {
  * The numbers are composed of three parts:
  * - 1 digit for Drupal core compatibility.
  * - 1 digit for your module's major release version (e.g., is this the 8.x-1.*
- *   (1) or 8.x-2.* (2) series of your module?). This digit should be 0 for
- *   initial porting of your module to a new Drupal core API.
- * - 2 digits for sequential counting, starting with 00.
+ *   (1) or 8.x-2.* (2) series of your module).
+ * - 2 digits for sequential counting, starting with 01.
  *
  * Examples:
- * - mymodule_update_8000(): This is the required update for mymodule to run
- *   with Drupal core API 8.x when upgrading from Drupal core API 7.x.
  * - mymodule_update_8100(): This is the first update to get the database ready
  *   to run mymodule 8.x-1.*.
  * - mymodule_update_8200(): This is the first update to get the database ready
- *   to run mymodule 8.x-2.*. Users can directly update from 7.x-2.* to 8.x-2.*
- *   and they get all 80xx and 82xx updates, but not 81xx updates, because
- *   those reside in the 8.x-1.x branch only.
+ *   to run mymodule 8.x-2.*.
  *
- * A good rule of thumb is to remove updates older than two major releases of
- * Drupal. See hook_update_last_removed() to notify Drupal about the removals.
+ * As of Drupal 8.0, the database upgrade system no longer supports updating a
+ * database from an earlier major version of Drupal: update.php can be used to
+ * upgrade from 7.x-1.x to 7.x-2.x, or 8.x-1.x to 8.x-2.x, but not from 7.x to
+ * 8.x. Therefore, only update hooks numbered 8001 or later will run for
+ * Drupal 8. 8000 is reserved for the minimum core schema version and defining
+ * mymodule_update_8000() will result in an exception. Use the
+ * @link https://drupal.org/node/2127611 Migration API @endlink instead to
+ * migrate data from an earlier major version of Drupal.
+ *
  * For further information about releases and release numbers see:
  * @link http://drupal.org/node/711070 Maintaining a drupal.org project with Git @endlink
  *
@@ -2342,21 +2402,21 @@ function hook_update_N(&$sandbox) {
  * @see hook_update_N()
  */
 function hook_update_dependencies() {
-  // Indicate that the mymodule_update_8000() function provided by this module
-  // must run after the another_module_update_8002() function provided by the
-  // 'another_module' module.
-  $dependencies['mymodule'][8000] = array(
-    'another_module' => 8002,
-  );
   // Indicate that the mymodule_update_8001() function provided by this module
-  // must run before the yet_another_module_update_8004() function provided by
+  // must run after the another_module_update_8003() function provided by the
+  // 'another_module' module.
+  $dependencies['mymodule'][8001] = array(
+    'another_module' => 8003,
+  );
+  // Indicate that the mymodule_update_8002() function provided by this module
+  // must run before the yet_another_module_update_8005() function provided by
   // the 'yet_another_module' module. (Note that declaring dependencies in this
   // direction should be done only in rare situations, since it can lead to the
   // following problem: If a site has already run the yet_another_module
   // module's database updates before it updates its codebase to pick up the
   // newest mymodule code, then the dependency declared here will be ignored.)
-  $dependencies['yet_another_module'][8004] = array(
-    'mymodule' => 8001,
+  $dependencies['yet_another_module'][8005] = array(
+    'mymodule' => 8002,
   );
   return $dependencies;
 }
@@ -2378,9 +2438,9 @@ function hook_update_dependencies() {
  * @see hook_update_N()
  */
 function hook_update_last_removed() {
-  // We've removed the 5.x-1.x version of mymodule, including database updates.
-  // The next update function is mymodule_update_5200().
-  return 5103;
+  // We've removed the 8.x-1.x version of mymodule, including database updates.
+  // The next update function is mymodule_update_8200().
+  return 8103;
 }
 
 /**
@@ -2582,7 +2642,7 @@ function hook_install_tasks(&$install_state) {
  *
  * Elements available to be altered are only those added using
  * drupal_add_html_head_link() or drupal_add_html_head(). CSS and JS files
- * are handled using drupal_add_css() and drupal_add_js(), so the head links
+ * are handled using _drupal_add_css() and _drupal_add_js(), so the head links
  * for those files will not appear in the $head_elements array.
  *
  * @param $head_elements
@@ -2698,8 +2758,7 @@ function hook_url_outbound_alter(&$path, &$options, $original_path) {
 
   // Instead of pointing to user/[uid]/edit, point to user/me/edit.
   if (preg_match('|^user/([0-9]*)/edit(/.*)?|', $path, $matches)) {
-    global $user;
-    if ($user->id() == $matches[1]) {
+    if (\Drupal::currentUser()->id() == $matches[1]) {
       $path = 'user/me/edit' . $matches[2];
     }
   }
@@ -2757,6 +2816,7 @@ function hook_tokens($type, $tokens, array $data = array(), array $options = arr
   $replacements = array();
 
   if ($type == 'node' && !empty($data['node'])) {
+    /** @var \Drupal\node\NodeInterface $node */
     $node = $data['node'];
 
     foreach ($tokens as $name => $original) {
@@ -2776,7 +2836,7 @@ function hook_tokens($type, $tokens, array $data = array(), array $options = arr
 
         // Default values for the chained tokens handled below.
         case 'author':
-          $account = $node->getAuthor() ? $node->getAuthor() : user_load(0);
+          $account = $node->getOwner() ? $node->getOwner() : user_load(0);
           $replacements[$original] = $sanitize ? check_plain($account->label()) : $account->label();
           break;
 
@@ -2787,7 +2847,7 @@ function hook_tokens($type, $tokens, array $data = array(), array $options = arr
     }
 
     if ($author_tokens = $token_service->findWithPrefix($tokens, 'author')) {
-      $replacements += $token_service->generate('user', $author_tokens, array('user' => $node->getAuthor()), $options);
+      $replacements += $token_service->generate('user', $author_tokens, array('user' => $node->getOwner()), $options);
     }
 
     if ($created_tokens = $token_service->findWithPrefix($tokens, 'created')) {
@@ -2965,16 +3025,6 @@ function hook_token_info_alter(&$data) {
  * @ingroup batch
  */
 function hook_batch_alter(&$batch) {
-  // If the current page request is inside the overlay, add ?render=overlay to
-  // the success callback URL, so that it appears correctly within the overlay.
-  if (overlay_get_mode() == 'child') {
-    if (isset($batch['url_options']['query'])) {
-      $batch['url_options']['query']['render'] = 'overlay';
-    }
-    else {
-      $batch['url_options']['query'] = array('render' => 'overlay');
-    }
-  }
 }
 
 /**
@@ -3187,10 +3237,10 @@ function hook_link_alter(&$variables) {
  * API function including the module's name.
  *
  * Examples:
- * - _update_7000_mymodule_save(): This function performs a save operation
- *   without invoking any hooks using the 7.x schema.
- * - _update_8000_mymodule_save(): This function performs the same save
- *   operation using the 8.x schema.
+ * - _update_8001_mymodule_save(): This function performs a save operation
+ *   without invoking any hooks using the original 8.x schema.
+ * - _update_8002_mymodule_save(): This function performs the same save
+ *   operation using an updated 8.x schema.
  *
  * The utility function should not invoke any hooks, and should perform database
  * operations using functions from the
@@ -3199,69 +3249,69 @@ function hook_link_alter(&$variables) {
  *
  * If a change to the schema necessitates a change to the utility function, a
  * new function should be created with a name based on the version of the schema
- * it acts on. See _update_8000_bar_get_types() and _update_8001_bar_get_types()
+ * it acts on. See _update_8002_bar_get_types() and _update_8003_bar_get_types()
  * in the code examples that follow.
  *
  * For example, foo.install could contain:
  * @code
  * function foo_update_dependencies() {
- *   // foo_update_8010() needs to run after bar_update_8000().
+ *   // foo_update_8010() needs to run after bar_update_8002().
  *   $dependencies['foo'][8010] = array(
- *     'bar' => 8000,
+ *     'bar' => 8002,
  *   );
  *
- *   // foo_update_8036() needs to run after bar_update_8001().
+ *   // foo_update_8036() needs to run after bar_update_8003().
  *   $dependencies['foo'][8036] = array(
- *     'bar' => 8001,
+ *     'bar' => 8003,
  *   );
  *
  *   return $dependencies;
  * }
  *
- * function foo_update_8000() {
+ * function foo_update_8002() {
  *   // No updates have been run on the {bar_types} table yet, so this needs
- *   // to work with the 7.x schema.
- *   foreach (_update_7000_bar_get_types() as $type) {
+ *   // to work with the original 8.x schema.
+ *   foreach (_update_8001_bar_get_types() as $type) {
  *     // Rename a variable.
  *   }
  * }
  *
  * function foo_update_8010() {
- *    // Since foo_update_8010() is going to run after bar_update_8000(), it
+ *    // Since foo_update_8010() is going to run after bar_update_8002(), it
  *    // needs to operate on the new schema, not the old one.
- *    foreach (_update_8000_bar_get_types() as $type) {
+ *    foreach (_update_8002_bar_get_types() as $type) {
  *      // Rename a different variable.
  *    }
  * }
  *
  * function foo_update_8036() {
- *   // This update will run after bar_update_8001().
- *   foreach (_update_8001_bar_get_types() as $type) {
+ *   // This update will run after bar_update_8003().
+ *   foreach (_update_8003_bar_get_types() as $type) {
  *   }
  * }
  * @endcode
  *
  * And bar.install could contain:
  * @code
- * function bar_update_8000() {
+ * function bar_update_8002() {
  *   // Type and bundle are confusing, so we renamed the table.
  *   db_rename_table('bar_types', 'bar_bundles');
  * }
  *
- * function bar_update_8001() {
+ * function bar_update_8003() {
  *   // Database table names should be singular when possible.
  *   db_rename_table('bar_bundles', 'bar_bundle');
  * }
  *
- * function _update_7000_bar_get_types() {
+ * function _update_8001_bar_get_types() {
  *   db_query('SELECT * FROM {bar_types}')->fetchAll();
  * }
  *
- * function _update_8000_bar_get_types() {
+ * function _update_8002_bar_get_types() {
  *   db_query('SELECT * FROM {bar_bundles'})->fetchAll();
  * }
  *
- * function _update_8001_bar_get_types() {
+ * function _update_8003_bar_get_types() {
  *   db_query('SELECT * FROM {bar_bundle}')->fetchAll();
  * }
  * @endcode
@@ -3303,8 +3353,7 @@ function hook_link_alter(&$variables) {
  * identified when you are looking at the Drupal source code by having
  * "@ Annotation" in their documentation blocks (without the space after @). To
  * find examples of annotation for a particular annotation class, such as
- * EntityType, look for class files that contain a PHP "use" declaration of the
- * annotation class, or files that have an @ annotation section using the
+ * EntityType, look for class files that have an @ annotation section using the
  * annotation class.
  * @}
  */

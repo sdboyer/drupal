@@ -8,6 +8,7 @@
 namespace Drupal\Core\Field;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\TypedData\ListDefinitionInterface;
 
 /**
  * Defines an interface for entity field definitions.
@@ -36,10 +37,9 @@ use Drupal\Core\Entity\EntityInterface;
  *
  * However, entity base fields, such as $node->title, are not managed by
  * field.module and its "field_entity"/"field_instance" configuration entities.
- * Therefore, their definitions are provided by different objects that implement
- * this interface.
- * @todo That is still in progress: https://drupal.org/node/1949932. Update this
- *   documentation with details when that's implemented.
+ * Therefore, their definitions are provided by different objects based on the
+ * class \Drupal\Core\Field\FieldDefinition, which implements this
+ * interface as well.
  *
  * Field definitions may fully define a concrete data object (e.g.,
  * $node_1->body), or may provide a best-guess definition for a data object that
@@ -51,7 +51,7 @@ use Drupal\Core\Entity\EntityInterface;
  * based on that abstract definition, even though that abstract definition can
  * differ from the concrete definition of any particular node's body field.
  */
-interface FieldDefinitionInterface {
+interface FieldDefinitionInterface extends ListDefinitionInterface {
 
   /**
    * Value indicating a field accepts an unlimited number of values.
@@ -67,7 +67,7 @@ interface FieldDefinitionInterface {
    * @return string
    *   The field name.
    */
-  public function getFieldName();
+  public function getName();
 
   /**
    * Returns the field type.
@@ -77,7 +77,7 @@ interface FieldDefinitionInterface {
    *
    * @see \Drupal\Core\Field\FieldTypePluginManager
    */
-  public function getFieldType();
+  public function getType();
 
   /**
    * Returns the field settings.
@@ -89,7 +89,7 @@ interface FieldDefinitionInterface {
    * @return array
    *   An array of key/value pairs.
    */
-  public function getFieldSettings();
+  public function getSettings();
 
   /**
    * Returns the value of a given field setting.
@@ -100,7 +100,7 @@ interface FieldDefinitionInterface {
    * @return mixed
    *   The setting value.
    */
-  public function getFieldSetting($setting_name);
+  public function getSetting($setting_name);
 
   /**
    * Returns the names of the field's subproperties.
@@ -116,7 +116,7 @@ interface FieldDefinitionInterface {
    * @return array
    *   The property names.
    */
-  public function getFieldPropertyNames();
+  public function getPropertyNames();
 
   /**
    * Returns whether the field is translatable.
@@ -124,14 +124,69 @@ interface FieldDefinitionInterface {
    * @return bool
    *   TRUE if the field is translatable.
    */
-  public function isFieldTranslatable();
+  public function isTranslatable();
 
   /**
-   * Determines whether the field is configurable via field.module.
+   * Returns whether the field is configurable via field.module.
    *
    * @return bool
+   *   TRUE if the field is configurable.
    */
-  public function isFieldConfigurable();
+  public function isConfigurable();
+
+  /**
+   * Returns whether the display for the field can be configured.
+   *
+   * @param string $display_context
+   *   The display context. Either 'view' or 'form'.
+   *
+   * @return bool
+   *   TRUE if the display for this field is configurable in the given context.
+   *   If TRUE, the display options returned by getDisplayOptions() may be
+   *   overridden via the respective EntityDisplay.
+   *
+   * @see \Drupal\Core\Entity\Display\EntityDisplayInterface
+   */
+  public function isDisplayConfigurable($display_context);
+
+  /**
+   * Returns the default display options for the field.
+   *
+   * If the field's display is configurable, the returned display options act
+   * as default values and may be overridden via the respective EntityDisplay.
+   * Otherwise, the display options will be applied to entity displays as is.
+   *
+   * @param string $display_context
+   *   The display context. Either 'view' or 'form'.
+   *
+   * @return array|null
+   *   The array of display options for the field, or NULL if the field is not
+   *   displayed. The following key/value pairs may be present:
+   *   - label: (string) Position of the field label. The default 'field' theme
+   *     implementation supports the values 'inline', 'above' and 'hidden'.
+   *     Defaults to 'above'. Only applies to 'view' context.
+   *   - type: (string) The plugin (widget or formatter depending on
+   *     $display_context) to use, or 'hidden'. If not specified or if the
+   *     requested plugin is unknown, the 'default_widget' / 'default_formatter'
+   *     for the field type will be used.
+   *   - settings: (array) Settings for the plugin specified above. The default
+   *     settings for the plugin will be used for settings left unspecified.
+   *   - weight: (float) The weight of the element. Not needed if 'type' is
+   *     'hidden'.
+   *   The defaults of the various display options above get applied by the used
+   *   entity display.
+   *
+   * @see \Drupal\Core\Entity\Display\EntityDisplayInterface
+   */
+  public function getDisplayOptions($display_context);
+
+  /**
+   * Determines whether the field is queryable via QueryInterface.
+   *
+   * @return bool
+   *   TRUE if the field is queryable.
+   */
+  public function isQueryable();
 
   /**
    * Returns the human-readable label for the field.
@@ -139,7 +194,7 @@ interface FieldDefinitionInterface {
    * @return string
    *   The field label.
    */
-  public function getFieldLabel();
+  public function getLabel();
 
   /**
    * Returns the human-readable description for the field.
@@ -148,10 +203,10 @@ interface FieldDefinitionInterface {
    * descriptive information is helpful. For example, as help text below the
    * form element in entity edit forms.
    *
-   * @return string
-   *   The field description.
+   * @return string|null
+   *   The field description, or NULL if no description is available.
    */
-  public function getFieldDescription();
+  public function getDescription();
 
   /**
    * Returns the maximum number of items allowed for the field.
@@ -162,7 +217,7 @@ interface FieldDefinitionInterface {
    * @return integer
    *   The field cardinality.
    */
-  public function getFieldCardinality();
+  public function getCardinality();
 
   /**
    * Returns whether at least one non-empty item is required for this field.
@@ -173,7 +228,7 @@ interface FieldDefinitionInterface {
    * @return bool
    *   TRUE if the field is required.
    */
-  public function isFieldRequired();
+  public function isRequired();
 
   /**
    * Returns whether the field can contain multiple items.
@@ -181,7 +236,7 @@ interface FieldDefinitionInterface {
    * @return bool
    *   TRUE if the field can contain multiple items, FALSE otherwise.
    */
-  public function isFieldMultiple();
+  public function isMultiple();
 
   /**
    * Returns the default value for the field in a newly created entity.
@@ -198,6 +253,38 @@ interface FieldDefinitionInterface {
    *     array.
    *   - NULL or array() for no default value.
    */
-  public function getFieldDefaultValue(EntityInterface $entity);
+  public function getDefaultValue(EntityInterface $entity);
+
+  /**
+   * Returns the field schema.
+   *
+   * Note that this method returns an empty array for computed fields which have
+   * no schema.
+   *
+   * @return array
+   *   The field schema, as an array of key/value pairs in the format returned
+   *   by hook_field_schema():
+   *   - columns: An array of Schema API column specifications, keyed by column
+   *     name. This specifies what comprises a single value for a given field.
+   *     No assumptions should be made on how storage backends internally use
+   *     the original column name to structure their storage.
+   *   - indexes: An array of Schema API index definitions. Some storage
+   *     backends might not support indexes.
+   *   - foreign keys: An array of Schema API foreign key definitions. Note,
+   *     however, that depending on the storage backend specified for the field,
+   *     the field data is not necessarily stored in SQL.
+   */
+  public function getSchema();
+
+  /**
+   * Returns the field columns, as defined in the field schema.
+   *
+   * @return array
+   *   The array of field columns, keyed by column name, in the same format
+   *   returned by getSchema().
+   *
+   * @see \Drupal\field\Entity\FieldInterface::getSchema()
+   */
+  public function getColumns();
 
 }
