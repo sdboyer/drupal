@@ -1,9 +1,8 @@
 <?php
+
 /**
- * Created by PhpStorm.
- * User: sdboyer
- * Date: 9/19/13
- * Time: 2:13 PM
+ * @file
+ * Contains \Drupal\Tests\Core\Asset\AsseticAdapterAssetTest.
  */
 
 namespace Drupal\Tests\Core\Asset;
