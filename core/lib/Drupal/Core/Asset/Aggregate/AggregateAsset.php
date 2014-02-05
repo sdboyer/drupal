@@ -7,12 +7,12 @@
 
 namespace Drupal\Core\Asset\Aggregate;
 
-use Assetic\Filter\FilterCollection;
 use Assetic\Filter\FilterInterface;
 use Drupal\Core\Asset\AssetInterface;
+use Assetic\Asset\AssetCollection as AsseticAssetCollection;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\Aggregate\AggregateAssetInterface;
-use Drupal\Core\Asset\Collection\BasicAssetCollection;
+use Drupal\Core\Asset\Collection\BasicCollectionTrait;
 use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
@@ -20,9 +20,13 @@ use Drupal\Core\Asset\AsseticAdapterTrait;
 
 /**
  * Base class for representing aggregate assets.
+ *
+ * Extends, and significantly modifies, Assetic's AssetCollection. But serves
+ * the same general conceptual purpose: a renderable asset container.
  */
-class AggregateAsset extends BasicAssetCollection implements \IteratorAggregate, AssetInterface, AggregateAssetInterface {
+class AggregateAsset extends AsseticAssetCollection implements \IteratorAggregate, AssetInterface, AggregateAssetInterface {
   use AsseticAdapterTrait;
+  use BasicCollectionTrait;
 
   /**
    * @var \Drupal\Core\Asset\Metadata\AssetMetadataInterface
@@ -47,27 +51,6 @@ class AggregateAsset extends BasicAssetCollection implements \IteratorAggregate,
   protected $content;
 
   /**
-   * A collection of filters to be applied to this asset.
-   *
-   * @var FilterCollection
-   */
-  protected $filters;
-
-  /**
-   * The relative path to the asset.
-   *
-   * @var string
-   */
-  protected $sourcePath;
-
-  /**
-   * The desired path at which the asset should be dumped.
-   *
-   * @var string
-   */
-  protected $targetPath;
-
-  /**
    * Internal state flag indicating whether or not load filters have been run.
    *
    * @var bool
@@ -75,17 +58,20 @@ class AggregateAsset extends BasicAssetCollection implements \IteratorAggregate,
   protected $loaded = FALSE;
 
   /**
+   * Creates a new AggregateAsset.
+   *
    * @param AssetMetadataInterface $metadata
    *   The metadata bag for this aggregate.
-   * @param array $assets
+   * @param AssetInterface[] $assets
    *   Assets to add to this aggregate.
-   * @param array $filters
+   * @param FilterInterface[] $filters
    *   Filters to apply to this aggregate.
    */
-  public function __construct(AssetMetadataInterface $metadata, $assets = array(), $filters = array()) {
+  public function __construct(AssetMetadataInterface $metadata, array $assets = array(), array $filters = array()) {
     $this->metadata = $metadata;
+    $this->_bcinit();
+
     parent::__construct($assets);
-    $this->filters = new FilterCollection($filters);
   }
 
   /**
@@ -172,96 +158,5 @@ class AggregateAsset extends BasicAssetCollection implements \IteratorAggregate,
    */
   public function isPreprocessable() {
     return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function load(FilterInterface $additionalFilter = NULL) {
-    // loop through leaves and load each asset
-    $parts = array();
-    foreach ($this as $asset) {
-      $asset->load($additionalFilter);
-      $parts[] = $asset->getContent();
-    }
-
-    $this->content = implode("\n", $parts);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function dump(FilterInterface $additionalFilter = NULL) {
-    // loop through leaves and dump each asset
-    $parts = array();
-    foreach ($this as $asset) {
-      $parts[] = $asset->dump($additionalFilter);
-    }
-
-    return implode("\n", $parts);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getContent() {
-    return $this->content;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setContent($content) {
-    $this->content = $content;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSourceRoot() {
-    // Drupal doesn't use this in general, and especially not for aggregates.
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSourcePath() {
-    return $this->sourcePath;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getTargetPath() {
-    return $this->targetPath;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setTargetPath($targetPath) {
-    $this->targetPath = $targetPath;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function ensureFilter(FilterInterface $filter) {
-    $this->filters->ensure($filter);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFilters() {
-    $this->filters->all();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function clearFilters() {
-    $this->filters->clear();
   }
 }

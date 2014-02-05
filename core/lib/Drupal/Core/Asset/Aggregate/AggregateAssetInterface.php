@@ -7,7 +7,7 @@
 
 namespace Drupal\Core\Asset\Aggregate;
 use Assetic\Asset\AssetCollectionInterface as AsseticAssetCollectionInterface;
-use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
+use Drupal\Core\Asset\Collection\BasicCollectionInterface;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Exception\AssetTypeMismatchException;
@@ -33,6 +33,6 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * @see \Assetic\Asset\AssetCollectionInterface
  * @see \Drupal\Core\Asset\Collection\AssetCollectionInterface
  */
-interface AggregateAssetInterface extends AssetInterface, AssetCollectionBasicInterface, AsseticAssetCollectionInterface {
+interface AggregateAssetInterface extends AssetInterface, BasicCollectionInterface, AsseticAssetCollectionInterface {
 
 }

@@ -14,16 +14,20 @@ use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
 use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Exception\FrozenObjectException;
-use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 /**
  * A container for assets.
  *
  * TODO js settings...
- *
- * TODO With PHP5.4, refactor out AssetCollectionBasicInterface into a trait.
  */
-class AssetCollection extends BasicAssetCollection implements AssetCollectionInterface {
+class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
+  use BasicCollectionTrait {
+    // Aliases for write methods; must be wrapped in a freeze check
+    add as _add;
+    remove as _remove;
+    replace as _replace;
+    _bcinit as public __construct;
+  }
 
   /**
    * State flag indicating whether or not this collection is frozen.
@@ -47,7 +51,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    */
   public function add(AsseticAssetInterface $asset) {
     $this->attemptWrite(__METHOD__);
-    return parent::add($asset);
+    return $this->_add($asset);
   }
 
   /**
@@ -79,7 +83,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    */
   public function remove($needle, $graceful = FALSE) {
     $this->attemptWrite(__METHOD__);
-    return parent::remove($needle, $graceful);
+    return $this->_remove($needle, $graceful);
   }
 
   /**
@@ -87,7 +91,7 @@ class AssetCollection extends BasicAssetCollection implements AssetCollectionInt
    */
   public function replace($needle, AssetInterface $replacement, $graceful = FALSE) {
     $this->attemptWrite(__METHOD__);
-    return parent::replace($needle, $replacement, $graceful);
+    return $this->_replace($needle, $replacement, $graceful);
   }
 
   /**

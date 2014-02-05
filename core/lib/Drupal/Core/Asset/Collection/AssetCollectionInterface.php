@@ -15,7 +15,7 @@ use Drupal\Core\Asset\AssetLibraryRepository;
  *
  * @see \Drupal\Core\Asset\Collection\AssetCollectionBasicInterface
  */
-interface AssetCollectionInterface extends AssetCollectionBasicInterface {
+interface AssetCollectionInterface extends BasicCollectionInterface {
 
   /**
    * Merges another asset collection into this one.

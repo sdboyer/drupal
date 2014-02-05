@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\Collection\BasicAssetCollection.
+ * Contains \Drupal\Core\Asset\Collection\BasicCollectionTrait.
  */
 
 namespace Drupal\Core\Asset\Collection;
@@ -14,14 +14,12 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Assetic\Asset\AssetInterface as AsseticAssetInterface;
 
 /**
- * Base class implementing AssetCollectionBasicInterface.
+ * Trait implementing BasicCollectionInterface.
  *
  * This class provides the essentials of the asset collection implementation,
  * common to all of the collection flavors.
- *
- * TODO With PHP5.4, refactor this entire thing into a trait.
  */
-abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollectionBasicInterface {
+trait BasicCollectionTrait /* implements \IteratorAggregate, BasicCollectionInterface */ {
 
   /**
    * A map of all assets, keyed by asset id.
@@ -47,15 +45,29 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
   protected $nestedStorage;
 
   /**
-   * @param AssetInterface[] $assets
-   *   (optional) An array of assets to immediately add to this collection.
+   * Tracks whether the trait has initialized itself yet.
+   *
+   * @var bool
    */
-  public function __construct($assets = array()) {
-    $this->assetStorage = new \SplObjectStorage();
-    $this->nestedStorage = new \SplObjectStorage();
+  private $_bcinit = FALSE;
 
-    foreach ($assets as $asset) {
-      $this->add($asset);
+  /**
+   * Initializes datastructures required by the trait.
+   *
+   * Should be called from the constructor in composed classes. Can also be
+   * aliased directly to being the constructor.
+   *
+   * @param AssetInterface[] $assets
+   *   Assets to add to this collection.
+   */
+  protected function _bcinit(array $assets = array()) {
+    if ($this->_bcinit === FALSE) {
+      $this->assetStorage = new \SplObjectStorage();
+      $this->nestedStorage = new \SplObjectStorage();
+      foreach ($assets as $asset) {
+        $this->add($asset);
+      }
+      $this->_bcinit = TRUE;
     }
   }
 
@@ -72,7 +84,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
       $this->assetStorage->attach($asset);
       $this->assetIdMap[$asset->id()] = $asset;
 
-      if ($asset instanceof AssetCollectionBasicInterface) {
+      if ($asset instanceof BasicCollectionInterface) {
         $this->nestedStorage->attach($asset);
       }
     }
@@ -130,7 +142,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
       }
     }
     else if (!$needle instanceof AssetInterface) {
-      throw new \InvalidArgumentException('Invalid type provided to AssetCollectionBasicInterface::replace(); must provide either a string asset id or AssetInterface instance.');
+      throw new \InvalidArgumentException('Invalid type provided to BasicCollectionInterface::replace(); must provide either a string asset id or AssetInterface instance.');
     }
 
     return $this->doRemove($needle, $graceful);
@@ -159,8 +171,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
         return TRUE;
       }
 
-      // TODO wtf, that's protected
-      if ($asset instanceof AssetCollectionBasicInterface && $asset->doRemove($needle, TRUE)) {
+      if ($asset instanceof BasicCollectionInterface && $asset->remove($needle, TRUE)) {
         return TRUE;
       }
     }
@@ -182,7 +193,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
       }
     }
     else if (!$needle instanceof AssetInterface) {
-      throw new \InvalidArgumentException('Invalid type provided to AssetCollectionBasicInterface::replace(); must provide either a string asset id or AssetInterface instance.');
+      throw new \InvalidArgumentException('Invalid type provided to BasicCollectionInterface::replace(); must provide either a string asset id or AssetInterface instance.');
     }
 
     $this->ensureCorrectType($replacement);
@@ -217,14 +228,14 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
 
         array_splice($this->assetIdMap, $i, 1, array($replacement->id() => $replacement));
         $this->assetStorage->attach($replacement);
-        if ($replacement instanceof AssetCollectionBasicInterface) {
+        if ($replacement instanceof BasicCollectionInterface) {
           $this->nestedStorage->attach($replacement);
         }
 
         return TRUE;
       }
 
-      if ($asset instanceof AssetCollectionBasicInterface && $asset->doReplace($needle, $replacement, TRUE)) {
+      if ($asset instanceof BasicCollectionInterface && $asset->replace($needle, $replacement, TRUE)) {
         return TRUE;
       }
       $i++;
@@ -308,7 +319,7 @@ abstract class BasicAssetCollection implements \IteratorAggregate, AssetCollecti
    *
    * "Type" here refers to 'css' vs. 'js'.
    *
-   * BasicAssetCollection's implementation has no body because it has no type
+   * BasicCollectionTrait's implementation has no body because it has no type
    * restrictions; only aggregates do.
    *
    * @param AssetInterface $asset

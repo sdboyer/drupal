@@ -7,7 +7,7 @@
 namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetCollection;
-use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
+use Drupal\Core\Asset\Collection\BasicCollectionInterface;
 use Drupal\Core\Asset\Exception\FrozenObjectException;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
 
@@ -37,7 +37,7 @@ class AssetCollectionTest extends AssetUnitTest {
   /**
    * Returns an AssetCollection, the base collection type for this unit test.
    *
-   * @return AssetCollectionBasicInterface
+   * @return BasicCollectionInterface
    */
   public function getCollection() {
     return new AssetCollection();

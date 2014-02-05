@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\Collection\AssetCollectionBasicInterface.
+ * Contains \Drupal\Core\Asset\Collection\BasicCollectionInterface.
  */
 
 namespace Drupal\Core\Asset\Collection;
@@ -25,7 +25,7 @@ use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
  * @see \Drupal\Core\Asset\Aggregate\AggregateAssetInterface
  * @see \Drupal\Core\Asset\Collection\AssetCollectionInterface
  */
-interface AssetCollectionBasicInterface extends \Traversable, \Countable {
+interface BasicCollectionInterface extends \Traversable, \Countable {
 
   /**
    * Adds an asset to this aggregate.
@@ -119,7 +119,7 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
    * Indicates whether the collection contains any assets.
    *
    * Note that this will only return TRUE if leaf assets are present - that is,
-   * assets that do NOT implement AssetCollectionBasicInterface.
+   * assets that do NOT implement BasicCollectionInterface.
    *
    * @return bool
    *   TRUE if the collection is devoid of any leaf assets, FALSE otherwise.
@@ -141,7 +141,7 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
   /**
    * Returns the total number of leaf assets in this collection.
    *
-   * Non-leaf assets - objects implementing AssetCollectionBasicInterface - are
+   * Non-leaf assets - objects implementing BasicCollectionInterface - are
    * not included in the count.
    *
    * @return int
@@ -151,7 +151,7 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
   /**
    * Retrieves a traversable that will return all contained assets.
    *
-   * 'All' assets includes both AssetCollectionBasicInterface objects and plain
+   * 'All' assets includes both BasicCollectionInterface objects and plain
    * AssetInterface objects.
    *
    * @return \Traversable
@@ -162,7 +162,7 @@ interface AssetCollectionBasicInterface extends \Traversable, \Countable {
    * Retrieves a traversable that returns only contained leaf assets.
    *
    * Leaf assets are objects that only implement AssetInterface, not
-   * AssetCollectionBasicInterface.
+   * BasicCollectionInterface.
    *
    * @return \Traversable
    */

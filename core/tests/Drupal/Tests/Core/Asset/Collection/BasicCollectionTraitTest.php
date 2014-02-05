@@ -2,37 +2,37 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\Core\Asset\Collection\BasicAssetCollectionTest.
+ * Contains \Drupal\Tests\Core\Asset\Collection\BasicCollectionTraitTest.
  */
 
 namespace Drupal\Tests\Core\Asset\Collection;
 
-use Drupal\Core\Asset\Collection\AssetCollectionBasicInterface;
-use Drupal\Core\Asset\Collection\BasicAssetCollection;
+use Drupal\Core\Asset\Collection\BasicCollectionInterface;
+use Drupal\Core\Asset\Collection\BasicCollectionTrait;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
- * @coversDefaultClass \Drupal\Core\Asset\Collection\BasicAssetCollection
+ * @coversDefaultClass \Drupal\Core\Asset\Collection\BasicCollectionTrait
  * @group Asset
  */
-class BasicAssetCollectionTest extends AssetUnitTest {
+class BasicCollectionTraitTest extends AssetUnitTest {
 
   public static function getInfo() {
     return array(
-      'name' => 'BasicAssetCollection unit tests',
-      'description' => 'Unit tests for BasicAssetCollection',
+      'name' => 'BasicCollectionTrait unit tests',
+      'description' => 'Unit tests for BasicCollectionTrait',
       'group' => 'Asset',
     );
   }
 
   /**
-   * Generates a simple BasicAssetCollection mock.
+   * Generates a simple BasicCollectionTrait mock.
    *
-   * @return BasicAssetCollection
+   * @return BasicCollectionTrait
    */
   public function getBasicCollection() {
-    return $this->getMockForAbstractClass('Drupal\Core\Asset\Collection\BasicAssetCollection');
+    return new BasicCollectionTraitStub();
   }
 
   /**
@@ -40,9 +40,9 @@ class BasicAssetCollectionTest extends AssetUnitTest {
    *
    * If demonstrating adherence to Liskov is desired, this test class can be
    * extended and this method swapped out to provide the correct
-   * AssetCollectionBasicInterface object for testing.
+   * BasicCollectionInterface object for testing.
    *
-   * @return AssetCollectionBasicInterface
+   * @return BasicCollectionInterface
    */
   public function getCollection() {
     return $this->getBasicCollection();
@@ -114,20 +114,6 @@ class BasicAssetCollectionTest extends AssetUnitTest {
       $contained[] = $leaf;
     }
     $this->assertEquals(array($nested_aggregate, $foo, $bar, $baz), $contained);
-  }
-
-  /**
-   * @depends testAdd
-   * @depends testEach
-   * @covers ::__construct
-   */
-  public function testCreateWithAssets() {
-    $asset1 = $this->createStubFileAsset();
-    $asset2 = $this->createStubFileAsset();
-    $collection = $this->getMockForAbstractClass('Drupal\Core\Asset\Collection\BasicAssetCollection', array(array($asset1, $asset2)));
-
-    $this->assertContains($asset1, $collection);
-    $this->assertContains($asset2, $collection);
   }
 
   /**
@@ -442,7 +428,7 @@ class BasicAssetCollectionTest extends AssetUnitTest {
     try {
       foreach ($invalid as $val) {
         $collection->remove($val);
-        $this->fail('BasicAssetCollection::remove() did not throw exception on invalid argument type for $needle.');
+        $this->fail('BasicCollectionTrait::remove() did not throw exception on invalid argument type for $needle.');
       }
     } catch (\InvalidArgumentException $e) {}
   }
@@ -457,10 +443,15 @@ class BasicAssetCollectionTest extends AssetUnitTest {
     try {
       foreach ($invalid as $val) {
         $collection->replace($val, $this->createStubFileAsset());
-        $this->fail('BasicAssetCollection::replace() did not throw exception on invalid argument type for $needle.');
+        $this->fail('BasicCollectionTrait::replace() did not throw exception on invalid argument type for $needle.');
       }
     } catch (\InvalidArgumentException $e) {}
   }
 
 }
 
+class BasicCollectionTraitStub implements \IteratorAggregate, BasicCollectionInterface {
+  use BasicCollectionTrait {
+    _bcinit as public __construct;
+  }
+}
