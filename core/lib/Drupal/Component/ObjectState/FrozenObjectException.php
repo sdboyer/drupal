@@ -5,7 +5,7 @@
  * Contains \Drupal\Core\Asset\Exception\FrozenObjectException.
  */
 
-namespace Drupal\Core\Asset\Exception;
+namespace Drupal\Component\ObjectState;
 
 /**
  * Exception thrown when a write-protected operation is attempted on a frozen

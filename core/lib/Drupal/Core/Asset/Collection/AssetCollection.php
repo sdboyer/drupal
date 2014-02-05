@@ -13,7 +13,7 @@ use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
 use Drupal\Core\Asset\DependencyInterface;
-use Drupal\Core\Asset\Exception\FrozenObjectException;
+use Drupal\Component\ObjectState\FreezableTrait;
 
 /**
  * A container for assets.
@@ -21,20 +21,14 @@ use Drupal\Core\Asset\Exception\FrozenObjectException;
  * TODO js settings...
  */
 class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
+  use FreezableTrait;
   use BasicCollectionTrait {
-    // Aliases for write methods; must be wrapped in a freeze check
+    // Aliases for write methods that must be wrapped in a freeze check
     add as _add;
     remove as _remove;
     replace as _replace;
     _bcinit as public __construct;
   }
-
-  /**
-   * State flag indicating whether or not this collection is frozen.
-   *
-   * @var bool
-   */
-  protected $frozen = FALSE;
 
   /**
    * The list of unresolved library keys attached directly to this collection.
@@ -92,22 +86,6 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
   public function replace($needle, AssetInterface $replacement, $graceful = FALSE) {
     $this->attemptWrite(__METHOD__);
     return $this->_replace($needle, $replacement, $graceful);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function freeze() {
-    $this->frozen = TRUE;
-
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isFrozen() {
-    return $this->frozen;
   }
 
   /**
@@ -235,19 +213,4 @@ class AssetCollection implements \IteratorAggregate, AssetCollectionInterface {
 
     return $this;
   }
-
-  /**
-   * Checks if the asset collection is frozen, throws an exception if it is.
-   *
-   * @param string $method
-   *   The name of the method that was originally called.
-   *
-   * @throws FrozenObjectException
-   */
-  protected function attemptWrite($method) {
-    if ($this->isFrozen()) {
-      throw new FrozenObjectException(sprintf('AssetCollectionInterface::%s was called; writes cannot be performed on a frozen collection.', $method));
-    }
-  }
-
 }

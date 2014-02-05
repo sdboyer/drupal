@@ -10,7 +10,7 @@ namespace Drupal\Core\Asset\Collection;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Collection\AssetCollection;
-use Drupal\Core\Asset\Exception\FrozenObjectException;
+use Drupal\Component\ObjectState\FrozenObjectException;
 use Drupal\Core\Asset\DependencyTrait;
 
 /**
@@ -139,14 +139,5 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
     $this->attemptWrite(__METHOD__);
     $this->dependencies = array();
     return $this;
-  }
-
-  /**
-   * Checks if the asset library is frozen, throws an exception if it is.
-   */
-  protected function attemptWrite($method) {
-    if ($this->isFrozen()) {
-      throw new FrozenObjectException('Metadata cannot be modified on a frozen AssetLibrary.');
-    }
   }
 }

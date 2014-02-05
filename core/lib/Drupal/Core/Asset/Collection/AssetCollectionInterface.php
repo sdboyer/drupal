@@ -9,13 +9,14 @@ namespace Drupal\Core\Asset\Collection;
 
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\AssetLibraryRepository;
+use Drupal\Component\ObjectState\FreezableInterface;
 
 /**
  * Describes an asset collection.
  *
  * @see \Drupal\Core\Asset\Collection\AssetCollectionBasicInterface
  */
-interface AssetCollectionInterface extends BasicCollectionInterface {
+interface AssetCollectionInterface extends BasicCollectionInterface, FreezableInterface {
 
   /**
    * Merges another asset collection into this one.
@@ -34,26 +35,6 @@ interface AssetCollectionInterface extends BasicCollectionInterface {
    *   The current asset collection.
    */
   public function mergeCollection(AssetCollectionInterface $collection, $freeze = TRUE);
-
-  /**
-   * Freeze this asset collection, preventing asset additions or removals.
-   *
-   * This does not prevent modification of assets already contained within the
-   * collection.
-   *
-   * TODO put this on the basic interface so aggregates have it, too?
-   *
-   * @return \Drupal\Core\Asset\Collection\AssetCollectionInterface
-   *   The current asset collection.
-   */
-  public function freeze();
-
-  /**
-   * Indicates whether or not this collection is frozen.
-   *
-   * @return bool
-   */
-  public function isFrozen();
 
   /**
    * Returns all contained CSS assets in a traversable form.

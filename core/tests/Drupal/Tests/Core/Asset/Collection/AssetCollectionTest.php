@@ -8,7 +8,7 @@ namespace Drupal\Tests\Core\Asset\Collection;
 
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Collection\BasicCollectionInterface;
-use Drupal\Core\Asset\Exception\FrozenObjectException;
+use Drupal\Component\ObjectState\FrozenObjectException;
 use Drupal\Tests\Core\Asset\AssetUnitTest;
 
 /**
