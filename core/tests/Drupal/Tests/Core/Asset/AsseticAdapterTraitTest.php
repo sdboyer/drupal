@@ -2,36 +2,36 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\Core\Asset\AsseticAdapterAssetTest.
+ * Contains \Drupal\Tests\Core\Asset\AsseticAdapterTraitTest.
  */
 
 namespace Drupal\Tests\Core\Asset;
-use Drupal\Core\Asset\AsseticAdapterAsset;
+use Drupal\Core\Asset\AsseticAdapterTrait;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests for the AsseticAdapterAsset, which ensures certain Assetic methods
- * cannot be called by any child method.
+ * Tests for the AsseticAdapterTrait, which ensures certain Assetic methods
+ * will throw exceptions if called on a composed object.
  *
  * @group Asset
  */
-class AsseticAdapterAssetTest extends UnitTestCase {
+class AsseticAdapterTraitTest extends UnitTestCase {
 
   /**
-   * @var AsseticAdapterAsset
+   * @var AsseticAdapterTrait
    */
   protected $mock;
 
   public static function getInfo() {
     return array(
-      'name' => 'Assetic adapter asset test',
+      'name' => 'Assetic adapter trait test',
       'description' => 'Tests that certain Assetic methods throw known exceptions in a Drupal context',
       'group' => 'Asset',
     );
   }
 
   public function setUp() {
-    $this->mock = $this->getMockForAbstractClass('Drupal\Core\Asset\AsseticAdapterAsset');
+    $this->mock = $this->getObjectForTrait('Drupal\Core\Asset\AsseticAdapterTrait');
   }
 
   /**

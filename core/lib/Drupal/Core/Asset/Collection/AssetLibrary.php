@@ -11,7 +11,7 @@ use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\DependencyInterface;
 use Drupal\Core\Asset\Collection\AssetCollection;
 use Drupal\Core\Asset\Exception\FrozenObjectException;
-use Drupal\Core\Asset\RelativePositionInterface;
+use Drupal\Core\Asset\DependencyTrait;
 
 /**
  * An asset library is a named collection of assets.
@@ -20,6 +20,7 @@ use Drupal\Core\Asset\RelativePositionInterface;
  * other assets (including assets declared by other libraries).
  */
 class AssetLibrary extends AssetCollection implements DependencyInterface {
+  use DependencyTrait;
 
   /**
    * The asset library's title.
@@ -41,27 +42,6 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    * @var string
    */
   protected $website = '';
-
-  /**
-   * The asset library's dependencies (on other asset libraries).
-   *
-   * @var array
-   */
-  protected $dependencies = array();
-
-  /**
-   * The asset library's predecing assets (not asset libraries!).
-   *
-   * @var array
-   */
-  protected $predecessors = array();
-
-  /**
-   * The asset library's succeeding assets (not asset libraries!).
-   *
-   * @var array
-   */
-  protected $successors = array();
 
   /**
    * Set the asset library's title.
@@ -150,20 +130,6 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
     // The library key is stored as the key for cheap deduping.
     $this->dependencies[$key] = TRUE;
     return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasDependencies() {
-    return !empty($this->dependencies);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDependencyInfo() {
-    return array_keys($this->dependencies);
   }
 
   /**

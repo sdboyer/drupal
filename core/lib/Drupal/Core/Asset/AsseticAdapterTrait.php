@@ -2,20 +2,18 @@
 
 /**
  * @file
- * Contains \Drupal\Core\Asset\AsseticAdapterAsset.
+ * Contains \Drupal\Core\Asset\AsseticAdapterTrait.
  */
 
 namespace Drupal\Core\Asset;
 
-use Assetic\Asset\AssetInterface as AsseticAssetInterface;
-use Assetic\Asset\BaseAsset as AsseticBaseAsset;
 use Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException;
 
 /**
- * A class that reduces boilerplate code by centrally disabling the Assetic
+ * A trait that reduces boilerplate code by centrally disabling the Assetic
  * properties and methods Drupal does not support.
  */
-abstract class AsseticAdapterAsset extends AsseticBaseAsset implements AsseticAssetInterface {
+trait AsseticAdapterTrait {
 
   /**
    * @throws \Drupal\Core\Asset\Exception\UnsupportedAsseticBehaviorException

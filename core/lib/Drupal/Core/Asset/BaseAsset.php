@@ -9,6 +9,7 @@ namespace Drupal\Core\Asset;
 
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
+use Assetic\Asset\BaseAsset as AsseticBaseAsset;
 
 /**
  * A base abstract asset.
@@ -20,33 +21,15 @@ use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
  * The methods load() and getLastModified() are left undefined, although a
  * reusable doLoad() method is available to child classes.
  */
-abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, DependencyInterface, RelativePositionInterface {
+abstract class BaseAsset extends AsseticBaseAsset implements AssetInterface, DependencyInterface, RelativePositionInterface {
+  use AsseticAdapterTrait;
+  use RelativePositionTrait;
+  use DependencyTrait;
 
   /**
    * @var AssetMetadataInterface
    */
   protected $metadata;
-
-  /**
-   * The asset library's dependencies (on other asset libraries).
-   *
-   * @var array
-   */
-  protected $dependencies = array();
-
-  /**
-   * The asset library's predecing assets (not asset libraries!).
-   *
-   * @var array
-   */
-  protected $predecessors = array();
-
-  /**
-   * The asset library's succeeding assets (not asset libraries!).
-   *
-   * @var array
-   */
-  protected $successors = array();
 
   public function __construct(AssetMetadataInterface $metadata, $filters = array(), $sourceRoot = NULL, $sourcePath = NULL) {
     $this->metadata = $metadata;
@@ -77,109 +60,6 @@ abstract class BaseAsset extends AsseticAdapterAsset implements AssetInterface, 
    */
   public function isPreprocessable() {
     return (bool) $this->metadata->get('preprocess');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addDependency($key) {
-    if (!is_string($key) || substr_count($key, '/') !== 1) {
-      throw new \InvalidArgumentException('Dependencies must be expressed as a string key identifying the depended-upon library.');
-    }
-
-    // The library key is stored as the key for cheap deduping.
-    $this->dependencies[$key] = TRUE;
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasDependencies() {
-    return !empty($this->dependencies);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDependencyInfo() {
-    return array_keys($this->dependencies);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function clearDependencies() {
-    $this->dependencies = array();
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function after($asset) {
-    if (!($asset instanceof AssetInterface || is_string($asset))) {
-      throw new \InvalidArgumentException('Ordering information must be declared using either an asset string id or the full AssetInterface object.');
-    }
-
-    $this->predecessors[] = $asset;
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasPredecessors() {
-    return !empty($this->predecessors);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getPredecessors() {
-    return $this->predecessors;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function clearPredecessors() {
-    $this->predecessors = array();
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function before($asset) {
-    if (!($asset instanceof AssetInterface || is_string($asset))) {
-      throw new \InvalidArgumentException('Ordering information must be declared using either an asset string id or the full AssetInterface object.');
-    }
-
-    $this->successors[] = $asset;
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasSuccessors() {
-    return !empty($this->successors);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSuccessors() {
-    return $this->successors;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function clearSuccessors() {
-    $this->successors = array();
-    return $this;
   }
 
 }
