@@ -20,7 +20,9 @@ use Drupal\Core\Asset\DependencyTrait;
  * other assets (including assets declared by other libraries).
  */
 class AssetLibrary extends AssetCollection implements DependencyInterface {
-  use DependencyTrait;
+  use DependencyTrait {
+    addDependency as _addDependency;
+  }
 
   /**
    * The asset library's title.
@@ -123,13 +125,7 @@ class AssetLibrary extends AssetCollection implements DependencyInterface {
    */
   public function addDependency($key) {
     $this->attemptWrite(__METHOD__);
-    if (!is_string($key) || substr_count($key, '/') !== 1) {
-      throw new \InvalidArgumentException('Dependencies must be expressed as a string key identifying the depended-upon library.');
-    }
-
-    // The library key is stored as the key for cheap deduping.
-    $this->dependencies[$key] = TRUE;
-    return $this;
+    return $this->_addDependency($key);
   }
 
   /**
