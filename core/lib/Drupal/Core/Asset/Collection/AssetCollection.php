@@ -13,7 +13,7 @@ use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\AssetLibraryRepository;
 use Drupal\Core\Asset\Collection\Iterator\AssetSubtypeFilterIterator;
 use Drupal\Core\Asset\DependencyInterface;
-use Drupal\Component\ObjectState\FreezableTrait;
+use Frozone\FreezableTrait;
 
 /**
  * A container for assets.

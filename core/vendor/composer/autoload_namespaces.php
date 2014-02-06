@@ -30,6 +30,7 @@ return array(
     'Guzzle\\Http' => array($vendorDir . '/guzzle/http'),
     'Guzzle\\Common' => array($vendorDir . '/guzzle/common'),
     'Gliph' => array($vendorDir . '/sdboyer/gliph/src'),
+    'Frozone' => array($vendorDir . '/sdboyer/frozone/src'),
     'EasyRdf_' => array($vendorDir . '/easyrdf/easyrdf/lib'),
     'Drupal\\Driver' => array($baseDir . '/drivers/lib'),
     'Drupal\\Core' => array($baseDir . '/core/lib'),

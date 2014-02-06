@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "0733d59446085cb815b72923c37e0fd6",
+    "hash": "efdf1be8e0fa28407216024ff3ae06e7",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1119,6 +1119,54 @@
                 "psr-3"
             ],
             "time": "2012-12-21 11:40:51"
+        },
+        {
+            "name": "sdboyer/frozone",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sdboyer/frozone.git",
+                "reference": "76cfb53007017d2c7b0218404fe39188a0380533"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sdboyer/frozone/zipball/76cfb53007017d2c7b0218404fe39188a0380533",
+                "reference": "76cfb53007017d2c7b0218404fe39188a0380533",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.*",
+                "satooshi/php-coveralls": "0.6.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Frozone": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sam Boyer",
+                    "email": "tech@samboyer.org"
+                }
+            ],
+            "description": "Freeze and lock objects. Also makes you 23% more like Samuel L. Jackson.",
+            "homepage": "http://github.com/sdboyer/frozone",
+            "keywords": [
+                "frozone",
+                "library",
+                "php",
+                "state",
+                "theincredibles"
+            ],
+            "time": "2014-02-06 17:59:52"
         },
         {
             "name": "sdboyer/gliph",

@@ -9,14 +9,14 @@ namespace Drupal\Core\Asset\Collection;
 
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\AssetLibraryRepository;
-use Drupal\Component\ObjectState\FreezableInterface;
+use Frozone\Freezable;
 
 /**
  * Describes an asset collection.
  *
  * @see \Drupal\Core\Asset\Collection\AssetCollectionBasicInterface
  */
-interface AssetCollectionInterface extends BasicCollectionInterface, FreezableInterface {
+interface AssetCollectionInterface extends BasicCollectionInterface, Freezable {
 
   /**
    * Merges another asset collection into this one.
