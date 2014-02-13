@@ -11,6 +11,7 @@ use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\Exception\LockedObjectException;
 use Drupal\Core\Asset\Metadata\DefaultAssetMetadataFactory;
 use Drupal\Core\Asset\Metadata\MetadataFactoryInterface;
+use Frozone\LockableTrait;
 
 /**
  * A class that helps to create and collect assets.
@@ -20,6 +21,7 @@ use Drupal\Core\Asset\Metadata\MetadataFactoryInterface;
  * order to ease the creation and collection of asset information.
  */
 class AssetCollector implements AssetCollectorInterface {
+  use LockableTrait;
 
   /**
    * The collection used to store any assets that are added.
@@ -151,9 +153,7 @@ class AssetCollector implements AssetCollectorInterface {
    * {@inheritdoc}
    */
   public function setCollection(AssetCollectionInterface $collection) {
-    if ($this->isLocked()) {
-      throw new LockedObjectException('The collector instance is locked. A new collection cannot be attached to a locked collector.');
-    }
+    $this->attemptWrite();
     $this->collection = $collection;
   }
 
@@ -161,9 +161,7 @@ class AssetCollector implements AssetCollectorInterface {
    * {@inheritdoc}
    */
   public function clearCollection() {
-    if ($this->isLocked()) {
-      throw new LockedObjectException('The collector instance is locked. Collections cannot be cleared on a locked collector.');
-    }
+    $this->attemptWrite();
     $this->collection = NULL;
   }
 
@@ -177,48 +175,8 @@ class AssetCollector implements AssetCollectorInterface {
   /**
    * {@inheritdoc}
    */
-  public function lock($key) {
-    if ($this->isLocked()) {
-      throw new LockedObjectException('Collector is already locked.', E_WARNING);
-    }
-
-    $this->locked = TRUE;
-    $this->lockKey = $key;
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function unlock($key) {
-    if (!$this->isLocked()) {
-      throw new LockedObjectException('Collector is not locked', E_WARNING);
-    }
-
-    if ($this->lockKey !== $key) {
-      throw new LockedObjectException('Attempted to unlock Collector with incorrect key.', E_WARNING);
-    }
-
-    $this->locked = FALSE;
-    $this->lockKey = NULL;
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isLocked() {
-    return $this->locked;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function setMetadataFactory(MetadataFactoryInterface $factory) {
-    if ($this->isLocked()) {
-      throw new LockedObjectException('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
-    }
-
+    $this->attemptWrite();
     $this->metadataFactory = $factory;
   }
 
@@ -241,10 +199,7 @@ class AssetCollector implements AssetCollectorInterface {
    * {@inheritdoc}
    */
   public function restoreDefaults() {
-    if ($this->isLocked()) {
-      throw new LockedObjectException('The collector instance is locked. Asset defaults cannot be modified on a locked collector.');
-    }
-
+    $this->attemptWrite();
     $this->metadataFactory = new DefaultAssetMetadataFactory();
   }
 

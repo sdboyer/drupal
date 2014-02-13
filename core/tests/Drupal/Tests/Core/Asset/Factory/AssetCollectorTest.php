@@ -129,42 +129,8 @@ class AssetCollectorTest extends AssetUnitTest {
     $this->assertFalse($this->collector->hasCollection());
   }
 
-  public function testLock() {
-    $this->assertTrue($this->collector->lock($this), 'Collector locked successfully.');
-    $this->assertTrue($this->collector->isLocked(), 'Collector accurately reports that it is locked via isLocked() method.');
-  }
-
-  public function testUnlock() {
-    $this->collector->lock($this);
-    $this->assertTrue($this->collector->unlock($this), 'Collector unlocked successfully when appropriate key was provided.');
-    $this->assertFalse($this->collector->isLocked(), 'Collector correctly reported unlocked state via isLocked() method after unlocking.');
-  }
-
   /**
-   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
-   */
-  public function testUnlockFailsWithoutCorrectSecret() {
-    $this->collector->lock('foo');
-    $this->collector->unlock('bar');
-  }
-
-  /**
-   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
-   */
-  public function testUnlockFailsIfNotLocked() {
-    $this->collector->unlock('foo');
-  }
-
-  /**
-   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
-   */
-  public function testLockFailsIfLocked() {
-    $this->collector->lock('foo');
-    $this->collector->lock('error');
-  }
-
-  /**
-   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
+   * @expectedException \Frozone\LockedObjectException
    */
   public function testLockingPreventsSettingDefaults() {
     $this->collector->lock($this);
@@ -172,7 +138,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
+   * @expectedException \Frozone\LockedObjectException
    */
   public function testLockingPreventsRestoringDefaults() {
     $this->collector->lock($this);
@@ -180,7 +146,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
+   * @expectedException \Frozone\LockedObjectException
    */
   public function testLockingPreventsClearingCollection() {
     $this->collector->lock($this);
@@ -188,7 +154,7 @@ class AssetCollectorTest extends AssetUnitTest {
   }
 
   /**
-   * @expectedException \Drupal\Core\Asset\Exception\LockedObjectException
+   * @expectedException \Frozone\LockedObjectException
    */
   public function testLockingPreventsSettingCollection() {
     $this->collector->lock($this);

@@ -12,6 +12,7 @@ use Drupal\Core\Asset\Metadata\AssetMetadataInterface;
 use Drupal\Core\Asset\AssetInterface;
 use Drupal\Core\Asset\Collection\AssetCollectionInterface;
 use Drupal\Core\Asset\Metadata\MetadataFactoryInterface;
+use Frozone\Lockable;
 
 /**
  * Interface for asset collectors, which help to create and collect assets.
@@ -24,7 +25,7 @@ use Drupal\Core\Asset\Metadata\MetadataFactoryInterface;
  * injected into code whose only responsibility should be to append new items
  * to the collection.
  */
-interface AssetCollectorInterface {
+interface AssetCollectorInterface extends Lockable {
 
   /**
    * Adds an asset to the contained collection.
@@ -134,48 +135,6 @@ interface AssetCollectorInterface {
   public function hasCollection();
 
   /**
-   * Locks this collector, using the provided key.
-   *
-   * The collector can only be unlocked by providing the same key. Key
-   * comparison is done using the identity operator (===), so avoid using an
-   * object as a key if there is any chance the collector will be serialized.
-   *
-   * @param mixed $key
-   *   The key used to lock the collector.
-   *
-   * @return AssetCollectorInterface
-   *   The current asset collector.
-   *
-   * @throws LockedObjectException
-   *   Thrown if the collector is already locked.
-   */
-  public function lock($key);
-
-  /**
-   * Attempts to unlock the collector with the provided key.
-   *
-   * Key comparison is done using the identity operator (===).
-   *
-   * @param mixed $key
-   *   The key with which to unlock the collector.
-   *
-   * @return AssetCollectorInterface
-   *   The current asset collector.
-   *
-   * @throws LockedObjectException
-   *   Thrown if the incorrect key is provided, or if the collector is not
-   *   locked.
-   */
-  public function unlock($key);
-
-  /**
-   * Indicates whether this collector is currently locked.
-   *
-   * @return bool
-   */
-  public function isLocked();
-
-  /**
    * Sets the metadata factory to use for generating asset metadata.
    *
    * @param MetadataFactoryInterface $factory
@@ -225,5 +184,4 @@ interface AssetCollectorInterface {
    *   Thrown if the incorrect key is provided.
    */
   public function restoreDefaults();
-
 }
